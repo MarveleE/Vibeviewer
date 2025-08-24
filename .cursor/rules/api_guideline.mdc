@@ -1,159 +1,149 @@
 ---
-alwaysApply: false
+alwaysApply: true
 ---
-# API 文件编写规范（基于 @GroNetworkKit/）
+
+# API 文件编写规范（VibeviewerAPI）
 
 ## 目标
-
 - 统一 API 的命名、目录、抽象、依赖注入与解码范式
-- 所有 API 置于单一 Module 内，实现依赖隔离与模块化
-- 标准化 `DecodableTargetType` 与 `GroNetwork.decodableRequest(_:)`（仅 async/await）使用
+- 所有 API 置于单一 Module：`VibeviewerAPI`，实现依赖隔离与模块化
+- 标准化 `DecodableTargetType` 与基于 Moya/Alamofire 的 `GroNetwork.decodableRequest(_:)`（仅 async/await）使用
 
 ## 强制约束
-
-- API 类型使用 struct 声明（禁止 enum/case 风格 Target）。
-- 只使用 async/await 的 `decodableRequest`，禁止回调风格调用。
-- API 声明与 Model 声明分离，Model 放置于 `Models/` 目录。
-- 在 View/上层仅通过依赖注入使用 `Service` 协议，不得直接调用 API 或 `GroNetwork`。
-- API 模块只声明协议与默认 Service 实现，不提供真实网络调用的默认注入；具体注入由业务层实现。
+- API Target 使用 `struct` 声明（禁止 `enum`/`case` 风格 Target）
+- 只使用 async/await 的解码调用，禁止回调风格
+- API 声明与 Model 声明分离：
+  - API Target/Service → `VibeviewerAPI`
+  - 数据模型/聚合状态 → `VibeviewerModel`
+- View/上层仅通过依赖注入使用 `Service` 协议，不得直接调用 API Target 或 `GroNetwork`
+- API 模块对外仅暴露 `Service` 协议与默认实现；API Target、网络细节与公共 Header 配置均为内部实现
 
 ## 依赖与导入
-
-- API Module 仅引入：
+- API 模块仅引入：
   - `import Foundation`
   - `import Moya`
-  - `import GroNetworkKit`（或同等方式暴露的 `GroNetwork`/`DecodableTargetType`）
-- 禁止引入 UI 相关依赖（`SwiftUI`/`UIKit` 等）至 API Module。
+  - `import Alamofire`（通过 `GroNetwork` 使用）
+  - `import VibeviewerModel`
+- 禁止在 API 模块引入 UI 相关依赖（`SwiftUI`/`AppKit`/`UIKit`）
 
 ## 命名规范
+- Target：功能名 + `API`，如 `YourFeatureAPI`
+- 协议：`YourFeatureService`
+- 默认实现：`DefaultYourFeatureService`
+- 模型：`YourFeatureResponse`、`YourFeatureDetail` 等
 
-- 功能命名 + `API`：`YourFeatureAPI`
-- 对外协议命名：`YourFeatureService`（或 `YourFeatureRepository`）
-- 默认实现命名：`DefaultYourFeatureService`
-- 模型命名：`YourFeatureResponse`、`YourFeatureDetail` 等，保证含义清晰
-
-## 目录结构
-
+## 目录结构（VibeviewerAPI）
 ```
-API_Module/
-  ├─ YourFeature/
-  │   ├─ YourFeatureAPI.swift           // struct Target 定义
-  │   ├─ YourFeatureService.swift       // 协议 + 默认实现（依赖注入 NetworkClient）
-  │   └─ Models/
-  │       └─ YourFeatureResponse.swift
-  ├─ Shared/
-  │   ├─ JSONDecodingStrategy.swift
-  │   ├─ NetworkClient.swift            // 仅声明抽象网络客户端协议，无实现
-  │   └─ HTTPHeaders.swift
-  └─ API_Module.swift
+VibeviewerAPI/
+  Sources/VibeviewerAPI/
+    Shared/
+      APICommon.swift                   # 基础配置/常量（baseURL、referer 等）
+      MoyaNetworkTypes.swift            # DecodableTargetType 协议
+      MoyaProvider+DecodableRequest.swift
+      RequestHeaderConfigurationPlugin.swift
+      RequestErrorHandlingPlugin.swift
+      SimpleNetworkLoggerPlugin.swift
+      GroNetwork.swift                  # 统一封装的 Moya Provider & 会话
+      GroNetworkError.swift
+    Cursor/                             # 功能分组目录（示例）
+      CursorGetMeAPI.swift              # internal Target
+      CursorUsageAPI.swift              # internal Target
+      CursorTeamSpendAPI.swift          # internal Target
+      CursorService.swift               # public 协议 + 默认实现（仅暴露 Service）
 ```
 
 ## Target 与解码规范
-
-- `YourFeatureAPI` 使用 struct 并遵循 `DecodableTargetType`：
+- Target 遵循 `DecodableTargetType`：
   - `associatedtype ResultType: Decodable`
   - `var decodeAtKeyPath: String? { get }`（默认 `nil`）
   - 实现 `baseURL`、`path`、`method`、`task`、`headers`、`sampleData`
-  - 仅在必要时覆盖 `validationType`
+  - 如无必要，不覆盖 `validationType`
 
 示例：
-
 ```swift
 import Foundation
 import Moya
-import GroNetworkKit
+import VibeviewerModel
 
 struct UserProfileDetailAPI: DecodableTargetType {
     typealias ResultType = UserProfileResponse
 
     let userId: String
 
-    var baseURL: URL { URL(string: "https://api.example.com")! }
+    var baseURL: URL { APIConfig.baseURL }
     var path: String { "/users/\(userId)" }
     var method: Moya.Method { .get }
     var task: Task { .requestPlain }
-    var headers: [String: String]? { nil }
+    var headers: [String: String]? { APIHeadersBuilder.basicHeaders(cookieHeader: nil) }
     var sampleData: Data { Data("{\"id\":\"1\",\"name\":\"foo\"}".utf8) }
-    var decodeAtKeyPath: String? { nil }
 }
 ```
 
 ## Service 抽象与依赖注入
+- 对外协议 + 默认实现（仅暴露 Service，不暴露网络细节）
+- 默认实现的 `public init(decoding:)` 不泄露内部协议类型；提供 `internal init(network:decoding:)` 便于测试注入
 
 ```swift
 import Foundation
 import Moya
-import GroNetworkKit
-
-// 仅在 API 模块内声明网络客户端抽象，由业务层注入具体实现
-public protocol NetworkClient {
-    func decodableRequest<T: DecodableTargetType>(
-        _ target: T,
-        decodingStrategy: JSONDecoder.KeyDecodingStrategy
-    ) async throws -> T.ResultType
-}
+import VibeviewerModel
 
 public protocol UserProfileService {
     func fetchDetail(userId: String) async throws -> UserProfileResponse
 }
 
-public final class DefaultUserProfileService: UserProfileService {
+public struct DefaultUserProfileService: UserProfileService {
     private let network: NetworkClient
-    private let decodingStrategy: JSONDecoder.KeyDecodingStrategy
+    private let decoding: JSONDecoder.KeyDecodingStrategy
 
-    public init(network: NetworkClient,
-                decodingStrategy: JSONDecoder.KeyDecodingStrategy = .useDefaultKeys) {
+    // 面向业务使用：不暴露内部 NetworkClient 抽象
+    public init(decoding: JSONDecoder.KeyDecodingStrategy = .useDefaultKeys) {
+        self.network = DefaultNetworkClient()
+        self.decoding = decoding
+    }
+
+    // 面向测试注入：在 API 模块内可用（同层或 @testable）
+    init(network: any NetworkClient, decoding: JSONDecoder.KeyDecodingStrategy = .useDefaultKeys) {
         self.network = network
-        self.decodingStrategy = decodingStrategy
+        self.decoding = decoding
     }
 
     public func fetchDetail(userId: String) async throws -> UserProfileResponse {
         try await network.decodableRequest(
             UserProfileDetailAPI(userId: userId),
-            decodingStrategy: decodingStrategy)
+            decodingStrategy: decoding
+        )
     }
 }
 ```
 
-> 注：API 模块不提供 `NetworkClient` 的默认实现；业务层可基于 `GroNetwork.decodableRequest` 实现并注入。
+> 说明：`DefaultNetworkClient`、`NetworkClient` 协议，以及 `GroNetwork` 的具体实现细节均保持 `internal`，不对外暴露。
 
 ## View 层使用（依赖注入）
-
-禁止在 View 层直接调用 API 或 `GroNetwork`。通过注入 `UserProfileService` 使用：
-
+禁止在 View 层直接调用 Target 或 `GroNetwork`。通过注入 `Service` 使用：
 ```swift
-// 业务层装配（示例）：提供一个基于 GroNetwork 的 NetworkClient 实现
-final class GroNetworkClient: NetworkClient {
-    func decodableRequest<T: DecodableTargetType>(_ target: T,
-        decodingStrategy: JSONDecoder.KeyDecodingStrategy) async throws -> T.ResultType {
-        try await GroNetwork.decodableRequest(target, decodingStrategy: decodingStrategy)
-    }
-}
+import VibeviewerAPI
+import VibeviewerModel
 
-// ViewModel / Composition Root 中注入
-let service: UserProfileService = DefaultUserProfileService(network: GroNetworkClient())
-
-// 使用
+let service: UserProfileService = DefaultUserProfileService()
 let model = try await service.fetchDetail(userId: "1")
 ```
 
 ## 错误处理与日志
-
-- 默认启用 `SimpleNetworkLoggerPlugin` 打印请求与响应
+- 默认启用 `SimpleNetworkLoggerPlugin` 打印请求/响应
 - 默认启用 `RequestErrorHandlingPlugin`：
   - 超时/断网 → 统一提示
-  - 可通过 `RequestErrorHandlable` 自定义过滤策略
+  - 可通过策略协议自定义过滤
 
 ## 测试与 Mock 规范
+- 在 `VibeviewerAPI` 模块内，通过 `internal init(network:decoding:)` 注入 `FakeNetworkClient` 实现，替代真实网络
+- 为每个 Target 提供 `sampleData`，建议使用最小可用真实 JSON，保障解析健壮性
+- 需要外部测试时使用 `@testable import VibeviewerAPI` 获取内部可见性
 
-- 业务层可使用 `GroNetwork.mockProvider(.success/.failure)` 定义基于 `GroNetwork` 的 `NetworkClient` 测试实现
-- 为每个 Target 提供 `sampleData`
-- 建议用真实接口的最小 JSON 作为 `sampleData`，保障解析健壮性
-
-## 与模块化指南对齐
-
-- API Module 不得引入 UI 框架
-- 面向外部仅暴露协议与 Service 实现，隐藏 Target 与具体网络实现
-- 同一功能聚合在同一目录，清晰的抽象边界与依赖方向
+## 与模块化指南对齐（architecture.mdc）
+- API 模块不引入 UI 框架
+- 对外仅暴露 `Service` 协议与默认实现；隐藏 Target 与网络细节
+- 依赖方向：`VibeviewerModel` ← `VibeviewerAPI` ← `VibeviewerFeature`
+- 严格“一文件一个类型/职责”，功能聚合清晰，依赖单向
 
 

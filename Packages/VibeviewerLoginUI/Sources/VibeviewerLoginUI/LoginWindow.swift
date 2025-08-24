@@ -20,11 +20,11 @@ final class LoginWindowController: NSWindowController, NSWindowDelegate {
     }
 }
 
-final class LoginWindowManager {
-    static let shared = LoginWindowManager()
+public final class LoginWindowManager {
+    public static let shared = LoginWindowManager()
     private var controller: LoginWindowController?
 
-    func show(onCookieCaptured: @escaping (String) -> Void) {
+    public func show(onCookieCaptured: @escaping (String) -> Void) {
         if let controller {
             controller.showWindow(nil)
             controller.window?.makeKeyAndOrderFront(nil)
@@ -50,7 +50,7 @@ final class LoginWindowManager {
         }
     }
 
-    func close() {
+    public func close() {
         controller?.close()
         controller = nil
     }

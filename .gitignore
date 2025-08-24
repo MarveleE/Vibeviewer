@@ -88,3 +88,12 @@ Dependencies/
 
 **/.build/
 # Info.plist
+
+# Tuist (generated artifacts not necessary to track)
+# Project/workspace are already ignored above via *.xcodeproj / *.xcworkspace
+# Ignore project-local Derived directory that may appear at repo root
+Derived/
+# Potential Tuist local directories (safe to ignore if present)
+Tuist/Derived/
+Tuist/Cache/
+Tuist/Graph/

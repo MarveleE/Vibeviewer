@@ -1,0 +1,143 @@
+---
+alwaysApply: true
+---
+
+### 模块化分层规则（Vibeviewer）
+
+本项目采用模块化分层，严格控制依赖方向与对外暴露，确保可维护性与可测试性。
+
+关联规则：请与 `.cursor/rules/project.mdc`（项目架构/SwiftUI 规范）与 `.cursor/rules/specs.mdc`（全局规范）共同遵循；本文件为分层与暴露策略的源规则。
+
+### 分层与职责
+- **VibeviewerModel（Model 层）**
+  - 对象：纯数据模型、DTO、聚合状态（如 `CursorDashboardSnapshot`）
+  - 能力：轻量工具（如 `CursorStorage` actor）
+  - 规范：类型默认 `public`，无第三方网络依赖
+  - 文件规范：一个文件一个类型
+- **VibeviewerAPI（API 层）**
+  - 对象：业务 API 调用与服务封装（Moya/Alamofire/GroNetwork 均在此层）
+  - 能力：
+    - `CursorService` 协议 + `DefaultCursorService` 实现（对外暴露）
+    - 具体 API Target（如 `CursorGetMeAPI`、`CursorUsageAPI`、`CursorTeamSpendAPI`）仅内部可见
+    - 公共配置与 Header 构造（`APIConfig`、`APIHeadersBuilder`）
+    - Moya 扩展与插件（`DecodableTargetType`、`MoyaProvider.decodableRequest`、日志/请求头/错误处理插件）
+  - 规范：
+    - 对外只暴露 Service 接口与默认实现；隐藏 API Target 与具体网络细节
+    - 一文件一个类型/职责
+- **VibeviewerFeature（Feature/UI 层）**
+  - 对象：SwiftUI 视图与轻量视图状态（如 `CursorDataModel`）
+  - 能力：仅通过 `VibeviewerAPI` 的 `CursorService` 访问网络；不得直接依赖 Moya/Alamofire
+  - 规范：遵循“无 ViewModel、使用 SwiftUI 原生数据流”的规则；UI 与服务解耦
+  - 文件规范：一个文件一个类型（`MenuPopoverView`、`LoginWindow`、`CursorLoginView` 等）
+- **VibeviewerCore（可选通用层）**
+  - 对象：与业务无关、与网络无关的通用纯 Swift 工具与扩展
+  - 规范：目前不承载网络相关内容；可逐步沉淀跨模块通用能力
+
+### 依赖方向（单向）
+- `VibeviewerModel` ← `VibeviewerAPI` ← `VibeviewerFeature`
+- `VibeviewerCore`（如有使用）仅被其它层引用，不反向依赖业务层
+- Feature 绝不直接依赖 Moya/Alamofire/GroNetwork
+
+### 暴露策略与访问控制
+- Model 层：模型与聚合状态 `public`（供 UI 与 API 使用）
+- API 层：
+  - `public`: `CursorService`、`DefaultCursorService`
+  - `internal`: API Target、`CursorNetworkClient`、公共头部构建器、配置常量、网络细节
+  - `DefaultCursorService` 提供 `public init(decoding: ...)`；测试注入使用 `internal init(network:decoding:)`
+- Feature 层：对外仅暴露 UI 入口（如 `MenuPopoverView`、`CursorDataModel`）
+
+### 代码放置与导入规范（示例）
+- 新增数据模型 → `VibeviewerModel/Sources/VibeviewerModel/YourType.swift`
+- 新增 API 调用 → `VibeviewerAPI/Sources/VibeviewerAPI/YourApiTarget.swift`（`internal`）
+- Service 扩展 → `VibeviewerAPI/Sources/VibeviewerAPI/YourServicePart.swift`（`public` 仅在协议/实现层）
+- 共享 Header/配置 → `VibeviewerAPI/Sources/VibeviewerAPI/APICommon.swift`（`internal`）
+- 新增 UI 视图 → `VibeviewerFeature/Sources/VibeviewerFeature/YourView.swift`
+- UI 访问网络 → 仅 `import VibeviewerAPI`，通过 `CursorService` 调用
+
+### 一文件一个类型
+- 严格执行“一文件一个类型/职责”
+- 典型示例（Feature 层）：
+  - `MenuPopoverView.swift`
+  - `CursorDataModel.swift`
+  - `LoginWindow.swift`
+  - `CursorLoginView.swift`
+- 典型示例（API 层）：
+  - `CursorGetMeAPI.swift`、`CursorUsageAPI.swift`、`CursorTeamSpendAPI.swift`
+  - `CursorService.swift`
+  - `APICommon.swift`
+  - `MoyaNetworkTypes.swift`、`MoyaProvider+DecodableRequest.swift`
+
+### 新功能开发流程（规范化步骤）
+1. 定义/更新模型（如有）于 Model 层（`public`）
+2. 在 API 层新增/扩展 Service：
+   - 新增 API Target（`internal`）与必要的公共 Header/配置
+   - 在 `DefaultCursorService` 中编排、错误处理与状态码映射
+3. 在 Feature 层编写 UI：通过注入的 `CursorService` 使用 API；不得直接使用 Moya
+4. 遵循 Swift Concurrency（async/await），UI 侧用 `.task` 绑定生命周期
+
+### 与 project.mdc 的协同要点
+- 保持 SwiftUI 纯状态表达（无 ViewModel）；`@State`/`@Observable`/`@Environment`/`@Binding`
+- 仅在 API 层使用第三方网络库；Feature 禁止 `import Moya/Alamofire`
+- 严格早返回与错误传播；类型 Sendable；使用 actors 进行隔离
+- iOS 新特性采用渐进增强策略（见 `project.mdc` 中可用 API 与可用性检查示例）
+
+### 最小示例（仅示意）
+
+Feature 使用服务（不依赖 Moya）：
+```swift
+import VibeviewerAPI
+import VibeviewerModel
+import Observation
+
+@MainActor
+@Observable
+public final class CursorDataModel {
+    private let service: CursorService = DefaultCursorService()
+    public var snapshot: CursorDashboardSnapshot?
+
+    public func refresh() async {
+        // 调用仅通过服务，不见 Moya 细节
+        // try await service.fetchUsage(...)
+    }
+}
+```
+
+API Target（internal）与 Service（public）：
+```swift
+// internal
+struct CursorGetMeAPI: DecodableTargetType {
+    typealias ResultType = CursorMeResponse
+    var baseURL: URL { APIConfig.baseURL }
+    var path: String { "/api/dashboard/get-me" }
+    var method: Moya.Method { .get }
+    var task: Task { .requestPlain }
+    var headers: [String: String]? { APIHeadersBuilder.jsonHeaders(cookieHeader: cookie) }
+    private let cookie: String?
+    init(cookieHeader: String?) { self.cookie = cookieHeader }
+}
+
+// public
+public protocol CursorService { /* ... */ }
+public struct DefaultCursorService: CursorService {
+    public init(decoding: JSONDecoder.KeyDecodingStrategy = .useDefaultKeys) {}
+}
+```
+
+Model（public）：
+```swift
+public struct CursorDashboardSnapshot: Sendable {
+    public let email: String
+    public init(email: String) { self.email = email }
+}
+```
+
+### 测试与可替换性
+- API 层提供 `internal init(network: CursorNetworkClient, ...)` 便于注入 Mock
+- 建议为 Service 行为编写单元测试；Feature 仅做快照/交互层面验证
+
+### PR 检查清单
+- 依赖方向是否正确（Feature→API→Model）
+- 是否泄露了 API Target 或 Moya 细节到 Feature
+- 是否一文件一个类型/职责
+- 可见性修饰是否合理（`public` 仅对必要入口）
+- 是否遵循 Swift Concurrency 与 SwiftUI 状态管理规范

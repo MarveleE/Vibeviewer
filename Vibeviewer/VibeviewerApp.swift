@@ -6,15 +6,21 @@
 //
 
 import SwiftUI
-import VibeviewerFeature
+import VibeviewerMenuUI
+import VibeviewerAPI
+import VibeviewerModel
+import VibeviewerLoginUI
+import VibeviewerSettingsUI
 
 @main
 struct VibeviewerApp: App {
-    @State private var dataModel = CursorDataModel()
-
     var body: some Scene {
         MenuBarExtra("Vibeviewer", systemImage: "bolt.fill") {
-            MenuPopoverView(model: dataModel)
+            MenuPopoverView()
+                .environment(\.cursorService, DefaultCursorService())
+                .environment(\.cursorStorage, CursorStorage.shared)
+                .environment(\.loginWindowManager, LoginWindowManager.shared)
+                .environment(\.settingsWindowManager, SettingsWindowManager.shared)
         }
     }
 }

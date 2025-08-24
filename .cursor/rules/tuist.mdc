@@ -1,0 +1,80 @@
+# Tuist 集成与模块化拆分（Vibeviewer）
+
+本规则记录项目接入 Tuist、按 Feature 拆分为独立 SPM 包、UI 层依赖注入，以及常见问题排查与修复。
+
+## 标准方案（Single Source of Truth）
+- 仅在 `Project.swift` 的 `packages` 节点声明本地包，保持“单一来源”。
+- 不使用 `Tuist/Dependencies.swift` 声明本地包，避免与 `Project.swift` 重复导致解析冲突。
+- App 目标依赖统一使用 `.package(product:)`。
+- 生成工程：`make generate`；清理：`make clear`（仅清当前项目 DerivedData 与项目级 Tuist 缓存）。
+
+示例（节选，自 `Project.swift`）
+```swift
+packages: [
+    .local(path: "Packages/VibeviewerCore"),
+    .local(path: "Packages/VibeviewerModel"),
+    .local(path: "Packages/VibeviewerAPI"),
+    .local(path: "Packages/VibeviewerLoginUI"),
+    .local(path: "Packages/VibeviewerMenuUI"),
+    .local(path: "Packages/VibeviewerSettingsUI")
+],
+```
+
+## UI 层依赖注入（遵循 project.mdc）
+- 不使用 MVVM；视图内部用 `@State` 管理轻量状态。
+- 使用 Environment 注入跨模块依赖：
+  - 在 `VibeviewerModel` 暴露 `EnvironmentValues.cursorStorage`。
+  - 在 `VibeviewerMenuUI` 暴露 `EnvironmentValues.cursorService`、`loginWindowManager`、`settingsWindowManager`。
+- App 注入：
+```swift
+MenuPopoverView()
+    .environment(\.cursorService, DefaultCursorService())
+    .environment(\.cursorStorage, CursorStorage.shared)
+    .environment(\.loginWindowManager, LoginWindowManager.shared)
+    .environment(\.settingsWindowManager, SettingsWindowManager.shared)
+```
+- 视图使用：
+```swift
+@Environment(\.cursorService) private var service
+@Environment(\.cursorStorage) private var storage
+@Environment(\.loginWindowManager) private var loginWindow
+@Environment(\.settingsWindowManager) private var settingsWindow
+```
+
+## Feature 拆包规范
+- 单一职责：
+  - `VibeviewerLoginUI`：登录视图与窗口
+  - `VibeviewerMenuUI`：菜单视图与业务触发
+  - `VibeviewerSettingsUI`：设置视图与窗口
+- 每个包必须包含测试目录 `Tests/<TargetName>Tests/`（即便是占位），否则会出现测试路径报错。
+
+## 常见问题与排查
+- 包在 Xcode 里显示为“文件夹 + ?”，不是 SPM 包：
+  - 原因：`Project.swift` 与 `Tuist/Dependencies.swift` 同时声明了本地包（重复来源），或 SwiftPM/Xcode 缓存脏。
+  - 处理：删除 `Tuist/Dependencies.swift` 的本地包声明（本项目直接删除该文件）；删除各包 `.swiftpm/`；`make clear` 后再 `make generate`。
+- “Couldn't load project at …/.swiftpm/xcode”：
+  - 原因：加载了过期的 `.swiftpm/xcode` 子工程缓存。
+  - 处理：删除对应包 `.swiftpm/` 后重新生成。
+- `no such module 'X'`：
+  - 原因：缺少包/目标依赖或未在 `packages` 声明路径。
+  - 处理：在包的 `Package.swift` 增加依赖；在 `Project.swift` 的 `packages` 增加 `.local(path:)`；再生成。
+- 捕获列表语法错误（如 `[weak _ = service]`）：
+  - Swift 不允许匿名弱引用捕获。移除该语法，使用受控任务生命周期（持有 `Task` 并适时取消）。
+
+## Make 命令
+- 生成：
+```bash
+make generate
+```
+- 清理（当前项目）：
+```bash
+make clear
+```
+
+## 新增 Feature 包 Checklist
+1. 在 `Packages/YourFeature/` 创建 `Package.swift`、`Sources/YourFeature/`、`Tests/YourFeatureTests/`。
+2. 在 `Package.swift` 写入 `.package(path: ...)` 与 `targets.target.dependencies`。
+3. 在 `Project.swift` 的 `packages` 增加 `.local(path: ...)`，并在 App 目标依赖加 `.package(product: ...)`。
+4. `make generate` 重新生成。
+
+> 经验：保持“单一来源”（只在 `Project.swift` 声明本地包）显著降低 Tuist/SwiftPM 解析歧义与缓存问题。

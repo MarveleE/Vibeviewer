@@ -2,6 +2,7 @@ import Foundation
 
 public enum CursorStorageKeys {
     public static let credentials = "cursor.credentials.v1"
+    public static let settings = "app.settings.v1"
 }
 
 public actor CursorStorage {

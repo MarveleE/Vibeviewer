@@ -3,6 +3,8 @@ alwaysApply: false
 ---
 # Project Overview
 
+> 参见 Tuist/模块化细节与常见问题排查：`.cursor/rules/tuist.mdc`
+
 This is a native **MacOS MenuBar application** built with **Swift 6.1+** and **SwiftUI**. The codebase targets **iOS 18.0 and later**, allowing full use of modern Swift and iOS APIs. All concurrency is handled with **Swift Concurrency** (async/await, actors, @MainActor isolation) ensuring thread-safe code.
 
 - **Frameworks & Tech:** SwiftUI for UI, Swift Concurrency with strict mode, Swift Package Manager for modular architecture

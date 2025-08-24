@@ -3,150 +3,283 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 55;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2A1A1BFE2E5B43A0006AC946 /* GroNetworkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2A1A1BFD2E5B43A0006AC946 /* GroNetworkKit */; };
+		010D0D80C6EDD1316C26F8E8 /* VibeviewerCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4B9C35F849AB7F9CC47D1DA5 /* VibeviewerCore */; };
+		0FF96E966E4A555B663F247C /* TuistBundle+Vibeviewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C52F0304666A04BEE427D367 /* TuistBundle+Vibeviewer.swift */; };
+		1B0D813C5A90DF78E7FDE527 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396EF53CB5888545DC0111BD /* ContentView.swift */; };
+		25B7B9F29DEB05C322C55FA4 /* VibeviewerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCF1E1DE5BD29719A0781BB6 /* VibeviewerApp.swift */; };
+		3682D35F54FDA2D0BFDFF520 /* VibeviewerModel in Frameworks */ = {isa = PBXBuildFile; productRef = 8F7747F5A47BE7CBC48D75E7 /* VibeviewerModel */; };
+		53CC4559868731C15DC41B2B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 91167C4D3210AEFDD23587C7 /* Preview Assets.xcassets */; };
+		D887978E18640D11DCF4738D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 906EC00DF4E6EEDBE4BAB83B /* Assets.xcassets */; };
+		DA542241635F9EC1B0812D00 /* VibeviewerSettingsUI in Frameworks */ = {isa = PBXBuildFile; productRef = 53A1282747DA2C6D3D94B6AB /* VibeviewerSettingsUI */; };
+		DBE75FD190F55B22EB03CA7F /* TuistAssets+Vibeviewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EA2F696E9E74D9E08EE0BB /* TuistAssets+Vibeviewer.swift */; };
+		ECF34671F1CA242804CDF306 /* VibeviewerMenuUI in Frameworks */ = {isa = PBXBuildFile; productRef = A0482D6CEE72E43B5BA319F5 /* VibeviewerMenuUI */; };
+		EFB587530213B85C23849B39 /* VibeviewerLoginUI in Frameworks */ = {isa = PBXBuildFile; productRef = 3B53C88F24A058590FC5D4BB /* VibeviewerLoginUI */; };
+		F66EF75E205C8573652EBD76 /* VibeviewerAPI in Frameworks */ = {isa = PBXBuildFile; productRef = E01D26D614B0D4AF45B1F2C5 /* VibeviewerAPI */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		8DBF590AB8ABAFFC9EE78D08 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		2A1A1BCB2E5B34B9006AC946 /* Vibeviewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vibeviewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0B87947D1DFD942BEB988EDB /* VibeviewerCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VibeviewerCore; path = Packages/VibeviewerCore; sourceTree = "<group>"; };
+		0D6922D58719E194AED467D7 /* VibeviewerAPI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VibeviewerAPI; path = Packages/VibeviewerAPI; sourceTree = "<group>"; };
+		396EF53CB5888545DC0111BD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		82EFA8122D97B6F7756517ED /* VibeviewerModel */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VibeviewerModel; path = Packages/VibeviewerModel; sourceTree = "<group>"; };
+		906EC00DF4E6EEDBE4BAB83B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		91167C4D3210AEFDD23587C7 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		9B2D4AA7DA687B4EE62EE42E /* VibeviewerMenuUI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VibeviewerMenuUI; path = Packages/VibeviewerMenuUI; sourceTree = "<group>"; };
+		A9EA2F696E9E74D9E08EE0BB /* TuistAssets+Vibeviewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TuistAssets+Vibeviewer.swift"; sourceTree = "<group>"; };
+		C52F0304666A04BEE427D367 /* TuistBundle+Vibeviewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TuistBundle+Vibeviewer.swift"; sourceTree = "<group>"; };
+		D352FFB558E6A6B64DF96096 /* VibeviewerLoginUI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VibeviewerLoginUI; path = Packages/VibeviewerLoginUI; sourceTree = "<group>"; };
+		D5DCC058A4E391EBE4F7843A /* VibeviewerSettingsUI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VibeviewerSettingsUI; path = Packages/VibeviewerSettingsUI; sourceTree = "<group>"; };
+		DA6B565C12A0B3B405EA7C2B /* Vibeviewer-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Vibeviewer-Info.plist"; sourceTree = "<group>"; };
+		DCF1E1DE5BD29719A0781BB6 /* VibeviewerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VibeviewerApp.swift; sourceTree = "<group>"; };
+		EE174579D22D89ECC04F68EE /* Vibeviewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vibeviewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		2A1A1BCD2E5B34B9006AC946 /* Vibeviewer */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Vibeviewer;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
-
 /* Begin PBXFrameworksBuildPhase section */
-		2A1A1BC82E5B34B9006AC946 /* Frameworks */ = {
+		ECF430A6ADDFDB13EF6824CC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2A1A1BFE2E5B43A0006AC946 /* GroNetworkKit in Frameworks */,
+				F66EF75E205C8573652EBD76 /* VibeviewerAPI in Frameworks */,
+				3682D35F54FDA2D0BFDFF520 /* VibeviewerModel in Frameworks */,
+				010D0D80C6EDD1316C26F8E8 /* VibeviewerCore in Frameworks */,
+				EFB587530213B85C23849B39 /* VibeviewerLoginUI in Frameworks */,
+				ECF34671F1CA242804CDF306 /* VibeviewerMenuUI in Frameworks */,
+				DA542241635F9EC1B0812D00 /* VibeviewerSettingsUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		2A1A1BC22E5B34B9006AC946 = {
+		04D7AAC3FC41A5ED1B332682 /* Derived */ = {
 			isa = PBXGroup;
 			children = (
-				2A1A1BCD2E5B34B9006AC946 /* Vibeviewer */,
-				2A1A1BFC2E5B43A0006AC946 /* Frameworks */,
-				2A1A1BCC2E5B34B9006AC946 /* Products */,
+				97F247BF0B678EB32CECFF36 /* InfoPlists */,
+				FA40E61678069DF2E951D3C5 /* Sources */,
 			);
+			path = Derived;
 			sourceTree = "<group>";
 		};
-		2A1A1BCC2E5B34B9006AC946 /* Products */ = {
+		4ABC33527C62D010A437E041 /* Project */ = {
 			isa = PBXGroup;
 			children = (
-				2A1A1BCB2E5B34B9006AC946 /* Vibeviewer.app */,
+				04D7AAC3FC41A5ED1B332682 /* Derived */,
+				679B741E0774A795378ACF66 /* Vibeviewer */,
+			);
+			name = Project;
+			sourceTree = "<group>";
+		};
+		5FC0A8CA5E1FA65CD31CF269 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				0D6922D58719E194AED467D7 /* VibeviewerAPI */,
+				0B87947D1DFD942BEB988EDB /* VibeviewerCore */,
+				D352FFB558E6A6B64DF96096 /* VibeviewerLoginUI */,
+				9B2D4AA7DA687B4EE62EE42E /* VibeviewerMenuUI */,
+				82EFA8122D97B6F7756517ED /* VibeviewerModel */,
+				D5DCC058A4E391EBE4F7843A /* VibeviewerSettingsUI */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		679B741E0774A795378ACF66 /* Vibeviewer */ = {
+			isa = PBXGroup;
+			children = (
+				8C797D80F1B11CBFCD43D1EE /* Preview Content */,
+				906EC00DF4E6EEDBE4BAB83B /* Assets.xcassets */,
+				396EF53CB5888545DC0111BD /* ContentView.swift */,
+				DCF1E1DE5BD29719A0781BB6 /* VibeviewerApp.swift */,
+			);
+			path = Vibeviewer;
+			sourceTree = "<group>";
+		};
+		8C797D80F1B11CBFCD43D1EE /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				91167C4D3210AEFDD23587C7 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		8CF5678F3FF347C3B747C470 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EE174579D22D89ECC04F68EE /* Vibeviewer.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		2A1A1BFC2E5B43A0006AC946 /* Frameworks */ = {
+		91E4603EC8F2194669FC0A8F = {
 			isa = PBXGroup;
 			children = (
+				4ABC33527C62D010A437E041 /* Project */,
+				8CF5678F3FF347C3B747C470 /* Products */,
+				5FC0A8CA5E1FA65CD31CF269 /* Packages */,
 			);
-			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		97F247BF0B678EB32CECFF36 /* InfoPlists */ = {
+			isa = PBXGroup;
+			children = (
+				DA6B565C12A0B3B405EA7C2B /* Vibeviewer-Info.plist */,
+			);
+			path = InfoPlists;
+			sourceTree = "<group>";
+		};
+		FA40E61678069DF2E951D3C5 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				A9EA2F696E9E74D9E08EE0BB /* TuistAssets+Vibeviewer.swift */,
+				C52F0304666A04BEE427D367 /* TuistBundle+Vibeviewer.swift */,
+			);
+			path = Sources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		2A1A1BCA2E5B34B9006AC946 /* Vibeviewer */ = {
+		2EA77F6E99C6AB702EE96DA0 /* Vibeviewer */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2A1A1BDA2E5B34BA006AC946 /* Build configuration list for PBXNativeTarget "Vibeviewer" */;
+			buildConfigurationList = 3F9D00D7719737DE748A65B2 /* Build configuration list for PBXNativeTarget "Vibeviewer" */;
 			buildPhases = (
-				2A1A1BC72E5B34B9006AC946 /* Sources */,
-				2A1A1BC82E5B34B9006AC946 /* Frameworks */,
-				2A1A1BC92E5B34B9006AC946 /* Resources */,
+				493EB47B424ADEFBE696F9A8 /* Sources */,
+				E2C326859384AE0B12962BE2 /* Resources */,
+				ECF430A6ADDFDB13EF6824CC /* Frameworks */,
+				8DBF590AB8ABAFFC9EE78D08 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			fileSystemSynchronizedGroups = (
-				2A1A1BCD2E5B34B9006AC946 /* Vibeviewer */,
-			);
 			name = Vibeviewer;
 			packageProductDependencies = (
-				2A1A1BFD2E5B43A0006AC946 /* GroNetworkKit */,
+				E01D26D614B0D4AF45B1F2C5 /* VibeviewerAPI */,
+				8F7747F5A47BE7CBC48D75E7 /* VibeviewerModel */,
+				4B9C35F849AB7F9CC47D1DA5 /* VibeviewerCore */,
+				3B53C88F24A058590FC5D4BB /* VibeviewerLoginUI */,
+				A0482D6CEE72E43B5BA319F5 /* VibeviewerMenuUI */,
+				53A1282747DA2C6D3D94B6AB /* VibeviewerSettingsUI */,
 			);
 			productName = Vibeviewer;
-			productReference = 2A1A1BCB2E5B34B9006AC946 /* Vibeviewer.app */;
+			productReference = EE174579D22D89ECC04F68EE /* Vibeviewer.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		2A1A1BC32E5B34B9006AC946 /* Project object */ = {
+		7E544F19E7215F0ECAC75810 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1620;
-				LastUpgradeCheck = 1620;
+				BuildIndependentTargetsInParallel = YES;
+				ORGANIZATIONNAME = Vibeviewer;
 				TargetAttributes = {
-					2A1A1BCA2E5B34B9006AC946 = {
-						CreatedOnToolsVersion = 16.2;
-					};
 				};
 			};
-			buildConfigurationList = 2A1A1BC62E5B34B9006AC946 /* Build configuration list for PBXProject "Vibeviewer" */;
+			buildConfigurationList = B620BFE58D839DDE7EF39282 /* Build configuration list for PBXProject "Vibeviewer" */;
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
 				Base,
+				en,
 			);
-			mainGroup = 2A1A1BC22E5B34B9006AC946;
-			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
-			productRefGroup = 2A1A1BCC2E5B34B9006AC946 /* Products */;
+			mainGroup = 91E4603EC8F2194669FC0A8F;
+			packageReferences = (
+				7870F211AA1F75F45F1F1798 /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerAPI" */,
+				7312C3CC86216CE185FBBAA2 /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerCore" */,
+				AD9D5421D54B77F7949103C1 /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerLoginUI" */,
+				E3CF3480708553BB9277968D /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerMenuUI" */,
+				40ADF506F56B9700A17BFF0B /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerModel" */,
+				8DE67066220B6A65F8604EE1 /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerSettingsUI" */,
+			);
+			productRefGroup = 8CF5678F3FF347C3B747C470 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				2A1A1BCA2E5B34B9006AC946 /* Vibeviewer */,
+				2EA77F6E99C6AB702EE96DA0 /* Vibeviewer */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		2A1A1BC92E5B34B9006AC946 /* Resources */ = {
+		E2C326859384AE0B12962BE2 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D887978E18640D11DCF4738D /* Assets.xcassets in Resources */,
+				53CC4559868731C15DC41B2B /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		2A1A1BC72E5B34B9006AC946 /* Sources */ = {
+		493EB47B424ADEFBE696F9A8 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DBE75FD190F55B22EB03CA7F /* TuistAssets+Vibeviewer.swift in Sources */,
+				0FF96E966E4A555B663F247C /* TuistBundle+Vibeviewer.swift in Sources */,
+				1B0D813C5A90DF78E7FDE527 /* ContentView.swift in Sources */,
+				25B7B9F29DEB05C322C55FA4 /* VibeviewerApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		2A1A1BD82E5B34BA006AC946 /* Debug */ = {
+		14FB39BE567143ED1E12F1B4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = "Derived/InfoPlists/Vibeviewer-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.magicgroot.vibeviewer;
+				PRODUCT_NAME = Vibeviewer;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+					"$(inherited)",
+					DEBUG,
+				);
+				SWIFT_COMPILATION_MODE = singlefile;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		46E54DA7CBDAD8D1D423BD22 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -173,11 +306,88 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.10;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		5C070A51F70972920AF8FCC3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = "Derived/InfoPlists/Vibeviewer-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.magicgroot.vibeviewer;
+				PRODUCT_NAME = Vibeviewer;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		5EA4FCE3D40AB059E9879EF8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -191,157 +401,90 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.2;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-				MTL_FAST_MATH = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.10;
 			};
 			name = Debug;
-		};
-		2A1A1BD92E5B34BA006AC946 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.2;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				MTL_FAST_MATH = YES;
-				SDKROOT = macosx;
-				SWIFT_COMPILATION_MODE = wholemodule;
-			};
-			name = Release;
-		};
-		2A1A1BDB2E5B34BA006AC946 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Vibeviewer/Vibeviewer.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Vibeviewer/Preview Content\"";
-				DEVELOPMENT_TEAM = FUB9NJ5SPT;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.magicgroot.Vibeviewer;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		2A1A1BDC2E5B34BA006AC946 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Vibeviewer/Vibeviewer.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Vibeviewer/Preview Content\"";
-				DEVELOPMENT_TEAM = FUB9NJ5SPT;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.magicgroot.Vibeviewer;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		2A1A1BC62E5B34B9006AC946 /* Build configuration list for PBXProject "Vibeviewer" */ = {
+		3F9D00D7719737DE748A65B2 /* Build configuration list for PBXNativeTarget "Vibeviewer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				2A1A1BD82E5B34BA006AC946 /* Debug */,
-				2A1A1BD92E5B34BA006AC946 /* Release */,
+				14FB39BE567143ED1E12F1B4 /* Debug */,
+				5C070A51F70972920AF8FCC3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2A1A1BDA2E5B34BA006AC946 /* Build configuration list for PBXNativeTarget "Vibeviewer" */ = {
+		B620BFE58D839DDE7EF39282 /* Build configuration list for PBXProject "Vibeviewer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				2A1A1BDB2E5B34BA006AC946 /* Debug */,
-				2A1A1BDC2E5B34BA006AC946 /* Release */,
+				5EA4FCE3D40AB059E9879EF8 /* Debug */,
+				46E54DA7CBDAD8D1D423BD22 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		40ADF506F56B9700A17BFF0B /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerModel" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = /Users/groot/Vibeviewer/Packages/VibeviewerModel;
+		};
+		7312C3CC86216CE185FBBAA2 /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = /Users/groot/Vibeviewer/Packages/VibeviewerCore;
+		};
+		7870F211AA1F75F45F1F1798 /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerAPI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = /Users/groot/Vibeviewer/Packages/VibeviewerAPI;
+		};
+		8DE67066220B6A65F8604EE1 /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerSettingsUI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = /Users/groot/Vibeviewer/Packages/VibeviewerSettingsUI;
+		};
+		AD9D5421D54B77F7949103C1 /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerLoginUI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = /Users/groot/Vibeviewer/Packages/VibeviewerLoginUI;
+		};
+		E3CF3480708553BB9277968D /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerMenuUI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = /Users/groot/Vibeviewer/Packages/VibeviewerMenuUI;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
-		2A1A1BFD2E5B43A0006AC946 /* GroNetworkKit */ = {
+		3B53C88F24A058590FC5D4BB /* VibeviewerLoginUI */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = GroNetworkKit;
+			productName = VibeviewerLoginUI;
+		};
+		4B9C35F849AB7F9CC47D1DA5 /* VibeviewerCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = VibeviewerCore;
+		};
+		53A1282747DA2C6D3D94B6AB /* VibeviewerSettingsUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = VibeviewerSettingsUI;
+		};
+		8F7747F5A47BE7CBC48D75E7 /* VibeviewerModel */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = VibeviewerModel;
+		};
+		A0482D6CEE72E43B5BA319F5 /* VibeviewerMenuUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = VibeviewerMenuUI;
+		};
+		E01D26D614B0D4AF45B1F2C5 /* VibeviewerAPI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = VibeviewerAPI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = 2A1A1BC32E5B34B9006AC946 /* Project object */;
+	rootObject = 7E544F19E7215F0ECAC75810 /* Project object */;
 }
