@@ -1,4 +1,4 @@
-// request
+// request 获取我账号的信息，id，邮箱等
 
 curl 'https://cursor.com/api/dashboard/get-me' \
   -H 'accept: */*' \

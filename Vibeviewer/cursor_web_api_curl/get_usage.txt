@@ -1,4 +1,4 @@
-// request
+// request 获取我Plan中已使用的requst数量，numRequests表示套餐中已发送的request，numRequestsTotal作为套餐中和按量付费情况下总的发送request情况
 
 curl 'https://cursor.com/api/usage?user=user_01JRXG9J1YYXYF39Y4NAR5AMCE' \
   -H 'accept: */*' \

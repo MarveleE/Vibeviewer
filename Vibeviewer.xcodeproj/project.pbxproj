@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2A1A1BFE2E5B43A0006AC946 /* GroNetworkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2A1A1BFD2E5B43A0006AC946 /* GroNetworkKit */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		2A1A1BCB2E5B34B9006AC946 /* Vibeviewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vibeviewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2A1A1BFE2E5B43A0006AC946 /* GroNetworkKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,6 +38,7 @@
 			isa = PBXGroup;
 			children = (
 				2A1A1BCD2E5B34B9006AC946 /* Vibeviewer */,
+				2A1A1BFC2E5B43A0006AC946 /* Frameworks */,
 				2A1A1BCC2E5B34B9006AC946 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +49,13 @@
 				2A1A1BCB2E5B34B9006AC946 /* Vibeviewer.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		2A1A1BFC2E5B43A0006AC946 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -65,6 +78,7 @@
 			);
 			name = Vibeviewer;
 			packageProductDependencies = (
+				2A1A1BFD2E5B43A0006AC946 /* GroNetworkKit */,
 			);
 			productName = Vibeviewer;
 			productReference = 2A1A1BCB2E5B34B9006AC946 /* Vibeviewer.app */;
@@ -321,6 +335,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2A1A1BFD2E5B43A0006AC946 /* GroNetworkKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = GroNetworkKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 2A1A1BC32E5B34B9006AC946 /* Project object */;
 }

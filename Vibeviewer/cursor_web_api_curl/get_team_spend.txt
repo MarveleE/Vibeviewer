@@ -1,4 +1,4 @@
-// request
+// request， 获取我team中的使用量情况，使用这里与我id相同的spendCents和fastPremiumRequests，还有hardLimitOverrideDollars作为我的用量数据源
 
 curl 'https://cursor.com/api/dashboard/get-team-spend' \
   -H 'accept: */*' \

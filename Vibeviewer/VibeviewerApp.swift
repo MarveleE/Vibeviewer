@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct VibeviewerApp: App {
+    @State private var dataModel = CursorDataModel()
+
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        MenuBarExtra("Vibeviewer", systemImage: "bolt.fill") {
+            MenuPopoverView(model: dataModel)
         }
     }
 }

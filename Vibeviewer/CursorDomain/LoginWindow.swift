@@ -1,0 +1,61 @@
+import SwiftUI
+import AppKit
+
+final class LoginWindowController: NSWindowController, NSWindowDelegate {
+    private var onCookieCaptured: ((String) -> Void)?
+
+    convenience init(onCookieCaptured: @escaping (String) -> Void) {
+        let vc = NSHostingController(rootView: CursorLoginView(onCookieCaptured: { cookie in
+            onCookieCaptured(cookie)
+        }, onClose: {
+            // Close handled by manager
+        }))
+        let window = NSWindow(contentViewController: vc)
+        window.title = "Cursor 登录"
+        window.setContentSize(NSSize(width: 900, height: 680))
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+        window.isReleasedWhenClosed = false
+        self.init(window: window)
+        self.onCookieCaptured = onCookieCaptured
+        self.window?.delegate = self
+    }
+}
+
+final class LoginWindowManager {
+    static let shared = LoginWindowManager()
+    private var controller: LoginWindowController?
+
+    func show(onCookieCaptured: @escaping (String) -> Void) {
+        if let controller {
+            controller.showWindow(nil)
+            controller.window?.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        let controller = LoginWindowController(onCookieCaptured: { [weak self] cookie in
+            onCookieCaptured(cookie)
+            self?.close()
+        })
+        self.controller = controller
+        controller.window?.center()
+        controller.showWindow(nil)
+        controller.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        // Inject close action into hosted view
+        if let hosting = controller.contentViewController as? NSHostingController<CursorLoginView> {
+            hosting.rootView = CursorLoginView(onCookieCaptured: { cookie in
+                onCookieCaptured(cookie)
+                self.close()
+            }, onClose: { [weak self] in
+                self?.close()
+            })
+        }
+    }
+
+    func close() {
+        controller?.close()
+        controller = nil
+    }
+}
+
+
