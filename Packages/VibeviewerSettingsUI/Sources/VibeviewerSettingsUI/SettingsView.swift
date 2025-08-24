@@ -1,5 +1,6 @@
 import SwiftUI
 import VibeviewerModel
+import VibeviewerAppEnvironment
 
 public struct SettingsView: View {
     @State private var settings: AppSettings = AppSettings()

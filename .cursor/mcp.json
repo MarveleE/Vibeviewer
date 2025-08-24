@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "tuist": {
+            "command": "/opt/homebrew/bin/tuist",
+            "args": [
+                "mcp",
+                "start"
+            ]
+        }
+    }
+}
