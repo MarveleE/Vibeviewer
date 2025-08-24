@@ -1,26 +1,29 @@
 import Foundation
 import Observation
+import VibeviewerModel
+import VibeviewerAPI
 
 @MainActor
 @Observable
-final class CursorDataModel {
+public final class CursorDataModel {
     // Inputs
     private let service: CursorService
     private let storage = CursorStorage.shared
 
     // Persisted creds (nil means not logged in)
-    var credentials: CursorCredentials?
+    public var credentials: CursorCredentials?
 
     // Derived UI snapshot
-    var snapshot: CursorDashboardSnapshot?
+    public var snapshot: CursorDashboardSnapshot?
 
     // Loading/error states
-    var isLoading: Bool = false
-    var lastErrorMessage: String?
+    public var isLoading: Bool = false
+    public var lastErrorMessage: String?
 
     // Timer management
     private var refreshTask: Task<Void, Never>?
 
+    // Internal designated initializer allowing injection
     init(service: CursorService = DefaultCursorService()) {
         self.service = service
         Task { [weak self] in
@@ -33,7 +36,12 @@ final class CursorDataModel {
         }
     }
 
-    func startAutoRefresh() {
+    // Public convenience initializer for app usage
+    public convenience init() {
+        self.init(service: DefaultCursorService())
+    }
+
+    public func startAutoRefresh() {
         refreshTask?.cancel()
         refreshTask = Task { [weak self] in
             guard let self else { return }
@@ -44,19 +52,19 @@ final class CursorDataModel {
         }
     }
 
-    func stopAutoRefresh() {
+    public func stopAutoRefresh() {
         refreshTask?.cancel()
         refreshTask = nil
     }
 
-    func setLoggedOut() async {
+    public func setLoggedOut() async {
         await storage.clearCredentials()
         credentials = nil
         snapshot = nil
         stopAutoRefresh()
     }
 
-    func completeLogin(cookieHeader: String) async {
+    public func completeLogin(cookieHeader: String) async {
         // 1) fetch me
         isLoading = true
         lastErrorMessage = nil
@@ -99,7 +107,7 @@ final class CursorDataModel {
         isLoading = false
     }
 
-    func refresh() async {
+    public func refresh() async {
         guard let creds = credentials else { return }
         isLoading = true
         lastErrorMessage = nil

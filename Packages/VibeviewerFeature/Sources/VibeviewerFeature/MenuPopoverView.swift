@@ -1,11 +1,16 @@
 import SwiftUI
 import Observation
+import VibeviewerModel
 
 @MainActor
-struct MenuPopoverView: View {
-    @State var model: CursorDataModel
+public struct MenuPopoverView: View {
+    @State public var model: CursorDataModel
 
-    var body: some View {
+    public init(model: CursorDataModel) {
+        self._model = State(initialValue: model)
+    }
+
+    public var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if let snapshot = model.snapshot {
                 Text("邮箱: \(snapshot.email)")

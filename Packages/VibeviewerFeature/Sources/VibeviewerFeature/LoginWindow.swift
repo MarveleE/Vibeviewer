@@ -8,7 +8,6 @@ final class LoginWindowController: NSWindowController, NSWindowDelegate {
         let vc = NSHostingController(rootView: CursorLoginView(onCookieCaptured: { cookie in
             onCookieCaptured(cookie)
         }, onClose: {
-            // Close handled by manager
         }))
         let window = NSWindow(contentViewController: vc)
         window.title = "Cursor 登录"
@@ -41,7 +40,6 @@ final class LoginWindowManager {
         controller.showWindow(nil)
         controller.window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-        // Inject close action into hosted view
         if let hosting = controller.contentViewController as? NSHostingController<CursorLoginView> {
             hosting.rootView = CursorLoginView(onCookieCaptured: { cookie in
                 onCookieCaptured(cookie)

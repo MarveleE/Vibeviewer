@@ -1,20 +1,5 @@
-import Combine
 import Foundation
 import Moya
-
-public protocol DecodableTargetType: TargetType {
-    associatedtype ResultType: Decodable
-
-    var decodeAtKeyPath: String? { get }
-}
-
-public extension DecodableTargetType {
-    var decodeAtKeyPath: String? { nil }
-
-    var validationType: ValidationType {
-        .successCodes
-    }
-}
 
 @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public extension MoyaProvider where Target == MultiTarget {

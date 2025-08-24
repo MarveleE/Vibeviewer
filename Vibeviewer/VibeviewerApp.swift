@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import VibeviewerFeature
 
 @main
 struct VibeviewerApp: App {
