@@ -1,0 +1,34 @@
+// request
+
+curl 'https://cursor.com/api/dashboard/get-me' \
+  -H 'accept: */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9' \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -b 'ph_phc_Rbh7SDD9nCGKRBOqjoiijTSAW8WMAJpVQEs6hGEPqZp_posthog=%7B%22distinct_id%22%3A%2219173c4ad7e1493-06705278063831-18525637-384000-19173c4ad7f32e6%22%2C%22%24device_id%22%3A%2219173c4ad7e1493-06705278063831-18525637-384000-19173c4ad7f32e6%22%2C%22%24user_state%22%3A%22anonymous%22%2C%22%24sesid%22%3A%5B1724985313038%2C%22191a112dc194d6-00f44b74fff70c-18525637-384000-191a112dc1a2457%22%2C1724984253465%5D%2C%22%24session_recording_enabled_server_side%22%3Afalse%2C%22%24autocapture_disabled_server_side%22%3Afalse%2C%22%24active_feature_flags%22%3A%5B%5D%2C%22%24enabled_feature_flags%22%3A%7B%7D%2C%22%24feature_flag_payloads%22%3A%7B%7D%7D; ph_phc_OrLbTmMnw0Ou1C4xuVIWJJaijIcp4J9Cm4JsAVRLtJo_posthog=%7B%22distinct_id%22%3A%22191754b04a119a8-0ed566da8c313e-18525637-384000-191754b04a23a15%22%2C%22%24device_id%22%3A%22191754b04a119a8-0ed566da8c313e-18525637-384000-191754b04a23a15%22%2C%22%24user_state%22%3A%22anonymous%22%2C%22%24sesid%22%3A%5B1728977816053%2C%221928f155ee2417b-0fc04a964da2e1-16525637-384000-1928f155ee32fa4%22%2C1728977395426%5D%2C%22%24session_recording_enabled_server_side%22%3Afalse%2C%22%24autocapture_disabled_server_side%22%3Afalse%2C%22%24active_feature_flags%22%3A%5B%5D%2C%22%24enabled_feature_flags%22%3A%7B%7D%2C%22%24feature_flag_payloads%22%3A%7B%7D%7D; IndrX2ZuSmZramJSX0NIYUZoRzRzUGZ0cENIVHpHNXk0VE0ya2ZiUkVzQU14X2Fub255bW91c1VzZXJJZCI%3D=Ijg4NGNiZDkwLWNiN2MtNDU2OC05NTJiLWYzMDM1MzI2MmI2OSI=; NEXT_LOCALE=en; WorkosCursorSessionToken=user_01JRXG9J1YYXYF39Y4NAR5AMCE%3A%3AeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhdXRoMHx1c2VyXzAxSlJYRzlKMVlZWFlGMzlZNE5BUjVBTUNFIiwidGltZSI6IjE3NTQ5MjkwMzciLCJyYW5kb21uZXNzIjoiOTI1OTg5M2MtZGM1YS00YmFiIiwiZXhwIjoxNzYwMTEzMDM3LCJpc3MiOiJodHRwczovL2F1dGhlbnRpY2F0aW9uLmN1cnNvci5zaCIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwgb2ZmbGluZV9hY2Nlc3MiLCJhdWQiOiJodHRwczovL2N1cnNvci5jb20iLCJ0eXBlIjoid2ViIn0.6xFI-QuOQ1mEs9NbZ2Q-b9_3j3X6U1_Jy_pVfUtGPlg; ph_phc_TXdpocbGVeZVm5VJmAsHTMrCofBQu3e0kN8HGMNGTVW_posthog=%7B%22distinct_id%22%3A%22019173c4-44fa-7c89-850b-6ade7fe8eed6%22%2C%22%24sesid%22%3A%5B1756035992474%2C%220198dbe6-cb44-7288-badf-61d3ca2c8d5c%22%2C1756035992388%5D%7D; htjs_anonymous_id=e1fbd20a-84b9-4a9b-990d-15fc360fc973; htjs_sesh={%22id%22:1756035992760%2C%22expiresAt%22:1756037792760%2C%22timeout%22:1800000%2C%22sessionStart%22:true%2C%22autoTrack%22:true}' \
+  -H 'dnt: 1' \
+  -H 'origin: https://cursor.com' \
+  -H 'pragma: no-cache' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://cursor.com/dashboard' \
+  -H 'sec-ch-ua: "Chromium";v="139", "Not;A=Brand";v="99"' \
+  -H 'sec-ch-ua-arch: "arm"' \
+  -H 'sec-ch-ua-bitness: "64"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "macOS"' \
+  -H 'sec-ch-ua-platform-version: "15.6.0"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36' \
+  --data-raw '{}'
+
+// Response
+
+{
+    "authId": "auth0|user_01JRXG9J1YYXYF39Y4NAR5AMCE",
+    "userId": 190525724,
+    "email": "svendaviskl@outlook.pt",
+    "workosId": "user_01JRXG9J1YYXYF39Y4NAR5AMCE",
+    "teamId": 15113845
+}
