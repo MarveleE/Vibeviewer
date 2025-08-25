@@ -1,9 +1,12 @@
 import AppKit
 import SwiftUI
+import VibeviewerModel
+import VibeviewerStorage
 
 public final class SettingsWindowManager {
     public static let shared = SettingsWindowManager()
     private var controller: NSWindowController?
+    public var appSettings: AppSettings = DefaultCursorStorageService.loadSettingsSync()
 
     public func show() {
         if let controller {
@@ -12,7 +15,7 @@ public final class SettingsWindowManager {
             NSApp.activate(ignoringOtherApps: true)
             return
         }
-        let vc = NSHostingController(rootView: SettingsView())
+        let vc = NSHostingController(rootView: SettingsView().environment(self.appSettings))
         let window = NSWindow(contentViewController: vc)
         window.title = "设置"
         window.setContentSize(NSSize(width: 560, height: 420))

@@ -1,6 +1,8 @@
 import Foundation
+import Observation
 
-public struct AppSettings: Codable, Sendable, Equatable {
+@Observable
+public final class AppSettings: Codable, Sendable, Equatable {
     public var launchAtLogin: Bool
     public var usageHistory: AppSettings.UsageHistory
     public var overview: AppSettings.Overview
@@ -13,6 +15,12 @@ public struct AppSettings: Codable, Sendable, Equatable {
         self.launchAtLogin = launchAtLogin
         self.usageHistory = usageHistory
         self.overview = overview
+    }
+
+    public static func == (lhs: AppSettings, rhs: AppSettings) -> Bool {
+        lhs.launchAtLogin == rhs.launchAtLogin &&
+        lhs.usageHistory == rhs.usageHistory &&
+        lhs.overview == rhs.overview
     }
 
     public struct Overview: Codable, Sendable, Equatable {

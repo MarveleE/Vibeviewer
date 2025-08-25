@@ -4,6 +4,7 @@ import VibeviewerAppEnvironment
 import VibeviewerLoginUI
 import VibeviewerModel
 import VibeviewerSettingsUI
+import Observation
 
 @MainActor
 public struct MenuPopoverView: View {
@@ -11,19 +12,28 @@ public struct MenuPopoverView: View {
     @Environment(\.cursorStorage) private var storage
     @Environment(\.loginWindowManager) private var loginWindow
     @Environment(\.settingsWindowManager) private var settingsWindow
-    @Environment(\.appSettings) private var settings
+    @Environment(AppSettings.self) private var appSettings
+
+    enum ViewState {
+        case loading
+        case loaded
+        case error(String)
+    }
 
     @State private var credentials: Credentials?
     @State private var snapshot: DashboardSnapshot?
-    @State private var isLoading: Bool = false
     @State private var lastErrorMessage: String?
     @State private var refreshTask: Task<Void, Never>?
 
     // Usage History (filtered by date)
-    @State private var selectedDate: Date = Date()
-    @State private var historyLimit: Int = 10
     @State private var usageEvents: [VibeviewerModel.UsageEvent] = []
     @State private var isLoadingHistory: Bool = false
+
+    // Split states for granular fetching
+    @State private var usageOverview: UsageOverview?
+    @State private var teamSpend: TeamSpendOverview?
+    @State private var isLoadingUsage: Bool = false
+    @State private var isLoadingSpend: Bool = false
 
     public init(initialCredentials: Credentials? = nil, initialSnapshot: DashboardSnapshot? = nil) {
         self._credentials = State(initialValue: initialCredentials)
@@ -37,7 +47,7 @@ public struct MenuPopoverView: View {
             ErrorBannerView(message: lastErrorMessage)
 
             ActionButtonsView(
-                isLoading: isLoading,
+                isLoading: (isLoadingUsage || isLoadingSpend),
                 isLoggedIn: credentials != nil,
                 onRefresh: { Task { await self.refresh() } },
                 onLogin: {
@@ -51,18 +61,18 @@ public struct MenuPopoverView: View {
 
             UsageHistorySection(
                 isLoading: isLoadingHistory,
-                selectedDate: $selectedDate,
-                historyLimit: $historyLimit,
+                selectedDate: selectedDateBinding,
+                historyLimit: historyLimitBinding,
                 events: usageEvents,
                 onReload: { Task { await fetchUsageHistory() } },
-                onToday: { selectedDate = Date() }
+                onToday: { appSettings.usageHistory.dateRange.start = Date() }
             )
         }
         .padding(16)
         .frame(minWidth: 320)
         .task { await self.loadInitial() }
-        .onChange(of: selectedDate) { _, _ in Task { await fetchUsageHistory() } }
-        .onChange(of: historyLimit) { _, _ in Task { await fetchUsageHistory() } }
+        .onChange(of: appSettings.usageHistory.dateRange.start) { _, _ in Task { await fetchUsageHistory() } }
+        .onChange(of: appSettings.usageHistory.limit) { _, _ in Task { await fetchUsageHistory() } }
     }
 
     private func loadInitial() async {
@@ -74,8 +84,10 @@ public struct MenuPopoverView: View {
         // 读取登录态
         self.credentials = await self.storage.loadCredentials()
         if self.credentials != nil {
-            // 登录态存在则进行一次刷新以获得最新数据
-            await self.refresh()
+            // 并行拉取每一块数据
+            async let a: Void = self.reloadUsage()
+            async let b: Void = self.reloadTeamSpend()
+            _ = await (a, b)
             self.startAutoRefresh()
             await self.fetchUsageHistory()
         }
@@ -86,7 +98,8 @@ public struct MenuPopoverView: View {
         self.refreshTask = Task {
             while !Task.isCancelled {
                 await self.refresh()
-                try? await Task.sleep(for: .seconds(5 * 60))
+                let minutes = max(appSettings.overview.refreshInterval, 1)
+                try? await Task.sleep(for: .seconds(Double(minutes) * 60))
             }
         }
     }
@@ -101,24 +114,9 @@ public struct MenuPopoverView: View {
     }
 
     private func completeLogin(cookieHeader: String) async {
-        self.isLoading = true
         self.lastErrorMessage = nil
         do {
             let me = try await service.fetchMe(cookieHeader: cookieHeader)
-            let usage = try await service.fetchUsage(workosUserId: me.workosId, cookieHeader: cookieHeader)
-            let spend = try await service.fetchTeamSpend(teamId: me.teamId, cookieHeader: cookieHeader)
-
-            let planRequestsUsed = usage.models.values.map(\.requestsUsed).reduce(0, +)
-            let totalAll = usage.models.values.map(\.totalRequests).reduce(0, +)
-            let mySpend = spend.members.first { $0.userId == me.userId }
-            let newSnapshot = DashboardSnapshot(
-                email: me.email,
-                planRequestsUsed: planRequestsUsed,
-                totalRequestsAllModels: totalAll,
-                spendingCents: mySpend?.spendCents ?? 0,
-                hardLimitDollars: mySpend?.hardLimitOverrideDollars ?? 0
-            )
-
             let creds = Credentials(
                 userId: me.userId,
                 workosId: me.workosId,
@@ -128,43 +126,22 @@ public struct MenuPopoverView: View {
             )
             try await self.storage.saveCredentials(creds)
             self.credentials = creds
-            self.snapshot = newSnapshot
-            try? await self.storage.saveDashboardSnapshot(newSnapshot)
+            // 并行拉取各块数据
+            async let a: Void = self.reloadUsage()
+            async let b: Void = self.reloadTeamSpend()
+            _ = await (a, b)
             self.startAutoRefresh()
         } catch {
             self.lastErrorMessage = error.localizedDescription
         }
-        self.isLoading = false
     }
 
     private func refresh() async {
-        guard let creds = credentials else { return }
-        self.isLoading = true
+        guard credentials != nil else { return }
         self.lastErrorMessage = nil
-        do {
-            let usage = try await service.fetchUsage(workosUserId: creds.workosId, cookieHeader: creds.cookieHeader)
-            let spend = try await service.fetchTeamSpend(teamId: creds.teamId, cookieHeader: creds.cookieHeader)
-            let planRequestsUsed = usage.models.values.map(\.requestsUsed).reduce(0, +)
-            let totalAll = usage.models.values.map(\.totalRequests).reduce(0, +)
-            let mySpend = spend.members.first { $0.userId == creds.userId }
-            let newSnapshot = DashboardSnapshot(
-                email: creds.email,
-                planRequestsUsed: planRequestsUsed,
-                totalRequestsAllModels: totalAll,
-                spendingCents: mySpend?.spendCents ?? 0,
-                hardLimitDollars: mySpend?.hardLimitOverrideDollars ?? 0
-            )
-            self.snapshot = newSnapshot
-            try? await self.storage.saveDashboardSnapshot(newSnapshot)
-        } catch {
-            if case CursorServiceError.sessionExpired = error {
-                await self.setLoggedOut()
-                self.lastErrorMessage = "会话已过期，请重新登录"
-            } else {
-                self.lastErrorMessage = error.localizedDescription
-            }
-        }
-        self.isLoading = false
+        async let a: Void = self.reloadUsage()
+        async let b: Void = self.reloadTeamSpend()
+        _ = await (a, b)
     }
 
     private func fetchUsageHistory() async {
@@ -172,14 +149,14 @@ public struct MenuPopoverView: View {
         self.isLoadingHistory = true
         defer { self.isLoadingHistory = false }
         do {
-            let (startMs, endMs) = self.dayRangeMs(for: selectedDate)
+            let (startMs, endMs) = self.dayRangeMs(for: appSettings.usageHistory.dateRange.start)
             let history = try await service.fetchFilteredUsageEvents(
                 teamId: creds.teamId,
                 startDateMs: startMs,
                 endDateMs: endMs,
                 userId: creds.userId,
                 page: 1,
-                pageSize: max(historyLimit, 1),
+                pageSize: max(appSettings.usageHistory.limit, 1),
                 cookieHeader: creds.cookieHeader
             )
             self.usageEvents = history.events
@@ -198,11 +175,74 @@ public struct MenuPopoverView: View {
         return (startMs, endMs)
     }
 
-    private func formatTimestamp(_ msString: String) -> String {
-        guard let ms = Double(msString) else { return msString }
-        let date = Date(timeIntervalSince1970: ms / 1000.0)
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm:ss"
-        return formatter.string(from: date)
+    
+
+    private func reloadUsage() async {
+        guard let creds = credentials else { return }
+        self.isLoadingUsage = true
+        defer { self.isLoadingUsage = false }
+        do {
+            let usage = try await service.fetchUsage(workosUserId: creds.workosId, cookieHeader: creds.cookieHeader)
+            self.usageOverview = usage
+            await self.composeSnapshotIfPossibleAndPersist()
+        } catch {
+            if case CursorServiceError.sessionExpired = error {
+                await self.setLoggedOut()
+                self.lastErrorMessage = "会话已过期，请重新登录"
+            } else {
+                self.lastErrorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func reloadTeamSpend() async {
+        guard let creds = credentials else { return }
+        self.isLoadingSpend = true
+        defer { self.isLoadingSpend = false }
+        do {
+            let spend = try await service.fetchTeamSpend(teamId: creds.teamId, cookieHeader: creds.cookieHeader)
+            self.teamSpend = spend
+            await self.composeSnapshotIfPossibleAndPersist()
+        } catch {
+            if case CursorServiceError.sessionExpired = error {
+                await self.setLoggedOut()
+                self.lastErrorMessage = "会话已过期，请重新登录"
+            } else {
+                self.lastErrorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func composeSnapshotIfPossibleAndPersist() async {
+        guard let creds = credentials, let usage = usageOverview, let spend = teamSpend else { return }
+        let planRequestsUsed = usage.models.values.map(\.requestsUsed).reduce(0, +)
+        let totalAll = usage.models.values.map(\.totalRequests).reduce(0, +)
+        let mySpend = spend.members.first { $0.userId == creds.userId }
+        let newSnapshot = DashboardSnapshot(
+            email: creds.email,
+            planRequestsUsed: planRequestsUsed,
+            totalRequestsAllModels: totalAll,
+            spendingCents: mySpend?.spendCents ?? 0,
+            hardLimitDollars: mySpend?.hardLimitOverrideDollars ?? 0
+        )
+        self.snapshot = newSnapshot
+        try? await self.storage.saveDashboardSnapshot(newSnapshot)
+    }
+}
+
+// MARK: - Bindings into AppSettings
+extension MenuPopoverView {
+    private var selectedDateBinding: Binding<Date> {
+        Binding(
+            get: { appSettings.usageHistory.dateRange.start },
+            set: { appSettings.usageHistory.dateRange.start = $0 }
+        )
+    }
+
+    private var historyLimitBinding: Binding<Int> {
+        Binding(
+            get: { appSettings.usageHistory.limit },
+            set: { appSettings.usageHistory.limit = max(1, $0) }
+        )
     }
 }

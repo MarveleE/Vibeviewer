@@ -1,9 +1,10 @@
 import SwiftUI
 import VibeviewerAppEnvironment
 import VibeviewerModel
+import Observation
 
 public struct SettingsView: View {
-    @State private var settings: AppSettings = .init()
+    @Environment(AppSettings.self) private var settings
     @Environment(\.cursorStorage) private var storage
 
     public init() {}
@@ -14,9 +15,6 @@ public struct SettingsView: View {
         }
         .padding(16)
         .frame(minWidth: 420, minHeight: 300)
-        .task { self.settings = await self.storage.loadSettings() }
-        .onChange(of: self.settings) { _, newValue in
-            Task { try? await self.storage.saveSettings(newValue) }
-        }
+        .task { try? await settings.save(using: storage) }
     }
 }
