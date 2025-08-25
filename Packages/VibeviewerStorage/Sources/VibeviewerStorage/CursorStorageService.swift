@@ -24,5 +24,3 @@ public protocol CursorStorageSyncHelpers {
     static func loadDashboardSnapshotSync() -> DashboardSnapshot?
     static func loadSettingsSync() -> AppSettings
 }
-
-

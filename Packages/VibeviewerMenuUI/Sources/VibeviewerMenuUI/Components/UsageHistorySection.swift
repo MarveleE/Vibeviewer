@@ -13,27 +13,27 @@ struct UsageHistorySection: View {
         VStack(alignment: .leading, spacing: 8) {
             Divider()
             HStack {
-                DatePicker("选择日期", selection: $settings.usageHistory.dateRange.start, displayedComponents: .date)
+                DatePicker("选择日期", selection: self.$settings.usageHistory.dateRange.start, displayedComponents: .date)
                 Spacer()
-                Stepper("条数: \(settings.usageHistory.limit)", value: $settings.usageHistory.limit, in: 1...100)
+                Stepper("条数: \(self.settings.usageHistory.limit)", value: self.$settings.usageHistory.limit, in: 1 ... 100)
                     .frame(minWidth: 120)
             }
             .font(.callout)
 
             HStack(spacing: 10) {
-                if isLoading {
+                if self.isLoading {
                     ProgressView()
                 } else {
-                    Button("加载用量历史") { onReload() }
+                    Button("加载用量历史") { self.onReload() }
                 }
-                Button("今天") { onToday() }
+                Button("今天") { self.onToday() }
             }
 
-            if !events.isEmpty {
+            if !self.events.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
-                    ForEach(Array(events.prefix(settings.usageHistory.limit).enumerated()), id: \.offset) { _, e in
+                    ForEach(Array(self.events.prefix(self.settings.usageHistory.limit).enumerated()), id: \.offset) { _, e in
                         HStack(alignment: .top, spacing: 8) {
-                            Text(formatTimestamp(e.occurredAtMs))
+                            Text(self.formatTimestamp(e.occurredAtMs))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .frame(width: 120, alignment: .leading)
@@ -63,5 +63,3 @@ struct UsageHistorySection: View {
         return formatter.string(from: date)
     }
 }
-
-

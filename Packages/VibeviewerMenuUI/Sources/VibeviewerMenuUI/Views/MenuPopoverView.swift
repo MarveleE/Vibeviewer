@@ -1,10 +1,10 @@
+import Observation
 import SwiftUI
 import VibeviewerAPI
 import VibeviewerAppEnvironment
 import VibeviewerLoginUI
 import VibeviewerModel
 import VibeviewerSettingsUI
-import Observation
 
 @MainActor
 public struct MenuPopoverView: View {
@@ -30,15 +30,15 @@ public struct MenuPopoverView: View {
         @Bindable var appSettings = appSettings
 
         VStack(alignment: .leading, spacing: 12) {
-            DashboardSummaryView(snapshot: session.snapshot)
-            
-            if case .error(let message) = state {
+            DashboardSummaryView(snapshot: self.session.snapshot)
+
+            if case let .error(message) = state {
                 ErrorBannerView(message: message)
             }
 
             ActionButtonsView(
-                isLoading: state == .loading,
-                isLoggedIn: session.credentials != nil,
+                isLoading: self.state == .loading,
+                isLoggedIn: self.session.credentials != nil,
                 onRefresh: { Task { await self.refresh() } },
                 onLogin: {
                     self.loginWindow.show { cookie in
@@ -50,18 +50,18 @@ public struct MenuPopoverView: View {
             )
 
             UsageHistorySection(
-                isLoading: state == .loading,
+                isLoading: self.state == .loading,
                 settings: appSettings,
-                events: session.snapshot?.usageEvents ?? [],
-                onReload: { Task { await fetchUsageHistory() } },
+                events: self.session.snapshot?.usageEvents ?? [],
+                onReload: { Task { await self.fetchUsageHistory() } },
                 onToday: { appSettings.usageHistory.dateRange.start = Date() }
             )
         }
         .padding(16)
         .frame(minWidth: 320)
         .task { await self.loadInitial() }
-        .onChange(of: appSettings.usageHistory.dateRange.start) { _, _ in Task { await fetchUsageHistory() } }
-        .onChange(of: appSettings.usageHistory.limit) { _, _ in Task { await fetchUsageHistory() } }
+        .onChange(of: appSettings.usageHistory.dateRange.start) { _, _ in Task { await self.fetchUsageHistory() } }
+        .onChange(of: appSettings.usageHistory.limit) { _, _ in Task { await self.fetchUsageHistory() } }
     }
 
     private func loadInitial() async {
@@ -114,7 +114,7 @@ public struct MenuPopoverView: View {
     }
 
     private func refresh() async {
-        guard session.credentials != nil else { return }
+        guard self.session.credentials != nil else { return }
         self.state = .loading
         await self.reloadOverviewAndPersist()
     }
@@ -124,22 +124,22 @@ public struct MenuPopoverView: View {
         self.state = .loading
         defer { self.state = .loaded }
         do {
-            let (startMs, endMs) = self.dayRangeMs(for: appSettings.usageHistory.dateRange.start)
+            let (startMs, endMs) = self.dayRangeMs(for: self.appSettings.usageHistory.dateRange.start)
             let history = try await service.fetchFilteredUsageEvents(
                 teamId: creds.teamId,
                 startDateMs: startMs,
                 endDateMs: endMs,
                 userId: creds.userId,
                 page: 1,
-                pageSize: max(appSettings.usageHistory.limit, 1),
+                pageSize: max(self.appSettings.usageHistory.limit, 1),
                 cookieHeader: creds.cookieHeader
             )
             let newSnapshot = DashboardSnapshot(
                 email: creds.email,
-                planRequestsUsed: session.snapshot?.planRequestsUsed ?? 0,
-                totalRequestsAllModels: session.snapshot?.totalRequestsAllModels ?? 0,
-                spendingCents: session.snapshot?.spendingCents ?? 0,
-                hardLimitDollars: session.snapshot?.hardLimitDollars ?? 0,
+                planRequestsUsed: self.session.snapshot?.planRequestsUsed ?? 0,
+                totalRequestsAllModels: self.session.snapshot?.totalRequestsAllModels ?? 0,
+                spendingCents: self.session.snapshot?.spendingCents ?? 0,
+                hardLimitDollars: self.session.snapshot?.hardLimitDollars ?? 0,
                 usageEvents: history.events
             )
             self.session.snapshot = newSnapshot
@@ -159,20 +159,18 @@ public struct MenuPopoverView: View {
         return (startMs, endMs)
     }
 
-    
-
     private func reloadOverviewAndPersist() async {
         guard let creds = session.credentials else { return }
         self.state = .loading
         defer { self.state = .loaded }
         do {
-            async let usageAsync = service.fetchUsage(workosUserId: creds.workosId, cookieHeader: creds.cookieHeader)
-            async let spendAsync = service.fetchTeamSpend(teamId: creds.teamId, cookieHeader: creds.cookieHeader)
+            async let usageAsync = self.service.fetchUsage(workosUserId: creds.workosId, cookieHeader: creds.cookieHeader)
+            async let spendAsync = self.service.fetchTeamSpend(teamId: creds.teamId, cookieHeader: creds.cookieHeader)
             let usage = try await usageAsync
             let spend = try await spendAsync
 
-            let planRequestsUsed = usage.models.values.map { $0.requestsUsed }.reduce(0, +)
-            let totalAll = usage.models.values.map { $0.totalRequests }.reduce(0, +)
+            let planRequestsUsed = usage.models.values.map(\.requestsUsed).reduce(0, +)
+            let totalAll = usage.models.values.map(\.totalRequests).reduce(0, +)
             let mySpend = spend.members.first { $0.userId == creds.userId }
 
             let newSnapshot = DashboardSnapshot(
@@ -181,14 +179,14 @@ public struct MenuPopoverView: View {
                 totalRequestsAllModels: totalAll,
                 spendingCents: mySpend?.spendCents ?? 0,
                 hardLimitDollars: mySpend?.hardLimitOverrideDollars ?? 0,
-                usageEvents: session.snapshot?.usageEvents ?? []
+                usageEvents: self.session.snapshot?.usageEvents ?? []
             )
             self.session.snapshot = newSnapshot
             try? await self.storage.saveDashboardSnapshot(newSnapshot)
         } catch {
             if case CursorServiceError.sessionExpired = error {
                 await self.setLoggedOut()
-                self.state = .error("会话已过期，请重新登录")   
+                self.state = .error("会话已过期，请重新登录")
             } else {
                 self.state = .error(error.localizedDescription)
             }

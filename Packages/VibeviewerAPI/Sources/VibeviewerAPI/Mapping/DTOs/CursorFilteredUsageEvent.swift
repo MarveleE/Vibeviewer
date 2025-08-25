@@ -30,5 +30,3 @@ struct CursorFilteredUsageEvent: Decodable, Sendable, Equatable {
         self.owningTeam = owningTeam
     }
 }
-
-

@@ -12,5 +12,3 @@ struct ErrorBannerView: View {
         }
     }
 }
-
-

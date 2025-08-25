@@ -12,7 +12,7 @@ let package = Package(
   dependencies: [
     .package(path: "../VibeviewerModel"),
     .package(path: "../VibeviewerAppEnvironment"),
-    .package(path: "../VibeviewerShareUI")
+    .package(path: "../VibeviewerShareUI"),
   ],
   targets: [
     .target(
@@ -20,9 +20,8 @@ let package = Package(
       dependencies: [
         "VibeviewerModel",
         "VibeviewerAppEnvironment",
-        "VibeviewerShareUI"
-      ],
-      
+        "VibeviewerShareUI",
+      ]
     ),
     .testTarget(name: "VibeviewerSettingsUITests", dependencies: ["VibeviewerSettingsUI"]),
   ]

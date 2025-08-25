@@ -15,6 +15,7 @@ public struct DefaultCursorStorageService: CursorStorageService, CursorStorageSy
     }
 
     // MARK: - Credentials
+
     public func saveCredentials(_ me: Credentials) async throws {
         let data = try JSONEncoder().encode(me)
         self.defaults.set(data, forKey: CursorStorageKeys.credentials)
@@ -30,6 +31,7 @@ public struct DefaultCursorStorageService: CursorStorageService, CursorStorageSy
     }
 
     // MARK: - Dashboard Snapshot
+
     public func saveDashboardSnapshot(_ snapshot: DashboardSnapshot) async throws {
         let data = try JSONEncoder().encode(snapshot)
         self.defaults.set(data, forKey: CursorStorageKeys.dashboardSnapshot)
@@ -45,6 +47,7 @@ public struct DefaultCursorStorageService: CursorStorageService, CursorStorageSy
     }
 
     // MARK: - App Settings
+
     public func saveSettings(_ settings: AppSettings) async throws {
         let data = try JSONEncoder().encode(settings)
         self.defaults.set(data, forKey: CursorStorageKeys.settings)
@@ -52,13 +55,15 @@ public struct DefaultCursorStorageService: CursorStorageService, CursorStorageSy
 
     public func loadSettings() async -> AppSettings {
         if let data = self.defaults.data(forKey: CursorStorageKeys.settings),
-           let decoded = try? JSONDecoder().decode(AppSettings.self, from: data) {
+           let decoded = try? JSONDecoder().decode(AppSettings.self, from: data)
+        {
             return decoded
         }
         return AppSettings()
     }
 
     // MARK: - Sync Helpers
+
     public static func loadCredentialsSync() -> Credentials? {
         let defaults = UserDefaults.standard
         guard let data = defaults.data(forKey: CursorStorageKeys.credentials) else { return nil }
@@ -77,5 +82,3 @@ public struct DefaultCursorStorageService: CursorStorageService, CursorStorageSy
         return (try? JSONDecoder().decode(AppSettings.self, from: data)) ?? AppSettings()
     }
 }
-
-

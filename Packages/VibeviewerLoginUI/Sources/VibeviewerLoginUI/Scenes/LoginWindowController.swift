@@ -18,5 +18,3 @@ final class LoginWindowController: NSWindowController, NSWindowDelegate {
         self.window?.delegate = self
     }
 }
-
-

@@ -188,7 +188,7 @@ enum GroNetwork {
     }
 
     @discardableResult
-    public static func request(_ target: some TargetType, progressHandler: ProgressBlock? = nil)
+    static func request(_ target: some TargetType, progressHandler: ProgressBlock? = nil)
         async throws -> Data?
     {
         try await withCheckedThrowingContinuation { continuation in

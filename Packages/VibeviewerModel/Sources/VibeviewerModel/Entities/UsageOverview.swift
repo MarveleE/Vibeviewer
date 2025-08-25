@@ -21,5 +21,3 @@ public struct UsageOverview: Sendable, Equatable {
         self.models = models
     }
 }
-
-

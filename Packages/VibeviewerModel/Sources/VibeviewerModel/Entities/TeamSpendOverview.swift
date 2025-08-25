@@ -56,5 +56,3 @@ public struct TeamSpendOverview: Sendable, Equatable {
         self.totalByRole = totalByRole
     }
 }
-
-

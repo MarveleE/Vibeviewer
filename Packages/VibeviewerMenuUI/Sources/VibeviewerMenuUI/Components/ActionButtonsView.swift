@@ -12,20 +12,18 @@ struct ActionButtonsView: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            if isLoading {
+            if self.isLoading {
                 ProgressView()
             } else {
-                Button("刷新") { onRefresh() }
+                Button("刷新") { self.onRefresh() }
             }
 
-            if !isLoggedIn {
-                Button("登录") { onLogin() }
+            if !self.isLoggedIn {
+                Button("登录") { self.onLogin() }
             } else {
-                Button("退出登录") { onLogout() }
+                Button("退出登录") { self.onLogout() }
             }
-            Button("设置") { onSettings() }
+            Button("设置") { self.onSettings() }
         }
     }
 }
-
-

@@ -16,13 +16,11 @@ public class Credentials: Codable, Equatable {
         self.cookieHeader = cookieHeader
     }
 
-    public static func == (lhs: Credentials, rhs: Credentials) -> Bool { 
+    public static func == (lhs: Credentials, rhs: Credentials) -> Bool {
         lhs.userId == rhs.userId &&
-        lhs.workosId == rhs.workosId &&
-        lhs.email == rhs.email &&
-        lhs.teamId == rhs.teamId &&
-        lhs.cookieHeader == rhs.cookieHeader
+            lhs.workosId == rhs.workosId &&
+            lhs.email == rhs.email &&
+            lhs.teamId == rhs.teamId &&
+            lhs.cookieHeader == rhs.cookieHeader
     }
 }
-
-

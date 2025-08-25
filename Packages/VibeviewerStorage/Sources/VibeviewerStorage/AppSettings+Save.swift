@@ -6,5 +6,3 @@ public extension AppSettings {
         try await storage.saveSettings(self)
     }
 }
-
-

@@ -5,8 +5,8 @@
 //  Created by Groot chen on 2025/8/24.
 //
 
-import SwiftUI
 import Observation
+import SwiftUI
 import VibeviewerAPI
 import VibeviewerAppEnvironment
 import VibeviewerLoginUI
@@ -17,10 +17,9 @@ import VibeviewerStorage
 
 @main
 struct VibeviewerApp: App {
-
     @State private var settings: AppSettings = DefaultCursorStorageService.loadSettingsSync()
-    
-    @State private var session: VibeviewerModel.AppSession = VibeviewerModel.AppSession(
+
+    @State private var session: VibeviewerModel.AppSession = .init(
         credentials: DefaultCursorStorageService.loadCredentialsSync(),
         snapshot: DefaultCursorStorageService.loadDashboardSnapshotSync()
     )
@@ -32,16 +31,16 @@ struct VibeviewerApp: App {
                 .environment(\.cursorStorage, DefaultCursorStorageService())
                 .environment(\.loginWindowManager, LoginWindowManager.shared)
                 .environment(\.settingsWindowManager, SettingsWindowManager.shared)
-                .environment(settings)
-                .environment(session)
+                .environment(self.settings)
+                .environment(self.session)
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "bolt.fill")
                     .resizable()
                     .frame(width: 16, height: 16)
                     .padding(.trailing, 4)
-                Text(session.snapshot?.spendingCents.dollarStringFromCents ?? "Vibeviewer")
-                    .font(.subheadline)
+                Text(self.session.snapshot?.spendingCents.dollarStringFromCents ?? "Vibeviewer")
+                    .font(.headline.bold())
                     .foregroundColor(.primary)
             }
         }

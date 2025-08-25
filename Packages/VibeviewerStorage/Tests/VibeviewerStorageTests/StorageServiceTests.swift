@@ -1,18 +1,17 @@
-import Testing
 import Foundation
-@testable import VibeviewerStorage
+import Testing
 import VibeviewerModel
+@testable import VibeviewerStorage
 
 @Suite("StorageService basic")
 struct StorageServiceTests {
-
     @Test("Credentials save/load/clear")
     func credentialsCRUD() async throws {
         let suite = UserDefaults(suiteName: "test.credentials.")!
         suite.removePersistentDomain(forName: "test.credentials.")
         let storage = DefaultCursorStorageService(userDefaults: suite)
 
-        let creds = Credentials(userId: 123456, workosId: "w1", email: "e@x.com", teamId: 1, cookieHeader: "c")
+        let creds = Credentials(userId: 123_456, workosId: "w1", email: "e@x.com", teamId: 1, cookieHeader: "c")
         try await storage.saveCredentials(creds)
         let loaded = await storage.loadCredentials()
         #expect(loaded == creds)
@@ -50,5 +49,3 @@ struct StorageServiceTests {
         #expect(cleared == nil)
     }
 }
-
-

@@ -46,21 +46,19 @@ public class DashboardSnapshot: Codable, Equatable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(email, forKey: .email)
-        try container.encode(planRequestsUsed, forKey: .planRequestsUsed)
-        try container.encode(totalRequestsAllModels, forKey: .totalRequestsAllModels)
-        try container.encode(spendingCents, forKey: .spendingCents)
-        try container.encode(hardLimitDollars, forKey: .hardLimitDollars)
+        try container.encode(self.email, forKey: .email)
+        try container.encode(self.planRequestsUsed, forKey: .planRequestsUsed)
+        try container.encode(self.totalRequestsAllModels, forKey: .totalRequestsAllModels)
+        try container.encode(self.spendingCents, forKey: .spendingCents)
+        try container.encode(self.hardLimitDollars, forKey: .hardLimitDollars)
         // usageEvents 不参与持久化编码
     }
 
     public static func == (lhs: DashboardSnapshot, rhs: DashboardSnapshot) -> Bool {
         lhs.email == rhs.email &&
-        lhs.planRequestsUsed == rhs.planRequestsUsed &&
-        lhs.totalRequestsAllModels == rhs.totalRequestsAllModels &&
-        lhs.spendingCents == rhs.spendingCents &&
-        lhs.hardLimitDollars == rhs.hardLimitDollars
+            lhs.planRequestsUsed == rhs.planRequestsUsed &&
+            lhs.totalRequestsAllModels == rhs.totalRequestsAllModels &&
+            lhs.spendingCents == rhs.spendingCents &&
+            lhs.hardLimitDollars == rhs.hardLimitDollars
     }
 }
-
-

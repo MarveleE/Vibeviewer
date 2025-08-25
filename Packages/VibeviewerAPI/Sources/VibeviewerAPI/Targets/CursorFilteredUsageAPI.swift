@@ -43,5 +43,3 @@ struct CursorFilteredUsageAPI: DecodableTargetType {
         self.cookieHeader = cookieHeader
     }
 }
-
-

@@ -3,11 +3,11 @@ import XCTest
 
 final class CursorTeamSpendAPITests: XCTestCase {
     func test_teamSpend_target_path_and_task() throws {
-        let api = CursorTeamSpendAPI(teamId: 15113845, cookieHeader: "cookie")
+        let api = CursorTeamSpendAPI(teamId: 15_113_845, cookieHeader: "cookie")
         XCTAssertEqual(api.path, "/api/dashboard/get-team-spend")
         // Verify query params encoding contains teamId
         if case let .requestParameters(parameters, _) = api.task {
-            XCTAssertEqual(parameters["teamId"] as? Int, 15113845)
+            XCTAssertEqual(parameters["teamId"] as? Int, 15_113_845)
         } else {
             XCTFail("Unexpected task type")
         }
@@ -34,10 +34,10 @@ final class CursorTeamSpendAPITests: XCTestCase {
             func decodableRequest<T>(
                 _ target: T,
                 decodingStrategy: JSONDecoder.KeyDecodingStrategy
-            ) async throws -> T.ResultType where T : DecodableTargetType {
+            ) async throws -> T.ResultType where T: DecodableTargetType {
                 let decoder = JSONDecoder()
                 decoder.keyDecodingStrategy = decodingStrategy
-                return try decoder.decode(T.ResultType.self, from: data)
+                return try decoder.decode(T.ResultType.self, from: self.data)
             }
         }
 
@@ -59,5 +59,3 @@ final class CursorTeamSpendAPITests: XCTestCase {
         XCTAssertEqual(me?.hardLimitOverrideDollars, 20)
     }
 }
-
-

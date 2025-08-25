@@ -12,5 +12,3 @@ public final class AppSession {
         self.snapshot = snapshot
     }
 }
-
-

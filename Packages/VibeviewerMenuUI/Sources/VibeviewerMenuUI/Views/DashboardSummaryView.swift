@@ -1,6 +1,6 @@
 import SwiftUI
-import VibeviewerModel
 import VibeviewerCore
+import VibeviewerModel
 
 @MainActor
 struct DashboardSummaryView: View {
@@ -22,5 +22,3 @@ struct DashboardSummaryView: View {
         }
     }
 }
-
-

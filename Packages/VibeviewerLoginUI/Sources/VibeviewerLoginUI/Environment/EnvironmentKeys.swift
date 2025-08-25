@@ -10,5 +10,3 @@ public extension EnvironmentValues {
         set { self[LoginWindowManagerKey.self] = newValue }
     }
 }
-
-

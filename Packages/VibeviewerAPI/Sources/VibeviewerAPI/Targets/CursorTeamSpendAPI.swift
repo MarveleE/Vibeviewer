@@ -16,5 +16,6 @@ struct CursorTeamSpendAPI: DecodableTargetType {
             "teamId": self.teamId
         ], encoding: JSONEncoding.default)
     }
+
     var headers: [String: String]? { APIHeadersBuilder.jsonHeaders(cookieHeader: self.cookieHeader) }
 }

@@ -19,8 +19,8 @@ public final class AppSettings: Codable, Sendable, Equatable {
 
     public static func == (lhs: AppSettings, rhs: AppSettings) -> Bool {
         lhs.launchAtLogin == rhs.launchAtLogin &&
-        lhs.usageHistory == rhs.usageHistory &&
-        lhs.overview == rhs.overview
+            lhs.usageHistory == rhs.usageHistory &&
+            lhs.overview == rhs.overview
     }
 
     public struct Overview: Codable, Sendable, Equatable {

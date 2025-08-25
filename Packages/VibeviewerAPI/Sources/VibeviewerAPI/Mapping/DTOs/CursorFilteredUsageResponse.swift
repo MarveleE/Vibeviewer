@@ -9,5 +9,3 @@ struct CursorFilteredUsageResponse: Decodable, Sendable, Equatable {
         self.usageEventsDisplay = usageEventsDisplay
     }
 }
-
-

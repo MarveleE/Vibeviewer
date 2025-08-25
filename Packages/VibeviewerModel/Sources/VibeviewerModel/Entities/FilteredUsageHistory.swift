@@ -9,5 +9,3 @@ public struct FilteredUsageHistory: Sendable, Equatable {
         self.events = events
     }
 }
-
-
