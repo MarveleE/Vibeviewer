@@ -25,9 +25,9 @@ struct DefaultCursorNetworkClient: CursorNetworkClient {
 }
 
 public protocol CursorService {
-    func fetchMe(cookieHeader: String) async throws -> CursorMeResponse
-    func fetchUsage(workosUserId: String, cookieHeader: String) async throws -> CursorUsageResponse
-    func fetchTeamSpend(teamId: Int, cookieHeader: String) async throws -> TeamSpendResponse
+    func fetchMe(cookieHeader: String) async throws -> VibeviewerModel.UserProfile
+    func fetchUsage(workosUserId: String, cookieHeader: String) async throws -> VibeviewerModel.UsageOverview
+    func fetchTeamSpend(teamId: Int, cookieHeader: String) async throws -> VibeviewerModel.TeamSpendOverview
     func fetchFilteredUsageEvents(
         teamId: Int,
         startDateMs: String,
@@ -36,7 +36,7 @@ public protocol CursorService {
         page: Int,
         pageSize: Int,
         cookieHeader: String
-    ) async throws -> CursorFilteredUsageResponse
+    ) async throws -> VibeviewerModel.FilteredUsageHistory
 }
 
 public struct DefaultCursorService: CursorService {
@@ -69,16 +69,46 @@ public struct DefaultCursorService: CursorService {
         }
     }
 
-    public func fetchMe(cookieHeader: String) async throws -> CursorMeResponse {
-        try await self.performRequest(CursorGetMeAPI(cookieHeader: cookieHeader))
+    public func fetchMe(cookieHeader: String) async throws -> VibeviewerModel.UserProfile {
+        let dto: CursorMeResponse = try await self.performRequest(CursorGetMeAPI(cookieHeader: cookieHeader))
+        return VibeviewerModel.UserProfile(
+            authId: dto.authId,
+            userId: dto.userId,
+            email: dto.email,
+            workosId: dto.workosId,
+            teamId: dto.teamId
+        )
     }
 
-    public func fetchUsage(workosUserId: String, cookieHeader: String) async throws -> CursorUsageResponse {
-        try await self.performRequest(CursorUsageAPI(workosUserId: workosUserId, cookieHeader: cookieHeader))
+    public func fetchUsage(workosUserId: String, cookieHeader: String) async throws -> VibeviewerModel.UsageOverview {
+        let dto: CursorUsageResponse = try await self.performRequest(CursorUsageAPI(workosUserId: workosUserId, cookieHeader: cookieHeader))
+        var mapped: [String: VibeviewerModel.UsageOverview.ModelUsage] = [:]
+        for (name, usage) in dto.models {
+            mapped[name] = .init(modelName: name, requestsUsed: usage.numRequests, totalRequests: usage.numRequestsTotal)
+        }
+        return VibeviewerModel.UsageOverview(startOfMonthMs: dto.startOfMonth, models: mapped)
     }
 
-    public func fetchTeamSpend(teamId: Int, cookieHeader: String) async throws -> TeamSpendResponse {
-        try await self.performRequest(CursorTeamSpendAPI(teamId: teamId, cookieHeader: cookieHeader))
+    public func fetchTeamSpend(teamId: Int, cookieHeader: String) async throws -> VibeviewerModel.TeamSpendOverview {
+        let dto: TeamSpendResponse = try await self.performRequest(CursorTeamSpendAPI(teamId: teamId, cookieHeader: cookieHeader))
+        let members: [VibeviewerModel.TeamSpendOverview.Member] = dto.teamMemberSpend.map { m in
+            .init(
+                userId: m.userId,
+                email: m.email,
+                role: m.role,
+                spendCents: m.spendCents ?? 0,
+                fastPremiumRequests: m.fastPremiumRequests ?? 0,
+                hardLimitOverrideDollars: m.hardLimitOverrideDollars ?? 0
+            )
+        }
+        let roles: [VibeviewerModel.TeamSpendOverview.RoleCount] = dto.totalByRole.map { .init(role: $0.role, count: $0.count) }
+        return VibeviewerModel.TeamSpendOverview(
+            subscriptionCycleStartMs: dto.subscriptionCycleStart,
+            members: members,
+            totalMembers: dto.totalMembers,
+            totalPages: dto.totalPages,
+            totalByRole: roles
+        )
     }
 
     public func fetchFilteredUsageEvents(
@@ -89,8 +119,8 @@ public struct DefaultCursorService: CursorService {
         page: Int,
         pageSize: Int,
         cookieHeader: String
-    ) async throws -> CursorFilteredUsageResponse {
-        try await self.performRequest(
+    ) async throws -> VibeviewerModel.FilteredUsageHistory {
+        let dto: CursorFilteredUsageResponse = try await self.performRequest(
             CursorFilteredUsageAPI(
                 teamId: teamId,
                 startDateMs: startDateMs,
@@ -101,5 +131,18 @@ public struct DefaultCursorService: CursorService {
                 cookieHeader: cookieHeader
             )
         )
+        let events: [VibeviewerModel.UsageEvent] = dto.usageEventsDisplay.map { e in
+            VibeviewerModel.UsageEvent(
+                occurredAtMs: e.timestamp,
+                modelName: e.model,
+                kind: e.kind,
+                requestCostCount: e.requestsCosts ?? 0,
+                usageCostDisplay: e.usageBasedCosts,
+                isTokenBased: e.isTokenBasedCall,
+                userDisplayName: e.owningUser,
+                teamDisplayName: e.owningTeam
+            )
+        }
+        return VibeviewerModel.FilteredUsageHistory(totalCount: dto.totalUsageEventsCount, events: events)
     }
 }

@@ -6,7 +6,7 @@ struct UsageHistorySection: View {
     let isLoading: Bool
     @Binding var selectedDate: Date
     @Binding var historyLimit: Int
-    let events: [CursorFilteredUsageEvent]
+    let events: [VibeviewerModel.UsageEvent]
     let onReload: () -> Void
     let onToday: () -> Void
 
@@ -34,17 +34,17 @@ struct UsageHistorySection: View {
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(Array(events.prefix(historyLimit).enumerated()), id: \.offset) { _, e in
                         HStack(alignment: .top, spacing: 8) {
-                            Text(formatTimestamp(e.timestamp))
+                            Text(formatTimestamp(e.occurredAtMs))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .frame(width: 120, alignment: .leading)
-                            Text(e.model)
+                            Text(e.modelName)
                                 .font(.callout)
                                 .frame(minWidth: 90, alignment: .leading)
                             Spacer(minLength: 6)
-                            Text("req: \(e.requestsCosts ?? 0)")
+                            Text("req: \(e.requestCostCount)")
                                 .font(.caption)
-                            Text(e.usageBasedCosts)
+                            Text(e.usageCostDisplay)
                                 .font(.caption)
                         }
                     }

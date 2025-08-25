@@ -21,7 +21,7 @@ public struct MenuPopoverView: View {
     // Usage History (filtered by date)
     @State private var selectedDate: Date = Date()
     @State private var historyLimit: Int = 10
-    @State private var usageEvents: [CursorFilteredUsageEvent] = []
+    @State private var usageEvents: [VibeviewerModel.UsageEvent] = []
     @State private var isLoadingHistory: Bool = false
 
     public init(initialCredentials: CursorCredentials? = nil, initialSnapshot: CursorDashboardSnapshot? = nil) {
@@ -107,9 +107,9 @@ public struct MenuPopoverView: View {
             let usage = try await service.fetchUsage(workosUserId: me.workosId, cookieHeader: cookieHeader)
             let spend = try await service.fetchTeamSpend(teamId: me.teamId, cookieHeader: cookieHeader)
 
-            let planRequestsUsed = usage.models.values.map(\.numRequests).reduce(0, +)
-            let totalAll = usage.models.values.map(\.numRequestsTotal).reduce(0, +)
-            let mySpend = spend.teamMemberSpend.first { $0.userId == me.userId }
+            let planRequestsUsed = usage.models.values.map(\.requestsUsed).reduce(0, +)
+            let totalAll = usage.models.values.map(\.totalRequests).reduce(0, +)
+            let mySpend = spend.members.first { $0.userId == me.userId }
             let newSnapshot = CursorDashboardSnapshot(
                 email: me.email,
                 planRequestsUsed: planRequestsUsed,
@@ -143,9 +143,9 @@ public struct MenuPopoverView: View {
         do {
             let usage = try await service.fetchUsage(workosUserId: creds.workosId, cookieHeader: creds.cookieHeader)
             let spend = try await service.fetchTeamSpend(teamId: creds.teamId, cookieHeader: creds.cookieHeader)
-            let planRequestsUsed = usage.models.values.map(\.numRequests).reduce(0, +)
-            let totalAll = usage.models.values.map(\.numRequestsTotal).reduce(0, +)
-            let mySpend = spend.teamMemberSpend.first { $0.userId == creds.userId }
+            let planRequestsUsed = usage.models.values.map(\.requestsUsed).reduce(0, +)
+            let totalAll = usage.models.values.map(\.totalRequests).reduce(0, +)
+            let mySpend = spend.members.first { $0.userId == creds.userId }
             let newSnapshot = CursorDashboardSnapshot(
                 email: creds.email,
                 planRequestsUsed: planRequestsUsed,
@@ -172,7 +172,7 @@ public struct MenuPopoverView: View {
         defer { self.isLoadingHistory = false }
         do {
             let (startMs, endMs) = self.dayRangeMs(for: selectedDate)
-            let resp = try await service.fetchFilteredUsageEvents(
+            let history = try await service.fetchFilteredUsageEvents(
                 teamId: creds.teamId,
                 startDateMs: startMs,
                 endDateMs: endMs,
@@ -181,7 +181,7 @@ public struct MenuPopoverView: View {
                 pageSize: max(historyLimit, 1),
                 cookieHeader: creds.cookieHeader
             )
-            self.usageEvents = resp.usageEventsDisplay
+            self.usageEvents = history.events
         } catch {
             self.lastErrorMessage = error.localizedDescription
         }

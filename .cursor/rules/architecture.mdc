@@ -1,80 +1,77 @@
 ---
 alwaysApply: true
+title: Vibeviewer 架构规范（精简版）
 ---
 
-### 模块化分层规则（Vibeviewer）
+## 背景
 
-本项目采用模块化分层，严格控制依赖方向与对外暴露，确保可维护性与可测试性。
+- 本项目采用 Swift Package 模块化分层，目标：最小可见面、单向依赖、单一职责、可测试性与可替换性。
+- 分层与依赖方向（只能自上而下）：
+  - Core/Shared → 提供通用工具与扩展（不依赖业务层）
+  - Model → 纯数据/DTO/领域实体（可依赖 Core）
+  - API/Service → 网络/IO/三方 SDK 编排与 DTO→领域模型映射（依赖 Model + 三方）
+  - Feature/UI → SwiftUI 视图与交互（依赖 API 暴露的服务协议与领域模型，不依赖网络库）
+- 架构风格：SwiftUI 原生 MV（非 MVVM）。状态用 @State/@Observable；依赖注入用 @Environment；并发使用 async/await 与 @MainActor。
 
-关联规则：请与 `.cursor/rules/project.mdc`（项目架构/SwiftUI 规范 共同遵循；本文件为分层与暴露策略的源规则。
+## Do（应该做）
 
+- 模块定位与职责
+  - 在新增代码前，先判断是否属于 UI/Service/Model/Core，并放入对应包与目录；一文件一个类型/职责。
+  - API 层只暴露“服务协议 + 默认实现”，内部封装网络库/目标请求/插件。
+  - 服务函数返回“领域模型（Model 层实体）或清晰的错误类型”，避免将 DTO 透出到 UI。
 
-### 通用模块化与代码归属决策准则（面向 AI 生成，可复用）
+- 领域模型与映射
+  - 将 API 响应 DTO 抽象为领域实体（如 UserProfile / UsageOverview / TeamSpendOverview / UsageEvent / FilteredUsageHistory）。
+  - 在 API 层完成 DTO→领域模型映射；UI 仅消费领域模型。
 
-本章从更抽象、更底层的角度，指导在任意工程中由 AI 生成新代码时如何判定“放在哪个模块/层、以何种可见性暴露、如何保持依赖单向与单一职责”。适用于 Swift/SwiftUI 与其他语言/框架的通用思考。
+- 依赖与可见性
+  - 依赖单向：Core ← Model ← API ← Feature。
+  - 默认 internal；仅在跨包使用时 public；优先通过协议（protocol）而非具体类型暴露。
 
-- **核心目标**：最小可见面、清晰依赖方向、单一职责、可替换性、可测试性。
+- SwiftUI 与并发
+  - UI 通过 @Environment 注入服务；副作用置于 .task / .onChange 中，自动随视图生命周期取消。
+  - UI 更新在 @MainActor；网络/IO 在后台并用 async/await；跨隔离类型需 Sendable。
 
-- **四象限定位（先问四个问题）**：
-  1) 是否包含 UI 渲染或用户交互？是 → Feature/UI 层。
-  2) 是否进行网络/IO/三方 SDK 请求编排？是 → API/Service 层。
-  3) 是否为纯数据结构/DTO/状态聚合且无副作用？是 → Model 层。
-  4) 是否为与业务无关的纯工具/算法/扩展？是 → Core/Shared 层。
+- 测试与可替换性
+  - 为服务提供可注入的网络客户端接口；默认实现与可测试构造路径分离。
+  - 工具/算法写入 Core，纯函数优先，便于单测与复用。
 
-- **放置决策算法（自上而下）**：
-  - 先判定“副作用领域”：UI（交互/绘制）→ Feature；网络/磁盘/鉴权/加解密 → API；纯数据 → Model；共用算法/扩展 → Core。
-  - 再判定“暴露边界”：默认 `internal`，仅在需要跨包/跨模块使用时标为 `public`；尽量通过协议而非具体类型暴露。
-  - 最后判定“文件归属”：一文件一个类型/职责；若类型数量增加，优先按职责拆分目录（如 Service、Targets、Plugins、Views、Components、DTOs、Utils）。
+## Don't（避免）
 
-- **依赖方向（必须单向）**：
-  - Model ← API ← Feature，Core 仅被其它层引用，不反向依赖任何业务层。
-  - Feature 禁止直接依赖网络库或 API 的内部实现细节（仅依赖 Service 协议/默认实现）。
-  - API 仅依赖 Model 与三方网络库；不得依赖 Feature。
+- UI 直接依赖网络库、调用请求或感知后端错误细节。
+- Feature 依赖 API 的内部细节（如 Targets/Plugins/具体网络实现）。
+- 将 API DTO 直接暴露给 UI（造成全局耦合与易碎性）。
+- 反向依赖（如 Model 依赖 Feature，API 依赖 UI）。
+- 引入 MVVM/ViewModel 作为默认方案；或在 onAppear 中随意使用 Task { }（请用 .task）。
+- 过度 public 化类型/初始化器；在一个文件中放多个不相关类型。
 
-- **对外暴露策略（最小表面积）**：
-  - 对外仅暴露协议和默认实现；隐藏 Targets/内部网络细节/插件实现。
-  - 默认 `internal`，按需 `public`。构造器策略：对业务使用提供 `public init(...)`，对测试提供 `internal init(mockables...)`。
-  - 避免将 UI/环境键定义在跨层的“环境包”中引用具体 Feature；应由各 Feature 自持其环境键，App 统一注入。
+## 思考要求（落位与评审清单）
 
-- **服务与 UI 的解耦**：
-  - UI 通过依赖注入（如 SwiftUI Environment/参数）使用 Service，禁止在 UI 中直接 `import` 网络库或发请求。
-  - Service 只返回领域模型（Model）或明确的错误类型；UI 不感知网络细节与错误来源。
+1) 四象限自检（放置决策）
+   - UI/交互/渲染 → Feature/UI
+   - 网络/磁盘/鉴权/三方 → API/Service
+   - 纯数据/DTO/状态聚合 → Model
+   - 通用工具/扩展/算法 → Core
 
-- **可测试性与可替换性**：
-  - 为 Service 提供可注入的网络客户端接口与内部初始化路径（测试可注入假实现）。
-  - 纯函数、无副作用工具放入 Core，便于单测与跨项目复用。
-  - DTO/状态聚合放入 Model，保持 `Sendable` 与不可变性优先。
+2) 暴露面与替换性
+   - 是否可以通过协议暴露，隐藏实现细节？默认 internal 是否足够？
+   - 服务是否仅返回领域模型/错误枚举？是否便于替换/Mock？
 
-- **并发与边界**：
-  - UI 更新在主隔离（如 `@MainActor`）；IO/网络在后台，使用 async/await；类型跨隔离需 `Sendable`。
-  - Actor 用于持久化/缓存等需要串行化访问的边界；不要将 Actor 混入 UI 层。
+3) 依赖方向与耦合
+   - 是否违背 Core ← Model ← API ← Feature 的单向依赖？
+   - UI 是否仍引用了 DTO 或网络实现？若是，回到 API 做映射与抽象。
 
-- **命名与文件组织**：
-  - 类型名显式表达职责与层级：`FeatureXView`、`FeatureXService`、`GetYAPI`、`ZResponse`、`Core+DataExtensions`。
-  - 目录按层与职责划分：Feature/Views、API/Service、API/Targets、API/Plugins、Model/DTOs、Core/Extensions。
-  - 禁止在一个文件里放多个不相干的类型；嵌套类型仅在强从属关系下保留（如 Coordinator）。
+4) 并发与线程安全
+   - UI 更新是否在 @MainActor？跨隔离类型是否 Sendable？是否使用 async/await？
+   - 是否将需要串行化的持久化/缓存放入 Actor 边界？
 
-- **新增内容落位清单（生成前 30 秒自查）**：
-  - 这段代码是否触达网络/IO？是 → API；否 → 继续判断。
-  - 是否有 UI 呈现/交互？是 → Feature；否 → 继续判断。
-  - 是否纯数据定义/转换/状态聚合？是 → Model；否 → 继续判断。
-  - 是否通用工具/与业务无关？是 → Core；否则回到前述四象限重新评估责任划分。
+5) 文件组织与命名
+   - 目录清晰（Feature/Views、API/Service、API/Targets、API/Plugins、Model/DTOs、Core/Extensions）。
+   - 一文件一个类型；命名体现层级与职责（如 FeatureXView、FeatureXService、GetYAPI、ZResponse）。
 
-- **生成实现清单（生成时执行）**：
-  - 明确协议与实现：对外暴露协议 + 默认实现；内部隐藏 Targets/细节。
-  - 选择最小可见性：`internal` by default，`public` 仅在必要处。
-  - 一文件一个类型；新增文件路径遵循层与职责目录。
-  - 依赖方向校验：Feature 仅依赖 API；API 仅依赖 Model（与三方）；Model 可依赖 Core；Core 不依赖业务。
-  - Swift 并发安全：标注隔离与 `Sendable`；错误使用专用错误类型。
+6) 代码评审前检查
+   - 不必要的 public 是否已移除？是否存在跨层反向引用？
+   - UI 是否通过 @Environment 注入服务且不包含网络细节？
+   - DTO→领域模型映射是否完整、健壮、可测试？
 
-- **提交前检查（5 项）**：
-  - 依赖是否单向？是否存在跨层反向引用？
-  - 是否暴露了不必要的类型/初始化器？
-  - 是否出现“一文件多职责”？
-  - UI 是否未引入网络库与实现细节？
-  - 是否提供了可测试的注入点与纯函数逻辑？
-
-- **常见陷阱与解决**：
-  - 环境键跨层引用 Feature：将环境键放回各自 Feature 包，App 统一注入。
-  - 通用扩展重复：统一沉淀到 Core，其他层移除重复实现并按需导入。
-  - 直接依赖第三方实现：以协议抽象、默认实现封装第三方；对外仅暴露协议面。
+备注：如需使用 iOS 26 新特性，遵循可用性检查与渐进增强策略；确保旧版本有合理降级。
