@@ -7,7 +7,7 @@
 
 import Foundation
 
-extension Data {
+public extension Data {
     func toPrettyPrintedJSONString() -> String? {
         if let json = try? JSONSerialization.jsonObject(with: self),
            let data = try? JSONSerialization.data(

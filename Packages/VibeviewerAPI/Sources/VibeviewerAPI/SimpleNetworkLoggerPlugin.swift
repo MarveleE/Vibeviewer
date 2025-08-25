@@ -1,5 +1,6 @@
 import Foundation
 import Moya
+import VibeviewerCore
 
 final class SimpleNetworkLoggerPlugin {}
 

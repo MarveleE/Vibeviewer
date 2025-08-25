@@ -10,6 +10,7 @@ let package = Package(
     .library(name: "VibeviewerAPI", targets: ["VibeviewerAPI"])
   ],
   dependencies: [
+    .package(path: "../VibeviewerCore"),
     .package(path: "../VibeviewerModel"),
     .package(url: "https://github.com/Moya/Moya.git", .upToNextMajor(from: "15.0.0")),
     .package(url: "https://github.com/Alamofire/Alamofire.git", .upToNextMajor(from: "5.8.0")),
@@ -19,6 +20,7 @@ let package = Package(
     .target(
       name: "VibeviewerAPI",
       dependencies: [
+        "VibeviewerCore",
         "VibeviewerModel",
         .product(name: "Moya", package: "Moya"),
         .product(name: "Alamofire", package: "Alamofire"),

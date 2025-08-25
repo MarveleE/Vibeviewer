@@ -8,136 +8,73 @@ alwaysApply: true
 
 关联规则：请与 `.cursor/rules/project.mdc`（项目架构/SwiftUI 规范 共同遵循；本文件为分层与暴露策略的源规则。
 
-### 分层与职责
-- **VibeviewerModel（Model 层）**
-  - 对象：纯数据模型、DTO、聚合状态（如 `CursorDashboardSnapshot`）
-  - 能力：轻量工具（如 `CursorStorage` actor）
-  - 规范：类型默认 `public`，无第三方网络依赖
-  - 文件规范：一个文件一个类型
-- **VibeviewerAPI（API 层）**
-  - 对象：业务 API 调用与服务封装（Moya/Alamofire/GroNetwork 均在此层）
-  - 能力：
-    - `CursorService` 协议 + `DefaultCursorService` 实现（对外暴露）
-    - 具体 API Target（如 `CursorGetMeAPI`、`CursorUsageAPI`、`CursorTeamSpendAPI`）仅内部可见
-    - 公共配置与 Header 构造（`APIConfig`、`APIHeadersBuilder`）
-    - Moya 扩展与插件（`DecodableTargetType`、`MoyaProvider.decodableRequest`、日志/请求头/错误处理插件）
-  - 规范：
-    - 对外只暴露 Service 接口与默认实现；隐藏 API Target 与具体网络细节
-    - 一文件一个类型/职责
-- **VibeviewerFeature（Feature/UI 层）**
-  - 对象：SwiftUI 视图与轻量视图状态（如 `CursorDataModel`）
-  - 能力：仅通过 `VibeviewerAPI` 的 `CursorService` 访问网络；不得直接依赖 Moya/Alamofire
-  - 规范：遵循“无 ViewModel、使用 SwiftUI 原生数据流”的规则；UI 与服务解耦
-  - 文件规范：一个文件一个类型（`MenuPopoverView`、`LoginWindow`、`CursorLoginView` 等）
-- **VibeviewerCore（可选通用层）**
-  - 对象：与业务无关、与网络无关的通用纯 Swift 工具与扩展
-  - 规范：目前不承载网络相关内容；可逐步沉淀跨模块通用能力
 
-### 依赖方向（单向）
-- `VibeviewerModel` ← `VibeviewerAPI` ← `VibeviewerFeature`
-- `VibeviewerCore`（如有使用）仅被其它层引用，不反向依赖业务层
-- Feature 绝不直接依赖 Moya/Alamofire/GroNetwork
+### 通用模块化与代码归属决策准则（面向 AI 生成，可复用）
 
-### 暴露策略与访问控制
-- Model 层：模型与聚合状态 `public`（供 UI 与 API 使用）
-- API 层：
-  - `public`: `CursorService`、`DefaultCursorService`
-  - `internal`: API Target、`CursorNetworkClient`、公共头部构建器、配置常量、网络细节
-  - `DefaultCursorService` 提供 `public init(decoding: ...)`；测试注入使用 `internal init(network:decoding:)`
-- Feature 层：对外仅暴露 UI 入口（如 `MenuPopoverView`、`CursorDataModel`）
+本章从更抽象、更底层的角度，指导在任意工程中由 AI 生成新代码时如何判定“放在哪个模块/层、以何种可见性暴露、如何保持依赖单向与单一职责”。适用于 Swift/SwiftUI 与其他语言/框架的通用思考。
 
-### 代码放置与导入规范（示例）
-- 新增数据模型 → `VibeviewerModel/Sources/VibeviewerModel/YourType.swift`
-- 新增 API 调用 → `VibeviewerAPI/Sources/VibeviewerAPI/YourApiTarget.swift`（`internal`）
-- Service 扩展 → `VibeviewerAPI/Sources/VibeviewerAPI/YourServicePart.swift`（`public` 仅在协议/实现层）
-- 共享 Header/配置 → `VibeviewerAPI/Sources/VibeviewerAPI/APICommon.swift`（`internal`）
-- 新增 UI 视图 → `VibeviewerFeature/Sources/VibeviewerFeature/YourView.swift`
-- UI 访问网络 → 仅 `import VibeviewerAPI`，通过 `CursorService` 调用
+- **核心目标**：最小可见面、清晰依赖方向、单一职责、可替换性、可测试性。
 
-### 一文件一个类型
-- 严格执行“一文件一个类型/职责”
-- 典型示例（Feature 层）：
-  - `MenuPopoverView.swift`
-  - `CursorDataModel.swift`
-  - `LoginWindow.swift`
-  - `CursorLoginView.swift`
-- 典型示例（API 层）：
-  - `CursorGetMeAPI.swift`、`CursorUsageAPI.swift`、`CursorTeamSpendAPI.swift`
-  - `CursorService.swift`
-  - `APICommon.swift`
-  - `MoyaNetworkTypes.swift`、`MoyaProvider+DecodableRequest.swift`
+- **四象限定位（先问四个问题）**：
+  1) 是否包含 UI 渲染或用户交互？是 → Feature/UI 层。
+  2) 是否进行网络/IO/三方 SDK 请求编排？是 → API/Service 层。
+  3) 是否为纯数据结构/DTO/状态聚合且无副作用？是 → Model 层。
+  4) 是否为与业务无关的纯工具/算法/扩展？是 → Core/Shared 层。
 
-### 新功能开发流程（规范化步骤）
-1. 定义/更新模型（如有）于 Model 层（`public`）
-2. 在 API 层新增/扩展 Service：
-   - 新增 API Target（`internal`）与必要的公共 Header/配置
-   - 在 `DefaultCursorService` 中编排、错误处理与状态码映射
-3. 在 Feature 层编写 UI：通过注入的 `CursorService` 使用 API；不得直接使用 Moya
-4. 遵循 Swift Concurrency（async/await），UI 侧用 `.task` 绑定生命周期
+- **放置决策算法（自上而下）**：
+  - 先判定“副作用领域”：UI（交互/绘制）→ Feature；网络/磁盘/鉴权/加解密 → API；纯数据 → Model；共用算法/扩展 → Core。
+  - 再判定“暴露边界”：默认 `internal`，仅在需要跨包/跨模块使用时标为 `public`；尽量通过协议而非具体类型暴露。
+  - 最后判定“文件归属”：一文件一个类型/职责；若类型数量增加，优先按职责拆分目录（如 Service、Targets、Plugins、Views、Components、DTOs、Utils）。
 
-### 与 project.mdc 的协同要点
-- 保持 SwiftUI 纯状态表达（无 ViewModel）；`@State`/`@Observable`/`@Environment`/`@Binding`
-- 仅在 API 层使用第三方网络库；Feature 禁止 `import Moya/Alamofire`
-- 严格早返回与错误传播；类型 Sendable；使用 actors 进行隔离
-- iOS 新特性采用渐进增强策略（见 `project.mdc` 中可用 API 与可用性检查示例）
+- **依赖方向（必须单向）**：
+  - Model ← API ← Feature，Core 仅被其它层引用，不反向依赖任何业务层。
+  - Feature 禁止直接依赖网络库或 API 的内部实现细节（仅依赖 Service 协议/默认实现）。
+  - API 仅依赖 Model 与三方网络库；不得依赖 Feature。
 
-### 最小示例（仅示意）
+- **对外暴露策略（最小表面积）**：
+  - 对外仅暴露协议和默认实现；隐藏 Targets/内部网络细节/插件实现。
+  - 默认 `internal`，按需 `public`。构造器策略：对业务使用提供 `public init(...)`，对测试提供 `internal init(mockables...)`。
+  - 避免将 UI/环境键定义在跨层的“环境包”中引用具体 Feature；应由各 Feature 自持其环境键，App 统一注入。
 
-Feature 使用服务（不依赖 Moya）：
-```swift
-import VibeviewerAPI
-import VibeviewerModel
-import Observation
+- **服务与 UI 的解耦**：
+  - UI 通过依赖注入（如 SwiftUI Environment/参数）使用 Service，禁止在 UI 中直接 `import` 网络库或发请求。
+  - Service 只返回领域模型（Model）或明确的错误类型；UI 不感知网络细节与错误来源。
 
-@MainActor
-@Observable
-public final class CursorDataModel {
-    private let service: CursorService = DefaultCursorService()
-    public var snapshot: CursorDashboardSnapshot?
+- **可测试性与可替换性**：
+  - 为 Service 提供可注入的网络客户端接口与内部初始化路径（测试可注入假实现）。
+  - 纯函数、无副作用工具放入 Core，便于单测与跨项目复用。
+  - DTO/状态聚合放入 Model，保持 `Sendable` 与不可变性优先。
 
-    public func refresh() async {
-        // 调用仅通过服务，不见 Moya 细节
-        // try await service.fetchUsage(...)
-    }
-}
-```
+- **并发与边界**：
+  - UI 更新在主隔离（如 `@MainActor`）；IO/网络在后台，使用 async/await；类型跨隔离需 `Sendable`。
+  - Actor 用于持久化/缓存等需要串行化访问的边界；不要将 Actor 混入 UI 层。
 
-API Target（internal）与 Service（public）：
-```swift
-// internal
-struct CursorGetMeAPI: DecodableTargetType {
-    typealias ResultType = CursorMeResponse
-    var baseURL: URL { APIConfig.baseURL }
-    var path: String { "/api/dashboard/get-me" }
-    var method: Moya.Method { .get }
-    var task: Task { .requestPlain }
-    var headers: [String: String]? { APIHeadersBuilder.jsonHeaders(cookieHeader: cookie) }
-    private let cookie: String?
-    init(cookieHeader: String?) { self.cookie = cookieHeader }
-}
+- **命名与文件组织**：
+  - 类型名显式表达职责与层级：`FeatureXView`、`FeatureXService`、`GetYAPI`、`ZResponse`、`Core+DataExtensions`。
+  - 目录按层与职责划分：Feature/Views、API/Service、API/Targets、API/Plugins、Model/DTOs、Core/Extensions。
+  - 禁止在一个文件里放多个不相干的类型；嵌套类型仅在强从属关系下保留（如 Coordinator）。
 
-// public
-public protocol CursorService { /* ... */ }
-public struct DefaultCursorService: CursorService {
-    public init(decoding: JSONDecoder.KeyDecodingStrategy = .useDefaultKeys) {}
-}
-```
+- **新增内容落位清单（生成前 30 秒自查）**：
+  - 这段代码是否触达网络/IO？是 → API；否 → 继续判断。
+  - 是否有 UI 呈现/交互？是 → Feature；否 → 继续判断。
+  - 是否纯数据定义/转换/状态聚合？是 → Model；否 → 继续判断。
+  - 是否通用工具/与业务无关？是 → Core；否则回到前述四象限重新评估责任划分。
 
-Model（public）：
-```swift
-public struct CursorDashboardSnapshot: Sendable {
-    public let email: String
-    public init(email: String) { self.email = email }
-}
-```
+- **生成实现清单（生成时执行）**：
+  - 明确协议与实现：对外暴露协议 + 默认实现；内部隐藏 Targets/细节。
+  - 选择最小可见性：`internal` by default，`public` 仅在必要处。
+  - 一文件一个类型；新增文件路径遵循层与职责目录。
+  - 依赖方向校验：Feature 仅依赖 API；API 仅依赖 Model（与三方）；Model 可依赖 Core；Core 不依赖业务。
+  - Swift 并发安全：标注隔离与 `Sendable`；错误使用专用错误类型。
 
-### 测试与可替换性
-- API 层提供 `internal init(network: CursorNetworkClient, ...)` 便于注入 Mock
-- 建议为 Service 行为编写单元测试；Feature 仅做快照/交互层面验证
+- **提交前检查（5 项）**：
+  - 依赖是否单向？是否存在跨层反向引用？
+  - 是否暴露了不必要的类型/初始化器？
+  - 是否出现“一文件多职责”？
+  - UI 是否未引入网络库与实现细节？
+  - 是否提供了可测试的注入点与纯函数逻辑？
 
-### PR 检查清单
-- 依赖方向是否正确（Feature→API→Model）
-- 是否泄露了 API Target 或 Moya 细节到 Feature
-- 是否一文件一个类型/职责
-- 可见性修饰是否合理（`public` 仅对必要入口）
-- 是否遵循 Swift Concurrency 与 SwiftUI 状态管理规范
+- **常见陷阱与解决**：
+  - 环境键跨层引用 Feature：将环境键放回各自 Feature 包，App 统一注入。
+  - 通用扩展重复：统一沉淀到 Core，其他层移除重复实现并按需导入。
+  - 直接依赖第三方实现：以协议抽象、默认实现封装第三方；对外仅暴露协议面。

@@ -17,7 +17,6 @@ let package = Package(
   ],
   dependencies: [
     .package(path: "../VibeviewerAPI"),
-    .package(path: "../VibeviewerLoginUI"),
     .package(path: "../VibeviewerModel"),
     
   ],
@@ -28,7 +27,6 @@ let package = Package(
       name: "VibeviewerAppEnvironment",
       dependencies: [
         "VibeviewerAPI",
-        "VibeviewerLoginUI",
         "VibeviewerModel",
       ]
     ),

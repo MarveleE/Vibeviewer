@@ -1,6 +1,5 @@
 import Foundation
 import Moya
-import VibeviewerCore
 import VibeviewerModel
 
 public enum CursorServiceError: Error {
