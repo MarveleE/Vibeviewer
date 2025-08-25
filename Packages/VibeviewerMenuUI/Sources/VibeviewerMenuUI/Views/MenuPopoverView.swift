@@ -11,6 +11,7 @@ public struct MenuPopoverView: View {
     @Environment(\.cursorStorage) private var storage
     @Environment(\.loginWindowManager) private var loginWindow
     @Environment(\.settingsWindowManager) private var settingsWindow
+    @Environment(\.appSettings) private var settings
 
     @State private var credentials: Credentials?
     @State private var snapshot: DashboardSnapshot?

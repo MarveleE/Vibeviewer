@@ -22,6 +22,7 @@ public protocol CursorStorageService: Sendable {
 public protocol CursorStorageSyncHelpers {
     static func loadCredentialsSync() -> Credentials?
     static func loadDashboardSnapshotSync() -> DashboardSnapshot?
+    static func loadSettingsSync() -> AppSettings
 }
 
 

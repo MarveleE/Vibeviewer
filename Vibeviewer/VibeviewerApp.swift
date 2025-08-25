@@ -21,9 +21,11 @@ struct VibeviewerApp: App {
             // 预加载缓存，首次打开菜单即有数据展示
             let initialCreds = DefaultCursorStorageService.loadCredentialsSync()
             let initialSnapshot = DefaultCursorStorageService.loadDashboardSnapshotSync()
+            let initialSettings = DefaultCursorStorageService.loadSettingsSync()
             MenuPopoverView(initialCredentials: initialCreds, initialSnapshot: initialSnapshot)
                 .environment(\.cursorService, DefaultCursorService())
                 .environment(\.cursorStorage, DefaultCursorStorageService())
+                .environment(\.appSettings, initialSettings)
                 .environment(\.loginWindowManager, LoginWindowManager.shared)
                 .environment(\.settingsWindowManager, SettingsWindowManager.shared)
         }

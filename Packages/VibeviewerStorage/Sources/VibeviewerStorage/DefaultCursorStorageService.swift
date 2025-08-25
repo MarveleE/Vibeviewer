@@ -70,6 +70,12 @@ public struct DefaultCursorStorageService: CursorStorageService, CursorStorageSy
         guard let data = defaults.data(forKey: CursorStorageKeys.dashboardSnapshot) else { return nil }
         return try? JSONDecoder().decode(DashboardSnapshot.self, from: data)
     }
+
+    public static func loadSettingsSync() -> AppSettings {
+        let defaults = UserDefaults.standard
+        guard let data = defaults.data(forKey: CursorStorageKeys.settings) else { return AppSettings() }
+        return (try? JSONDecoder().decode(AppSettings.self, from: data)) ?? AppSettings()
+    }
 }
 
 
