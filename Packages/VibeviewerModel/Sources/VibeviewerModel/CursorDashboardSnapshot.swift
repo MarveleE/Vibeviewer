@@ -1,6 +1,6 @@
 import Foundation
 
-public struct CursorDashboardSnapshot: Sendable {
+public struct CursorDashboardSnapshot: Codable, Sendable {
     public let email: String
     public let planRequestsUsed: Int
     public let totalRequestsAllModels: Int

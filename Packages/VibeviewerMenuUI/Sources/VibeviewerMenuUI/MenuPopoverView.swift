@@ -18,7 +18,10 @@ public struct MenuPopoverView: View {
     @State private var lastErrorMessage: String?
     @State private var refreshTask: Task<Void, Never>?
 
-    public init() {}
+    public init(initialCredentials: CursorCredentials? = nil, initialSnapshot: CursorDashboardSnapshot? = nil) {
+        self._credentials = State(initialValue: initialCredentials)
+        self._snapshot = State(initialValue: initialSnapshot)
+    }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -61,8 +64,15 @@ public struct MenuPopoverView: View {
     }
 
     private func loadInitial() async {
+        // 先从本地读取最近一次的快照，避免冷启动空白
+        if let cached = await self.storage.loadDashboardSnapshot() {
+            self.snapshot = cached
+        }
+
+        // 读取登录态
         self.credentials = await self.storage.loadCredentials()
         if self.credentials != nil {
+            // 登录态存在则进行一次刷新以获得最新数据
             await self.refresh()
             self.startAutoRefresh()
         }
@@ -80,6 +90,7 @@ public struct MenuPopoverView: View {
 
     private func setLoggedOut() async {
         await self.storage.clearCredentials()
+        await self.storage.clearDashboardSnapshot()
         self.credentials = nil
         self.snapshot = nil
         self.refreshTask?.cancel()
@@ -115,6 +126,7 @@ public struct MenuPopoverView: View {
             try await self.storage.saveCredentials(creds)
             self.credentials = creds
             self.snapshot = newSnapshot
+            try? await self.storage.saveDashboardSnapshot(newSnapshot)
             self.startAutoRefresh()
         } catch {
             self.lastErrorMessage = error.localizedDescription
@@ -132,13 +144,15 @@ public struct MenuPopoverView: View {
             let planRequestsUsed = usage.models.values.map(\.numRequests).reduce(0, +)
             let totalAll = usage.models.values.map(\.numRequestsTotal).reduce(0, +)
             let mySpend = spend.teamMemberSpend.first { $0.userId == creds.userId }
-            self.snapshot = CursorDashboardSnapshot(
+            let newSnapshot = CursorDashboardSnapshot(
                 email: creds.email,
                 planRequestsUsed: planRequestsUsed,
                 totalRequestsAllModels: totalAll,
                 spendingCents: mySpend?.spendCents ?? 0,
                 hardLimitDollars: mySpend?.hardLimitOverrideDollars ?? 0
             )
+            self.snapshot = newSnapshot
+            try? await self.storage.saveDashboardSnapshot(newSnapshot)
         } catch {
             if case CursorServiceError.sessionExpired = error {
                 await self.setLoggedOut()
