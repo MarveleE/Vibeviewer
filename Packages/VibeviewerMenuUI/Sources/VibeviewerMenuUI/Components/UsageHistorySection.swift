@@ -4,9 +4,8 @@ import VibeviewerModel
 @MainActor
 struct UsageHistorySection: View {
     let isLoading: Bool
-    @Binding var selectedDate: Date
-    @Binding var historyLimit: Int
-    let events: [VibeviewerModel.UsageEvent]
+    @Bindable var settings: AppSettings
+    let events: [UsageEvent]
     let onReload: () -> Void
     let onToday: () -> Void
 
@@ -14,9 +13,9 @@ struct UsageHistorySection: View {
         VStack(alignment: .leading, spacing: 8) {
             Divider()
             HStack {
-                DatePicker("选择日期", selection: $selectedDate, displayedComponents: .date)
+                DatePicker("选择日期", selection: $settings.usageHistory.dateRange.start, displayedComponents: .date)
                 Spacer()
-                Stepper("条数: \(historyLimit)", value: $historyLimit, in: 1...100)
+                Stepper("条数: \(settings.usageHistory.limit)", value: $settings.usageHistory.limit, in: 1...100)
                     .frame(minWidth: 120)
             }
             .font(.callout)
@@ -32,7 +31,7 @@ struct UsageHistorySection: View {
 
             if !events.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
-                    ForEach(Array(events.prefix(historyLimit).enumerated()), id: \.offset) { _, e in
+                    ForEach(Array(events.prefix(settings.usageHistory.limit).enumerated()), id: \.offset) { _, e in
                         HStack(alignment: .top, spacing: 8) {
                             Text(formatTimestamp(e.occurredAtMs))
                                 .font(.caption)
