@@ -1,7 +1,6 @@
 ---
-alwaysApply: true
+alwaysApply: false
 ---
-
 # API 文件编写规范（VibeviewerAPI）
 
 ## 目标

@@ -6,7 +6,7 @@ alwaysApply: true
 
 本项目采用模块化分层，严格控制依赖方向与对外暴露，确保可维护性与可测试性。
 
-关联规则：请与 `.cursor/rules/project.mdc`（项目架构/SwiftUI 规范）与 `.cursor/rules/specs.mdc`（全局规范）共同遵循；本文件为分层与暴露策略的源规则。
+关联规则：请与 `.cursor/rules/project.mdc`（项目架构/SwiftUI 规范 共同遵循；本文件为分层与暴露策略的源规则。
 
 ### 分层与职责
 - **VibeviewerModel（Model 层）**
