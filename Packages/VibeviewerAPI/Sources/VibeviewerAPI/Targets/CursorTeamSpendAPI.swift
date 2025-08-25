@@ -8,13 +8,13 @@ struct CursorTeamSpendAPI: DecodableTargetType {
     let cookieHeader: String
 
     var baseURL: URL { APIConfig.baseURL }
-    var path: String { "/api/team/spend" }
-    var method: Moya.Method { .get }
+    var path: String { "/api/dashboard/get-team-spend" }
+    var method: Moya.Method { .post }
     var sampleData: Data { Data() }
     var task: Task {
         .requestParameters(parameters: [
             "teamId": self.teamId
-        ], encoding: URLEncoding.default)
+        ], encoding: JSONEncoding.default)
     }
-    var headers: [String: String]? { APIHeadersBuilder.basicHeaders(cookieHeader: self.cookieHeader) }
+    var headers: [String: String]? { APIHeadersBuilder.jsonHeaders(cookieHeader: self.cookieHeader) }
 }

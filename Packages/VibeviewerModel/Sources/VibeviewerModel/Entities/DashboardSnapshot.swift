@@ -1,6 +1,6 @@
 import Foundation
 
-public struct DashboardSnapshot: Codable, Sendable {
+public struct DashboardSnapshot: Codable, Sendable, Equatable {
     public let email: String
     public let planRequestsUsed: Int
     public let totalRequestsAllModels: Int

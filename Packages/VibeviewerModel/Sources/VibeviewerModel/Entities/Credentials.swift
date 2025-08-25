@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Credentials: Codable, Sendable {
+public struct Credentials: Codable, Sendable, Equatable {
     public let userId: Int
     public let workosId: String
     public let email: String
