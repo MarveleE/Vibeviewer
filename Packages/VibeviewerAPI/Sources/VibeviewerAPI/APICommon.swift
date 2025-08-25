@@ -1,6 +1,6 @@
 import Foundation
 
-struct APIConfig {
+enum APIConfig {
     static let baseURL = URL(string: "https://cursor.com")!
     static let dashboardReferer = "https://cursor.com/dashboard"
 }

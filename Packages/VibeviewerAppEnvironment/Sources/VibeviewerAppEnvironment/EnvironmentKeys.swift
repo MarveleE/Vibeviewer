@@ -3,21 +3,21 @@ import VibeviewerAPI
 import VibeviewerLoginUI
 
 private struct CursorServiceKey: EnvironmentKey {
-  static let defaultValue: CursorService = DefaultCursorService()
+    static let defaultValue: CursorService = DefaultCursorService()
 }
 
 private struct LoginWindowManagerKey: EnvironmentKey {
-  static let defaultValue: LoginWindowManager = .shared
+    static let defaultValue: LoginWindowManager = .shared
 }
 
-extension EnvironmentValues {
-  public var cursorService: CursorService {
-    get { self[CursorServiceKey.self] }
-    set { self[CursorServiceKey.self] = newValue }
-  }
+public extension EnvironmentValues {
+    var cursorService: CursorService {
+        get { self[CursorServiceKey.self] }
+        set { self[CursorServiceKey.self] = newValue }
+    }
 
-  public var loginWindowManager: LoginWindowManager {
-    get { self[LoginWindowManagerKey.self] }
-    set { self[LoginWindowManagerKey.self] = newValue }
-  }
+    var loginWindowManager: LoginWindowManager {
+        get { self[LoginWindowManagerKey.self] }
+        set { self[LoginWindowManagerKey.self] = newValue }
+    }
 }

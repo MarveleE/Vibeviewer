@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 final class LoginWindowController: NSWindowController, NSWindowDelegate {
     private var onCookieCaptured: ((String) -> Void)?
@@ -7,8 +7,7 @@ final class LoginWindowController: NSWindowController, NSWindowDelegate {
     convenience init(onCookieCaptured: @escaping (String) -> Void) {
         let vc = NSHostingController(rootView: CursorLoginView(onCookieCaptured: { cookie in
             onCookieCaptured(cookie)
-        }, onClose: {
-        }))
+        }, onClose: {}))
         let window = NSWindow(contentViewController: vc)
         window.title = "Cursor 登录"
         window.setContentSize(NSSize(width: 900, height: 680))
@@ -51,9 +50,7 @@ public final class LoginWindowManager {
     }
 
     public func close() {
-        controller?.close()
-        controller = nil
+        self.controller?.close()
+        self.controller = nil
     }
 }
-
-

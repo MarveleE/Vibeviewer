@@ -14,7 +14,7 @@ public struct CursorUsageResponse: Decodable, Sendable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: DynamicCodingKeys.self)
         var tempModels: [String: CursorModelUsage] = [:]
-        var start: String = ""
+        var start = ""
         for key in container.allKeys {
             if key.stringValue == "startOfMonth" {
                 start = try container.decode(String.self, forKey: key)

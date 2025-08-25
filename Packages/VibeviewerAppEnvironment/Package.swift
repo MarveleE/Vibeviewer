@@ -19,6 +19,7 @@ let package = Package(
     .package(path: "../VibeviewerAPI"),
     .package(path: "../VibeviewerLoginUI"),
     .package(path: "../VibeviewerModel"),
+    
   ],
   targets: [
     // Targets are the basic building blocks of a package, defining a module or a test suite.

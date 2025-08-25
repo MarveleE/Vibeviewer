@@ -1,12 +1,12 @@
 import SwiftUI
 
 private struct SettingsWindowManagerKey: EnvironmentKey {
-  static let defaultValue: SettingsWindowManager = .shared
+    static let defaultValue: SettingsWindowManager = .shared
 }
 
-extension EnvironmentValues {
-  public var settingsWindowManager: SettingsWindowManager {
-    get { self[SettingsWindowManagerKey.self] }
-    set { self[SettingsWindowManagerKey.self] = newValue }
-  }
+public extension EnvironmentValues {
+    var settingsWindowManager: SettingsWindowManager {
+        get { self[SettingsWindowManagerKey.self] }
+        set { self[SettingsWindowManagerKey.self] = newValue }
+    }
 }

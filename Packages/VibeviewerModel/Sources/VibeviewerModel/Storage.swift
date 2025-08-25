@@ -12,7 +12,7 @@ public actor CursorStorage {
 
     public func saveCredentials(_ creds: CursorCredentials) async throws {
         let data = try JSONEncoder().encode(creds)
-        defaults.set(data, forKey: CursorStorageKeys.credentials)
+        self.defaults.set(data, forKey: CursorStorageKeys.credentials)
     }
 
     public func loadCredentials() async -> CursorCredentials? {
@@ -21,8 +21,6 @@ public actor CursorStorage {
     }
 
     public func clearCredentials() async {
-        defaults.removeObject(forKey: CursorStorageKeys.credentials)
+        self.defaults.removeObject(forKey: CursorStorageKeys.credentials)
     }
 }
-
-

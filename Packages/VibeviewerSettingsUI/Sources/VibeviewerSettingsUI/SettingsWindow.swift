@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 public final class SettingsWindowManager {
     public static let shared = SettingsWindowManager()
@@ -27,9 +27,7 @@ public final class SettingsWindowManager {
     }
 
     public func close() {
-        controller?.close()
-        controller = nil
+        self.controller?.close()
+        self.controller = nil
     }
 }
-
-

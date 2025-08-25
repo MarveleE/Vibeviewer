@@ -2,15 +2,15 @@ import Foundation
 import Moya
 
 protocol DecodableTargetType: TargetType {
-  associatedtype ResultType: Decodable
+    associatedtype ResultType: Decodable
 
-  var decodeAtKeyPath: String? { get }
+    var decodeAtKeyPath: String? { get }
 }
 
 extension DecodableTargetType {
-  var decodeAtKeyPath: String? { nil }
+    var decodeAtKeyPath: String? { nil }
 
-  var validationType: ValidationType {
-    .successCodes
-  }
+    var validationType: ValidationType {
+        .successCodes
+    }
 }

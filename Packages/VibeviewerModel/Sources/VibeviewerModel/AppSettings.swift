@@ -24,11 +24,10 @@ public extension CursorStorage {
 
     func loadSettings() async -> AppSettings {
         if let data = UserDefaults.standard.data(forKey: CursorStorageKeys.settings),
-           let decoded = try? JSONDecoder().decode(AppSettings.self, from: data) {
+           let decoded = try? JSONDecoder().decode(AppSettings.self, from: data)
+        {
             return decoded
         }
         return AppSettings()
     }
 }
-
-

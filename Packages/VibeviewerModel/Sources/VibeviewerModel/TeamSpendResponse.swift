@@ -8,7 +8,14 @@ public struct TeamMemberSpend: Decodable, Sendable {
     public let fastPremiumRequests: Int?
     public let hardLimitOverrideDollars: Int?
 
-    public init(userId: Int, email: String, role: String, spendCents: Int?, fastPremiumRequests: Int?, hardLimitOverrideDollars: Int?) {
+    public init(
+        userId: Int,
+        email: String,
+        role: String,
+        spendCents: Int?,
+        fastPremiumRequests: Int?,
+        hardLimitOverrideDollars: Int?
+    ) {
         self.userId = userId
         self.email = email
         self.role = role
@@ -35,7 +42,13 @@ public struct TeamSpendResponse: Decodable, Sendable {
         }
     }
 
-    public init(teamMemberSpend: [TeamMemberSpend], subscriptionCycleStart: String, totalMembers: Int, totalPages: Int, totalByRole: [RoleCount]) {
+    public init(
+        teamMemberSpend: [TeamMemberSpend],
+        subscriptionCycleStart: String,
+        totalMembers: Int,
+        totalPages: Int,
+        totalByRole: [RoleCount]
+    ) {
         self.teamMemberSpend = teamMemberSpend
         self.subscriptionCycleStart = subscriptionCycleStart
         self.totalMembers = totalMembers

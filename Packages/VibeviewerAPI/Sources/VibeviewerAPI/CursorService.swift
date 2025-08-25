@@ -11,13 +11,16 @@ protocol CursorNetworkClient {
     func decodableRequest<T: DecodableTargetType>(
         _ target: T,
         decodingStrategy: JSONDecoder.KeyDecodingStrategy
-    ) async throws -> T.ResultType
+    ) async throws -> T
+        .ResultType
 }
 
 struct DefaultCursorNetworkClient: CursorNetworkClient {
     init() {}
 
-    func decodableRequest<T>(_ target: T, decodingStrategy: JSONDecoder.KeyDecodingStrategy) async throws -> T.ResultType where T : DecodableTargetType {
+    func decodableRequest<T>(_ target: T, decodingStrategy: JSONDecoder.KeyDecodingStrategy) async throws -> T
+        .ResultType where T: DecodableTargetType
+    {
         try await GroNetwork.decodableRequest(target, decodingStrategy: decodingStrategy)
     }
 }
@@ -46,11 +49,12 @@ public struct DefaultCursorService: CursorService {
 
     private func performRequest<T: DecodableTargetType>(_ target: T) async throws -> T.ResultType {
         do {
-            return try await network.decodableRequest(target, decodingStrategy: decoding)
+            return try await self.network.decodableRequest(target, decodingStrategy: self.decoding)
         } catch {
             if let moyaError = error as? MoyaError,
                case let .statusCode(response) = moyaError,
-               [401, 403].contains(response.statusCode) {
+               [401, 403].contains(response.statusCode)
+            {
                 throw CursorServiceError.sessionExpired
             }
             throw error
@@ -58,14 +62,14 @@ public struct DefaultCursorService: CursorService {
     }
 
     public func fetchMe(cookieHeader: String) async throws -> CursorMeResponse {
-        try await performRequest(CursorGetMeAPI(cookieHeader: cookieHeader))
+        try await self.performRequest(CursorGetMeAPI(cookieHeader: cookieHeader))
     }
 
     public func fetchUsage(workosUserId: String, cookieHeader: String) async throws -> CursorUsageResponse {
-        try await performRequest(CursorUsageAPI(workosUserId: workosUserId, cookieHeader: cookieHeader))
+        try await self.performRequest(CursorUsageAPI(workosUserId: workosUserId, cookieHeader: cookieHeader))
     }
 
     public func fetchTeamSpend(teamId: Int, cookieHeader: String) async throws -> TeamSpendResponse {
-        try await performRequest(CursorTeamSpendAPI(teamId: teamId, cookieHeader: cookieHeader))
+        try await self.performRequest(CursorTeamSpendAPI(teamId: teamId, cookieHeader: cookieHeader))
     }
 }

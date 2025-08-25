@@ -2,29 +2,29 @@ import Foundation
 import Moya
 
 final class RequestHeaderConfigurationPlugin: PluginType {
-  static let shared: RequestHeaderConfigurationPlugin = .init()
+    static let shared: RequestHeaderConfigurationPlugin = .init()
 
-  var header: [String: String] = [:]
+    var header: [String: String] = [:]
 
-  // MARK: Plugin
+    // MARK: Plugin
 
-  func prepare(_ request: URLRequest, target: TargetType) -> URLRequest {
-    var request = request
-    request.allHTTPHeaderFields?.merge(header) { _, new in new }
-    return request
-  }
+    func prepare(_ request: URLRequest, target: TargetType) -> URLRequest {
+        var request = request
+        request.allHTTPHeaderFields?.merge(self.header) { _, new in new }
+        return request
+    }
 
-  func setAuthorization(_ token: String) {
-    header["Authorization"] = "Bearer "
-  }
+    func setAuthorization(_ token: String) {
+        self.header["Authorization"] = "Bearer "
+    }
 
-  func clearAuthorization() {
-    header["Authorization"] = ""
-  }
+    func clearAuthorization() {
+        self.header["Authorization"] = ""
+    }
 
-  init() {
-    self.header = [
-      "Authorization": "Bearer "
-    ]
-  }
+    init() {
+        self.header = [
+            "Authorization": "Bearer "
+        ]
+    }
 }

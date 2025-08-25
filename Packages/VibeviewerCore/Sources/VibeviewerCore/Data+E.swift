@@ -13,7 +13,8 @@ extension Data {
            let data = try? JSONSerialization.data(
                withJSONObject: json,
                options: [.prettyPrinted, .withoutEscapingSlashes]
-           ) {
+           )
+        {
             return String(data: data, encoding: .utf8)
         }
         return nil

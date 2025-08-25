@@ -1,0 +1,28 @@
+--swiftversion 5.10
+
+--indent 4
+--tabwidth 4
+--allman false
+--wraparguments before-first
+--wrapcollections before-first
+--maxwidth 160
+--wrapreturntype preserve
+--wrapparameters before-first
+--stripunusedargs closure-only
+--header ignore
+--enable enumNamespaces
+--self insert
+
+# Enabled rules (opt-in)
+--enable isEmpty
+--enable redundantType
+--enable redundantReturn
+--enable extensionAccessControl
+
+# Disabled rules (avoid risky auto-fixes by default)
+--disable strongOutlets
+--disable trailingCommas
+
+# File options
+--exclude Derived,.build,**/Package.swift
+

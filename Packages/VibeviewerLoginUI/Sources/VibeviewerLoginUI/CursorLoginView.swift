@@ -11,13 +11,13 @@ struct CursorLoginView: View {
             HStack {
                 Text("登录 Cursor").font(.headline)
                 Spacer()
-                Button("关闭") { onClose() }
+                Button("关闭") { self.onClose() }
             }
             .padding(8)
 
             CookieWebView(onCookieCaptured: { cookie in
-                onCookieCaptured(cookie)
-                onClose()
+                self.onCookieCaptured(cookie)
+                self.onClose()
             })
         }
     }
@@ -30,7 +30,11 @@ struct CookieWebView: NSViewRepresentable {
         let config = WKWebViewConfiguration()
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
-        if let url = URL(string: "https://authenticator.cursor.sh/?client_id=client_01GS6W3C96KW4WRS6Z93JCE2RJ&redirect_uri=https%3A%2F%2Fcursor.com%2Fapi%2Fauth%2Fcallback&response_type=code&state=%257B%2522returnTo%2522%253A%2522%252Fdashboard%2522%252C%2522nonce%2522%253A%252208ddb34e-7f2f-479d-b255-634624a0576d%2522%257D&authorization_session_id=01K3E2YSQEZNYDR26YJZVQQM4Y") {
+        if let url =
+            URL(
+                string: "https://authenticator.cursor.sh/?client_id=client_01GS6W3C96KW4WRS6Z93JCE2RJ&redirect_uri=https%3A%2F%2Fcursor.com%2Fapi%2Fauth%2Fcallback&response_type=code&state=%257B%2522returnTo%2522%253A%2522%252Fdashboard%2522%252C%2522nonce%2522%253A%252208ddb34e-7f2f-479d-b255-634624a0576d%2522%257D&authorization_session_id=01K3E2YSQEZNYDR26YJZVQQM4Y"
+            )
+        {
             webView.load(URLRequest(url: url))
         }
         return webView
@@ -39,7 +43,7 @@ struct CookieWebView: NSViewRepresentable {
     func updateNSView(_ nsView: WKWebView, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onCookieCaptured: onCookieCaptured)
+        Coordinator(onCookieCaptured: self.onCookieCaptured)
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate {
@@ -51,7 +55,7 @@ struct CookieWebView: NSViewRepresentable {
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             if webView.url?.absoluteString.hasSuffix("/dashboard") == true {
-                captureCursorCookies(from: webView)
+                self.captureCursorCookies(from: webView)
             }
         }
 
@@ -68,5 +72,3 @@ struct CookieWebView: NSViewRepresentable {
         }
     }
 }
-
-
