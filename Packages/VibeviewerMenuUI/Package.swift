@@ -15,6 +15,7 @@ let package = Package(
     .package(path: "../VibeviewerAPI"),
     .package(path: "../VibeviewerLoginUI"),
     .package(path: "../VibeviewerSettingsUI"),
+    .package(path: "../VibeviewerShareUI"),
   ],
   targets: [
     .target(
@@ -24,7 +25,8 @@ let package = Package(
         "VibeviewerAppEnvironment",
         "VibeviewerAPI",
         "VibeviewerLoginUI",
-        "VibeviewerSettingsUI"
+        "VibeviewerSettingsUI",
+        "VibeviewerShareUI"
       ]
     ),
     .testTarget(name: "VibeviewerMenuUITests", dependencies: ["VibeviewerMenuUI"]),

@@ -1,6 +1,7 @@
 import Foundation
 
-public struct DashboardSnapshot: Codable, Sendable, Equatable {
+@Observable
+public class DashboardSnapshot: Codable, Equatable {
     public let email: String
     public let planRequestsUsed: Int
     public let totalRequestsAllModels: Int
@@ -32,7 +33,7 @@ public struct DashboardSnapshot: Codable, Sendable, Equatable {
         case hardLimitDollars
     }
 
-    public init(from decoder: Decoder) throws {
+    public required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.email = try container.decode(String.self, forKey: .email)
         self.planRequestsUsed = try container.decode(Int.self, forKey: .planRequestsUsed)
@@ -51,6 +52,14 @@ public struct DashboardSnapshot: Codable, Sendable, Equatable {
         try container.encode(spendingCents, forKey: .spendingCents)
         try container.encode(hardLimitDollars, forKey: .hardLimitDollars)
         // usageEvents 不参与持久化编码
+    }
+
+    public static func == (lhs: DashboardSnapshot, rhs: DashboardSnapshot) -> Bool {
+        lhs.email == rhs.email &&
+        lhs.planRequestsUsed == rhs.planRequestsUsed &&
+        lhs.totalRequestsAllModels == rhs.totalRequestsAllModels &&
+        lhs.spendingCents == rhs.spendingCents &&
+        lhs.hardLimitDollars == rhs.hardLimitDollars
     }
 }
 

@@ -9,11 +9,15 @@ let package = Package(
     products: [
         .library(name: "VibeviewerLoginUI", targets: ["VibeviewerLoginUI"]),
     ],
-    dependencies: [],
+    dependencies: [
+        .package(path: "../VibeviewerShareUI")
+    ],
     targets: [
         .target(
             name: "VibeviewerLoginUI",
-            dependencies: []
+            dependencies: [
+                "VibeviewerShareUI"
+            ]
         ),
         .testTarget(name: "VibeviewerLoginUITests", dependencies: ["VibeviewerLoginUI"]) 
     ]

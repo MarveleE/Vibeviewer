@@ -19,18 +19,31 @@ import VibeviewerStorage
 struct VibeviewerApp: App {
 
     @State private var settings: AppSettings = DefaultCursorStorageService.loadSettingsSync()
+    
+    @State private var session: VibeviewerModel.AppSession = VibeviewerModel.AppSession(
+        credentials: DefaultCursorStorageService.loadCredentialsSync(),
+        snapshot: DefaultCursorStorageService.loadDashboardSnapshotSync()
+    )
 
     var body: some Scene {
-        MenuBarExtra("Vibeviewer", systemImage: "bolt.fill") {
-            // 预加载缓存，首次打开菜单即有数据展示
-            let initialCreds = DefaultCursorStorageService.loadCredentialsSync()
-            let initialSnapshot = DefaultCursorStorageService.loadDashboardSnapshotSync()
-            MenuPopoverView(initialCredentials: initialCreds, initialSnapshot: initialSnapshot)
+        MenuBarExtra(isInserted: .constant(true)) {
+            MenuPopoverView()
                 .environment(\.cursorService, DefaultCursorService())
                 .environment(\.cursorStorage, DefaultCursorStorageService())
                 .environment(\.loginWindowManager, LoginWindowManager.shared)
                 .environment(\.settingsWindowManager, SettingsWindowManager.shared)
                 .environment(settings)
+                .environment(session)
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "bolt.fill")
+                    .resizable()
+                    .frame(width: 16, height: 16)
+                    .padding(.trailing, 4)
+                Text(session.snapshot?.spendingCents.dollarStringFromCents ?? "Vibeviewer")
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+            }
         }
     }
 }

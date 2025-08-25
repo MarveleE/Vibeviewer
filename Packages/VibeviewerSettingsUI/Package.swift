@@ -11,14 +11,16 @@ let package = Package(
   ],
   dependencies: [
     .package(path: "../VibeviewerModel"),
-    .package(path: "../VibeviewerAppEnvironment")
+    .package(path: "../VibeviewerAppEnvironment"),
+    .package(path: "../VibeviewerShareUI")
   ],
   targets: [
     .target(
       name: "VibeviewerSettingsUI",
       dependencies: [
         "VibeviewerModel",
-        "VibeviewerAppEnvironment"
+        "VibeviewerAppEnvironment",
+        "VibeviewerShareUI"
       ],
       
     ),

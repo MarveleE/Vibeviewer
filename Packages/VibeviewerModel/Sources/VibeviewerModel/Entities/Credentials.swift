@@ -1,6 +1,7 @@
 import Foundation
 
-public struct Credentials: Codable, Sendable, Equatable {
+@Observable
+public class Credentials: Codable, Equatable {
     public let userId: Int
     public let workosId: String
     public let email: String
@@ -13,6 +14,14 @@ public struct Credentials: Codable, Sendable, Equatable {
         self.email = email
         self.teamId = teamId
         self.cookieHeader = cookieHeader
+    }
+
+    public static func == (lhs: Credentials, rhs: Credentials) -> Bool { 
+        lhs.userId == rhs.userId &&
+        lhs.workosId == rhs.workosId &&
+        lhs.email == rhs.email &&
+        lhs.teamId == rhs.teamId &&
+        lhs.cookieHeader == rhs.cookieHeader
     }
 }
 

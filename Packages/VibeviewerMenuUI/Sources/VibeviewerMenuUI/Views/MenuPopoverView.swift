@@ -13,6 +13,7 @@ public struct MenuPopoverView: View {
     @Environment(\.loginWindowManager) private var loginWindow
     @Environment(\.settingsWindowManager) private var settingsWindow
     @Environment(AppSettings.self) private var appSettings
+    @Environment(AppSession.self) private var session
 
     enum ViewState: Equatable {
         case loading
@@ -20,20 +21,16 @@ public struct MenuPopoverView: View {
         case error(String)
     }
 
-    @State private var state: ViewState = .loading
-    @State private var credentials: Credentials?
-    @State private var snapshot: DashboardSnapshot?
-    @State private var refreshTask: Task<Void, Never>?
+    public init() {}
 
-    public init(initialCredentials: Credentials? = nil, initialSnapshot: DashboardSnapshot? = nil) {
-        self._credentials = State(initialValue: initialCredentials)
-        self._snapshot = State(initialValue: initialSnapshot)
-    }
+    @State private var state: ViewState = .loading
+    @State private var refreshTask: Task<Void, Never>?
 
     public var body: some View {
         @Bindable var appSettings = appSettings
+
         VStack(alignment: .leading, spacing: 12) {
-            DashboardSummaryView(snapshot: snapshot)
+            DashboardSummaryView(snapshot: session.snapshot)
             
             if case .error(let message) = state {
                 ErrorBannerView(message: message)
@@ -41,7 +38,7 @@ public struct MenuPopoverView: View {
 
             ActionButtonsView(
                 isLoading: state == .loading,
-                isLoggedIn: credentials != nil,
+                isLoggedIn: session.credentials != nil,
                 onRefresh: { Task { await self.refresh() } },
                 onLogin: {
                     self.loginWindow.show { cookie in
@@ -55,7 +52,7 @@ public struct MenuPopoverView: View {
             UsageHistorySection(
                 isLoading: state == .loading,
                 settings: appSettings,
-                events: snapshot?.usageEvents ?? [],
+                events: session.snapshot?.usageEvents ?? [],
                 onReload: { Task { await fetchUsageHistory() } },
                 onToday: { appSettings.usageHistory.dateRange.start = Date() }
             )
@@ -70,12 +67,13 @@ public struct MenuPopoverView: View {
     private func loadInitial() async {
         // 先从本地读取最近一次的快照，避免冷启动空白
         if let cached = await self.storage.loadDashboardSnapshot() {
-            self.snapshot = cached
+            self.session.snapshot = cached
         }
 
         // 读取登录态
-        self.credentials = await self.storage.loadCredentials()
-        if self.credentials != nil {
+        let creds = await self.storage.loadCredentials()
+        self.session.credentials = creds
+        if self.session.credentials != nil {
             await self.reloadOverviewAndPersist()
             self.startAutoRefresh()
             await self.fetchUsageHistory()
@@ -96,8 +94,8 @@ public struct MenuPopoverView: View {
     private func setLoggedOut() async {
         await self.storage.clearCredentials()
         await self.storage.clearDashboardSnapshot()
-        self.credentials = nil
-        self.snapshot = nil
+        self.session.credentials = nil
+        self.session.snapshot = nil
         self.refreshTask?.cancel()
         self.refreshTask = nil
     }
@@ -107,7 +105,7 @@ public struct MenuPopoverView: View {
         do {
             let me = try await service.fetchMe(cookieHeader: cookieHeader)
             try await self.storage.saveCredentials(me)
-            self.credentials = me
+            self.session.credentials = me
             await self.reloadOverviewAndPersist()
             self.startAutoRefresh()
         } catch {
@@ -116,15 +114,15 @@ public struct MenuPopoverView: View {
     }
 
     private func refresh() async {
-        guard credentials != nil else { return }
+        guard session.credentials != nil else { return }
         self.state = .loading
         await self.reloadOverviewAndPersist()
     }
 
     private func fetchUsageHistory() async {
-        guard let creds = credentials else { return }
+        guard let creds = session.credentials else { return }
         self.state = .loading
-        defer { self.state = .loading }
+        defer { self.state = .loaded }
         do {
             let (startMs, endMs) = self.dayRangeMs(for: appSettings.usageHistory.dateRange.start)
             let history = try await service.fetchFilteredUsageEvents(
@@ -138,13 +136,13 @@ public struct MenuPopoverView: View {
             )
             let newSnapshot = DashboardSnapshot(
                 email: creds.email,
-                planRequestsUsed: snapshot?.planRequestsUsed ?? 0,
-                totalRequestsAllModels: snapshot?.totalRequestsAllModels ?? 0,
-                spendingCents: snapshot?.spendingCents ?? 0,
-                hardLimitDollars: snapshot?.hardLimitDollars ?? 0,
+                planRequestsUsed: session.snapshot?.planRequestsUsed ?? 0,
+                totalRequestsAllModels: session.snapshot?.totalRequestsAllModels ?? 0,
+                spendingCents: session.snapshot?.spendingCents ?? 0,
+                hardLimitDollars: session.snapshot?.hardLimitDollars ?? 0,
                 usageEvents: history.events
             )
-            self.snapshot = newSnapshot
+            self.session.snapshot = newSnapshot
             try? await self.storage.saveDashboardSnapshot(newSnapshot)
         } catch {
             self.state = .error(error.localizedDescription)
@@ -164,18 +162,17 @@ public struct MenuPopoverView: View {
     
 
     private func reloadOverviewAndPersist() async {
-        guard let creds = credentials else { return }
+        guard let creds = session.credentials else { return }
         self.state = .loading
-        defer {
-        }
+        defer { self.state = .loaded }
         do {
             async let usageAsync = service.fetchUsage(workosUserId: creds.workosId, cookieHeader: creds.cookieHeader)
             async let spendAsync = service.fetchTeamSpend(teamId: creds.teamId, cookieHeader: creds.cookieHeader)
             let usage = try await usageAsync
             let spend = try await spendAsync
 
-            let planRequestsUsed = usage.models.values.map(\.requestsUsed).reduce(0, +)
-            let totalAll = usage.models.values.map(\.totalRequests).reduce(0, +)
+            let planRequestsUsed = usage.models.values.map { $0.requestsUsed }.reduce(0, +)
+            let totalAll = usage.models.values.map { $0.totalRequests }.reduce(0, +)
             let mySpend = spend.members.first { $0.userId == creds.userId }
 
             let newSnapshot = DashboardSnapshot(
@@ -184,9 +181,9 @@ public struct MenuPopoverView: View {
                 totalRequestsAllModels: totalAll,
                 spendingCents: mySpend?.spendCents ?? 0,
                 hardLimitDollars: mySpend?.hardLimitOverrideDollars ?? 0,
-                usageEvents: snapshot?.usageEvents ?? []
+                usageEvents: session.snapshot?.usageEvents ?? []
             )
-            self.snapshot = newSnapshot
+            self.session.snapshot = newSnapshot
             try? await self.storage.saveDashboardSnapshot(newSnapshot)
         } catch {
             if case CursorServiceError.sessionExpired = error {

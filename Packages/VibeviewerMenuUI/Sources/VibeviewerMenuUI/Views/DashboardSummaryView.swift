@@ -1,5 +1,6 @@
 import SwiftUI
 import VibeviewerModel
+import VibeviewerCore
 
 @MainActor
 struct DashboardSummaryView: View {
@@ -12,7 +13,7 @@ struct DashboardSummaryView: View {
                     Text("邮箱: \(snapshot.email)")
                     Text("Plan Requests 已用: \(snapshot.planRequestsUsed)")
                     Text("所有模型总请求: \(snapshot.totalRequestsAllModels)")
-                    Text("Usage Spending ($): \(String(format: "%.2f", Double(snapshot.spendingCents) / 100.0))")
+                    Text("Usage Spending ($): \(snapshot.spendingCents.dollarStringFromCents)")
                     Text("预算上限 ($): \(snapshot.hardLimitDollars)")
                 }
             } else {
