@@ -1,0 +1,53 @@
+import Testing
+@testable import VibeviewerStorage
+import VibeviewerModel
+
+@Suite("StorageService basic")
+struct StorageServiceTests {
+
+    @Test("Credentials save/load/clear")
+    func credentialsCRUD() async throws {
+        let suite = UserDefaults(suiteName: "test.credentials.")!
+        suite.removePersistentDomain(forName: "test.credentials.")
+        let storage = DefaultCursorStorageService(userDefaults: suite)
+
+        let creds = Credentials(userId: "u1", workosId: "w1", email: "e@x.com", teamId: "t1", cookieHeader: "c")
+        try await storage.saveCredentials(creds)
+        let loaded = await storage.loadCredentials()
+        #expect(loaded == creds)
+        await storage.clearCredentials()
+        let cleared = await storage.loadCredentials()
+        #expect(cleared == nil)
+    }
+
+    @Test("Settings save/load default")
+    func settingsCRUD() async throws {
+        let suite = UserDefaults(suiteName: "test.settings.")!
+        suite.removePersistentDomain(forName: "test.settings.")
+        let storage = DefaultCursorStorageService(userDefaults: suite)
+
+        let s0 = await storage.loadSettings()
+        #expect(s0 == AppSettings())
+        let s1 = AppSettings(launchAtLogin: true, showNotifications: false, enableNetworkLog: false)
+        try await storage.saveSettings(s1)
+        let s2 = await storage.loadSettings()
+        #expect(s2 == s1)
+    }
+
+    @Test("Snapshot save/load/clear")
+    func snapshotCRUD() async throws {
+        let suite = UserDefaults(suiteName: "test.snapshot.")!
+        suite.removePersistentDomain(forName: "test.snapshot.")
+        let storage = DefaultCursorStorageService(userDefaults: suite)
+
+        let snap = DashboardSnapshot(email: "e@x.com", planRequestsUsed: 1, totalRequestsAllModels: 2, spendingCents: 3, hardLimitDollars: 4)
+        try await storage.saveDashboardSnapshot(snap)
+        let loaded = await storage.loadDashboardSnapshot()
+        #expect(loaded == snap)
+        await storage.clearDashboardSnapshot()
+        let cleared = await storage.loadDashboardSnapshot()
+        #expect(cleared == nil)
+    }
+}
+
+

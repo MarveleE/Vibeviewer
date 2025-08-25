@@ -17,6 +17,7 @@
 		D887978E18640D11DCF4738D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 906EC00DF4E6EEDBE4BAB83B /* Assets.xcassets */; };
 		DA542241635F9EC1B0812D00 /* VibeviewerSettingsUI in Frameworks */ = {isa = PBXBuildFile; productRef = 53A1282747DA2C6D3D94B6AB /* VibeviewerSettingsUI */; };
 		DBE75FD190F55B22EB03CA7F /* TuistAssets+Vibeviewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EA2F696E9E74D9E08EE0BB /* TuistAssets+Vibeviewer.swift */; };
+		E52377F4E075416FCAE58281 /* VibeviewerStorage in Frameworks */ = {isa = PBXBuildFile; productRef = E37C1D11F95A7C39196E407F /* VibeviewerStorage */; };
 		ECF34671F1CA242804CDF306 /* VibeviewerMenuUI in Frameworks */ = {isa = PBXBuildFile; productRef = A0482D6CEE72E43B5BA319F5 /* VibeviewerMenuUI */; };
 		EFB587530213B85C23849B39 /* VibeviewerLoginUI in Frameworks */ = {isa = PBXBuildFile; productRef = 3B53C88F24A058590FC5D4BB /* VibeviewerLoginUI */; };
 		F66EF75E205C8573652EBD76 /* VibeviewerAPI in Frameworks */ = {isa = PBXBuildFile; productRef = E01D26D614B0D4AF45B1F2C5 /* VibeviewerAPI */; };
@@ -39,6 +40,7 @@
 		0B87947D1DFD942BEB988EDB /* VibeviewerCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VibeviewerCore; path = Packages/VibeviewerCore; sourceTree = "<group>"; };
 		0D6922D58719E194AED467D7 /* VibeviewerAPI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VibeviewerAPI; path = Packages/VibeviewerAPI; sourceTree = "<group>"; };
 		396EF53CB5888545DC0111BD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		5D2D934BDECFE4E6428BD0CD /* VibeviewerStorage */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VibeviewerStorage; path = Packages/VibeviewerStorage; sourceTree = "<group>"; };
 		64884037E267979DE86BC9FF /* VibeviewerAppEnvironment */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VibeviewerAppEnvironment; path = Packages/VibeviewerAppEnvironment; sourceTree = "<group>"; };
 		82EFA8122D97B6F7756517ED /* VibeviewerModel */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VibeviewerModel; path = Packages/VibeviewerModel; sourceTree = "<group>"; };
 		906EC00DF4E6EEDBE4BAB83B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -65,6 +67,7 @@
 				ECF34671F1CA242804CDF306 /* VibeviewerMenuUI in Frameworks */,
 				DA542241635F9EC1B0812D00 /* VibeviewerSettingsUI in Frameworks */,
 				4C257283FDE8DB184B063E1D /* VibeviewerAppEnvironment in Frameworks */,
+				E52377F4E075416FCAE58281 /* VibeviewerStorage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -99,6 +102,7 @@
 				9B2D4AA7DA687B4EE62EE42E /* VibeviewerMenuUI */,
 				82EFA8122D97B6F7756517ED /* VibeviewerModel */,
 				D5DCC058A4E391EBE4F7843A /* VibeviewerSettingsUI */,
+				5D2D934BDECFE4E6428BD0CD /* VibeviewerStorage */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
@@ -181,6 +185,7 @@
 				A0482D6CEE72E43B5BA319F5 /* VibeviewerMenuUI */,
 				53A1282747DA2C6D3D94B6AB /* VibeviewerSettingsUI */,
 				97798F335704080C1E606F20 /* VibeviewerAppEnvironment */,
+				E37C1D11F95A7C39196E407F /* VibeviewerStorage */,
 			);
 			productName = Vibeviewer;
 			productReference = EE174579D22D89ECC04F68EE /* Vibeviewer.app */;
@@ -214,6 +219,7 @@
 				E3CF3480708553BB9277968D /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerMenuUI" */,
 				40ADF506F56B9700A17BFF0B /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerModel" */,
 				8DE67066220B6A65F8604EE1 /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerSettingsUI" */,
+				B5D9F2642FF2111724020B09 /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerStorage" */,
 			);
 			productRefGroup = 8CF5678F3FF347C3B747C470 /* Products */;
 			projectDirPath = "";
@@ -459,6 +465,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = /Users/groot/Vibeviewer/Packages/VibeviewerLoginUI;
 		};
+		B5D9F2642FF2111724020B09 /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerStorage" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = /Users/groot/Vibeviewer/Packages/VibeviewerStorage;
+		};
 		CECAB45AD59BECCF47BC2D3C /* XCLocalSwiftPackageReference "/Users/groot/Vibeviewer/Packages/VibeviewerAppEnvironment" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = /Users/groot/Vibeviewer/Packages/VibeviewerAppEnvironment;
@@ -497,6 +507,10 @@
 		E01D26D614B0D4AF45B1F2C5 /* VibeviewerAPI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = VibeviewerAPI;
+		};
+		E37C1D11F95A7C39196E407F /* VibeviewerStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = VibeviewerStorage;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

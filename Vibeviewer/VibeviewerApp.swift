@@ -12,17 +12,18 @@ import VibeviewerLoginUI
 import VibeviewerMenuUI
 import VibeviewerModel
 import VibeviewerSettingsUI
+import VibeviewerStorage
 
 @main
 struct VibeviewerApp: App {
     var body: some Scene {
         MenuBarExtra("Vibeviewer", systemImage: "bolt.fill") {
             // 预加载缓存，首次打开菜单即有数据展示
-            let initialCreds = CursorStorage.loadCredentialsSync()
-            let initialSnapshot = CursorStorage.loadDashboardSnapshotSync()
+            let initialCreds = DefaultCursorStorageService.loadCredentialsSync()
+            let initialSnapshot = DefaultCursorStorageService.loadDashboardSnapshotSync()
             MenuPopoverView(initialCredentials: initialCreds, initialSnapshot: initialSnapshot)
                 .environment(\.cursorService, DefaultCursorService())
-                .environment(\.cursorStorage, CursorStorage.shared)
+                .environment(\.cursorStorage, DefaultCursorStorageService())
                 .environment(\.loginWindowManager, LoginWindowManager.shared)
                 .environment(\.settingsWindowManager, SettingsWindowManager.shared)
         }

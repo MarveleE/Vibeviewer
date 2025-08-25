@@ -16,18 +16,4 @@ public struct AppSettings: Codable, Sendable, Equatable {
     }
 }
 
-public extension CursorStorage {
-    func saveSettings(_ settings: AppSettings) async throws {
-        let data = try JSONEncoder().encode(settings)
-        UserDefaults.standard.set(data, forKey: CursorStorageKeys.settings)
-    }
-
-    func loadSettings() async -> AppSettings {
-        if let data = UserDefaults.standard.data(forKey: CursorStorageKeys.settings),
-           let decoded = try? JSONDecoder().decode(AppSettings.self, from: data)
-        {
-            return decoded
-        }
-        return AppSettings()
-    }
-}
+// 持久化相关逻辑已迁移到 VibeviewerStorage 包

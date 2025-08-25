@@ -18,6 +18,7 @@ let project = Project(
         .local(path: "Packages/VibeviewerMenuUI"),
         .local(path: "Packages/VibeviewerSettingsUI"),
         .local(path: "Packages/VibeviewerAppEnvironment"),
+        .local(path: "Packages/VibeviewerStorage"),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "5.10",
@@ -47,6 +48,7 @@ let project = Project(
                 .package(product: "VibeviewerMenuUI"),
                 .package(product: "VibeviewerSettingsUI"),
                 .package(product: "VibeviewerAppEnvironment"),
+                .package(product: "VibeviewerStorage"),
             ]
         )
     ]
