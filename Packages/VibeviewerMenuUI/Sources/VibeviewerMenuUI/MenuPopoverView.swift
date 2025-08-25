@@ -18,6 +18,12 @@ public struct MenuPopoverView: View {
     @State private var lastErrorMessage: String?
     @State private var refreshTask: Task<Void, Never>?
 
+    // Usage History (filtered by date)
+    @State private var selectedDate: Date = Date()
+    @State private var historyLimit: Int = 10
+    @State private var usageEvents: [CursorFilteredUsageEvent] = []
+    @State private var isLoadingHistory: Bool = false
+
     public init(initialCredentials: CursorCredentials? = nil, initialSnapshot: CursorDashboardSnapshot? = nil) {
         self._credentials = State(initialValue: initialCredentials)
         self._snapshot = State(initialValue: initialSnapshot)
@@ -25,42 +31,37 @@ public struct MenuPopoverView: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if let snapshot {
-                Text("邮箱: \(snapshot.email)")
-                Text("Plan Requests 已用: \(snapshot.planRequestsUsed)")
-                Text("所有模型总请求: \(snapshot.totalRequestsAllModels)")
-                Text("Usage Spending ($): \(String(format: "%.2f", Double(snapshot.spendingCents) / 100.0))")
-                Text("预算上限 ($): \(snapshot.hardLimitDollars)")
-            } else {
-                Text("未登录，请先登录 Cursor")
-            }
+            DashboardSummaryView(snapshot: snapshot)
 
-            if let msg = lastErrorMessage, !msg.isEmpty {
-                Text(msg).foregroundStyle(.red).font(.caption)
-            }
+            ErrorBannerView(message: lastErrorMessage)
 
-            HStack(spacing: 10) {
-                if self.isLoading {
-                    ProgressView()
-                } else {
-                    Button("刷新") { Task { await self.refresh() } }
-                }
-
-                if self.credentials == nil {
-                    Button("登录") {
-                        self.loginWindow.show { cookie in
-                            Task { await self.completeLogin(cookieHeader: cookie) }
-                        }
+            ActionButtonsView(
+                isLoading: isLoading,
+                isLoggedIn: credentials != nil,
+                onRefresh: { Task { await self.refresh() } },
+                onLogin: {
+                    self.loginWindow.show { cookie in
+                        Task { await self.completeLogin(cookieHeader: cookie) }
                     }
-                } else {
-                    Button("退出登录") { Task { await self.setLoggedOut() } }
-                }
-                Button("设置") { self.settingsWindow.show() }
-            }
+                },
+                onLogout: { Task { await self.setLoggedOut() } },
+                onSettings: { self.settingsWindow.show() }
+            )
+
+            UsageHistorySection(
+                isLoading: isLoadingHistory,
+                selectedDate: $selectedDate,
+                historyLimit: $historyLimit,
+                events: usageEvents,
+                onReload: { Task { await fetchUsageHistory() } },
+                onToday: { selectedDate = Date() }
+            )
         }
         .padding(16)
         .frame(minWidth: 320)
         .task { await self.loadInitial() }
+        .onChange(of: selectedDate) { _, _ in Task { await fetchUsageHistory() } }
+        .onChange(of: historyLimit) { _, _ in Task { await fetchUsageHistory() } }
     }
 
     private func loadInitial() async {
@@ -75,6 +76,7 @@ public struct MenuPopoverView: View {
             // 登录态存在则进行一次刷新以获得最新数据
             await self.refresh()
             self.startAutoRefresh()
+            await self.fetchUsageHistory()
         }
     }
 
@@ -162,5 +164,44 @@ public struct MenuPopoverView: View {
             }
         }
         self.isLoading = false
+    }
+
+    private func fetchUsageHistory() async {
+        guard let creds = credentials else { return }
+        self.isLoadingHistory = true
+        defer { self.isLoadingHistory = false }
+        do {
+            let (startMs, endMs) = self.dayRangeMs(for: selectedDate)
+            let resp = try await service.fetchFilteredUsageEvents(
+                teamId: creds.teamId,
+                startDateMs: startMs,
+                endDateMs: endMs,
+                userId: creds.userId,
+                page: 1,
+                pageSize: max(historyLimit, 1),
+                cookieHeader: creds.cookieHeader
+            )
+            self.usageEvents = resp.usageEventsDisplay
+        } catch {
+            self.lastErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func dayRangeMs(for date: Date) -> (String, String) {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let nextDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? date
+        let endOfDay = Date(timeInterval: -0.001, since: nextDay)
+        let startMs = String(Int(startOfDay.timeIntervalSince1970 * 1000))
+        let endMs = String(Int(endOfDay.timeIntervalSince1970 * 1000))
+        return (startMs, endMs)
+    }
+
+    private func formatTimestamp(_ msString: String) -> String {
+        guard let ms = Double(msString) else { return msString }
+        let date = Date(timeIntervalSince1970: ms / 1000.0)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter.string(from: date)
     }
 }

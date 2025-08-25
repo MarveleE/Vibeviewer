@@ -1,0 +1,1020 @@
+// request 获取用户按天filter的用量记录，
+
+curl 'https://cursor.com/api/dashboard/get-filtered-usage-events' \
+  -H 'accept: */*' \
+  -H 'accept-language: zh-CN,zh;q=0.9' \
+  -H 'content-type: application/json' \
+  -b 'IndrX2ZuSmZramJSX0NIYUZoRzRzUGZ0cENIVHpHNXk0VE0ya2ZiUkVzQU14X2Fub255bW91c1VzZXJJZCI%3D=IjI1NTg2NzdiLWYxNzEtNGEwNS04MGUwLWI5YmZjMGM2ZmE5YiI=; NEXT_LOCALE=en; htjs_anonymous_id=cb747e5e-9cc2-40a0-9fee-ef20e6451a9b; htjs_sesh={%22id%22:1755137078127%2C%22expiresAt%22:1755138890946%2C%22timeout%22:1800000%2C%22sessionStart%22:false%2C%22autoTrack%22:true}; ph_phc_TXdpocbGVeZVm5VJmAsHTMrCofBQu3e0kN8HGMNGTVW_posthog=%7B%22distinct_id%22%3A%220196aeab-9658-758a-98ad-891c3ed366d8%22%2C%22%24sesid%22%3A%5B1755137090946%2C%220198a652-6bb5-7e3f-8ba7-bad9d82b78cb%22%2C1755137076149%5D%7D; WorkosCursorSessionToken=user_01JRXG9J1YYXYF39Y4NAR5AMCE%3A%3AeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhdXRoMHx1c2VyXzAxSlJYRzlKMVlZWFlGMzlZNE5BUjVBTUNFIiwidGltZSI6IjE3NTYwOTI3OTEiLCJyYW5kb21uZXNzIjoiMjg0NTI0NTQtMjQ4Yi00ZjczIiwiZXhwIjoxNzYxMjc2NzkxLCJpc3MiOiJodHRwczovL2F1dGhlbnRpY2F0aW9uLmN1cnNvci5zaCIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwgb2ZmbGluZV9hY2Nlc3MiLCJhdWQiOiJodHRwczovL2N1cnNvci5jb20iLCJ0eXBlIjoid2ViIn0.UKbY6ERiNzPGTrS7KZlsLyQ5P6Zk2yc-bi2xM6FtrKo' \
+  -H 'dnt: 1' \
+  -H 'origin: https://cursor.com' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://cursor.com/dashboard?tab=usage' \
+  -H 'sec-ch-ua: "Not)A;Brand";v="8", "Chromium";v="138"' \
+  -H 'sec-ch-ua-arch: "arm"' \
+  -H 'sec-ch-ua-bitness: "64"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "macOS"' \
+  -H 'sec-ch-ua-platform-version: "15.3.1"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36' \
+  --data-raw '{"teamId":15113845,"startDate":"1755446400000","endDate":"1756137599999","userId":190525724,"page":1,"pageSize":100}'
+
+// response
+{
+    "totalUsageEventsCount": 301,
+    "usageEventsDisplay": [
+        {
+            "timestamp": "1756092480751",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756092139474",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756091504183",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756091210229",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_ERRORED_NOT_CHARGED",
+            "usageBasedCosts": "$0.00",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756090878293",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756090512166",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756090335293",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756090280795",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756089968588",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756089890357",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756089803184",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756089742204",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756089526214",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756088873845",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756088727930",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_ERRORED_NOT_CHARGED",
+            "usageBasedCosts": "$0.00",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756055462005",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756055346214",
+            "model": "default",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756055291889",
+            "model": "default",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756054699654",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756054462973",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756054008630",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756053670082",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756053527961",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756053391516",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756053172919",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756052764854",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756052659689",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756052493895",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756052260462",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756052190940",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756051744340",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756051598948",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756051349670",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756050915179",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756050850405",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756050700639",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756050448269",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756050335159",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756050210402",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756050183437",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756050051802",
+            "model": "default",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756050010838",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756049433497",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756049391669",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756049314138",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756049140111",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756048747301",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756048491643",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756048437844",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756048247301",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756043995436",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756043736663",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756043070519",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756042152568",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756041993311",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756041940213",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756041898229",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_ERRORED_NOT_CHARGED",
+            "usageBasedCosts": "$0.00",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756041574862",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756041488071",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756041301595",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756041052120",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756040859390",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756040773874",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_ERRORED_NOT_CHARGED",
+            "usageBasedCosts": "$0.00",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756040594601",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756040515035",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756040405076",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756040251644",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756039898112",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756037804990",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756037371784",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756037132458",
+            "model": "claude-4-sonnet-thinking",
+            "kind": "USAGE_EVENT_KIND_ABORTED_NOT_CHARGED",
+            "usageBasedCosts": "$0.00",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756036800093",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756036687610",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756036223465",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1756035968618",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755960848223",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755960451719",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755959571316",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755959507713",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755959345878",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755959185761",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755959104622",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_ERRORED_NOT_CHARGED",
+            "usageBasedCosts": "$0.00",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755959058276",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755958875478",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755958797537",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755958448507",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755958357202",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_ERRORED_NOT_CHARGED",
+            "usageBasedCosts": "$0.00",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755958195881",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_ERRORED_NOT_CHARGED",
+            "usageBasedCosts": "$0.00",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755957286553",
+            "model": "claude-4-sonnet-thinking",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 2,
+            "usageBasedCosts": "$0.08",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755956137227",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755956043892",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755955912774",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755954287497",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755954067654",
+            "model": "gemini-2.5-pro",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755953785644",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755953670452",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_ERRORED_NOT_CHARGED",
+            "usageBasedCosts": "$0.00",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755953035113",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755929085971",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755928797667",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        },
+        {
+            "timestamp": "1755928637560",
+            "model": "gpt-5",
+            "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+            "requestsCosts": 1,
+            "usageBasedCosts": "$0.04",
+            "isTokenBasedCall": false,
+            "owningUser": "190525724",
+            "owningTeam": "15113845"
+        }
+    ]
+}

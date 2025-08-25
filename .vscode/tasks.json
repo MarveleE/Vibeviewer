@@ -10,7 +10,11 @@
         "$sweetpad-xcbeautify-errors",
         "$sweetpad-xcbeautify-warnings"
       ],
-      "configuration": "Debug"
+      "configuration": "Debug",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     },
     {
       "label": "sweetpad: launch",

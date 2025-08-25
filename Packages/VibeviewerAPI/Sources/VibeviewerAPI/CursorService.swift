@@ -28,6 +28,15 @@ public protocol CursorService {
     func fetchMe(cookieHeader: String) async throws -> CursorMeResponse
     func fetchUsage(workosUserId: String, cookieHeader: String) async throws -> CursorUsageResponse
     func fetchTeamSpend(teamId: Int, cookieHeader: String) async throws -> TeamSpendResponse
+    func fetchFilteredUsageEvents(
+        teamId: Int,
+        startDateMs: String,
+        endDateMs: String,
+        userId: Int,
+        page: Int,
+        pageSize: Int,
+        cookieHeader: String
+    ) async throws -> CursorFilteredUsageResponse
 }
 
 public struct DefaultCursorService: CursorService {
@@ -70,5 +79,27 @@ public struct DefaultCursorService: CursorService {
 
     public func fetchTeamSpend(teamId: Int, cookieHeader: String) async throws -> TeamSpendResponse {
         try await self.performRequest(CursorTeamSpendAPI(teamId: teamId, cookieHeader: cookieHeader))
+    }
+
+    public func fetchFilteredUsageEvents(
+        teamId: Int,
+        startDateMs: String,
+        endDateMs: String,
+        userId: Int,
+        page: Int,
+        pageSize: Int,
+        cookieHeader: String
+    ) async throws -> CursorFilteredUsageResponse {
+        try await self.performRequest(
+            CursorFilteredUsageAPI(
+                teamId: teamId,
+                startDateMs: startDateMs,
+                endDateMs: endDateMs,
+                userId: userId,
+                page: page,
+                pageSize: pageSize,
+                cookieHeader: cookieHeader
+            )
+        )
     }
 }
