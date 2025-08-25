@@ -25,9 +25,9 @@ struct DefaultCursorNetworkClient: CursorNetworkClient {
 }
 
 public protocol CursorService {
-    func fetchMe(cookieHeader: String) async throws -> VibeviewerModel.UserProfile
-    func fetchUsage(workosUserId: String, cookieHeader: String) async throws -> VibeviewerModel.UsageOverview
-    func fetchTeamSpend(teamId: Int, cookieHeader: String) async throws -> VibeviewerModel.TeamSpendOverview
+    func fetchMe(cookieHeader: String) async throws -> Credentials
+    func fetchUsage(workosUserId: String, cookieHeader: String) async throws -> UsageOverview
+    func fetchTeamSpend(teamId: Int, cookieHeader: String) async throws -> TeamSpendOverview
     func fetchFilteredUsageEvents(
         teamId: Int,
         startDateMs: String,
@@ -69,14 +69,14 @@ public struct DefaultCursorService: CursorService {
         }
     }
 
-    public func fetchMe(cookieHeader: String) async throws -> VibeviewerModel.UserProfile {
+    public func fetchMe(cookieHeader: String) async throws -> Credentials {
         let dto: CursorMeResponse = try await self.performRequest(CursorGetMeAPI(cookieHeader: cookieHeader))
-        return VibeviewerModel.UserProfile(
-            authId: dto.authId,
+        return Credentials(
             userId: dto.userId,
-            email: dto.email,
             workosId: dto.workosId,
-            teamId: dto.teamId
+            email: dto.email,
+            teamId: dto.teamId,
+            cookieHeader: cookieHeader
         )
     }
 

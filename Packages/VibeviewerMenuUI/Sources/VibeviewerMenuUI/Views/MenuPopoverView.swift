@@ -14,21 +14,16 @@ public struct MenuPopoverView: View {
     @Environment(\.settingsWindowManager) private var settingsWindow
     @Environment(AppSettings.self) private var appSettings
 
-    enum ViewState {
+    enum ViewState: Equatable {
         case loading
         case loaded
         case error(String)
     }
 
+    @State private var state: ViewState = .loading
     @State private var credentials: Credentials?
     @State private var snapshot: DashboardSnapshot?
-    @State private var lastErrorMessage: String?
     @State private var refreshTask: Task<Void, Never>?
-
-    // Usage History (filtered by date) unified in snapshot
-    @State private var isLoadingHistory: Bool = false
-    @State private var isLoadingUsage: Bool = false
-    @State private var isLoadingSpend: Bool = false
 
     public init(initialCredentials: Credentials? = nil, initialSnapshot: DashboardSnapshot? = nil) {
         self._credentials = State(initialValue: initialCredentials)
@@ -39,11 +34,13 @@ public struct MenuPopoverView: View {
         @Bindable var appSettings = appSettings
         VStack(alignment: .leading, spacing: 12) {
             DashboardSummaryView(snapshot: snapshot)
-
-            ErrorBannerView(message: lastErrorMessage)
+            
+            if case .error(let message) = state {
+                ErrorBannerView(message: message)
+            }
 
             ActionButtonsView(
-                isLoading: (isLoadingUsage || isLoadingSpend),
+                isLoading: state == .loading,
                 isLoggedIn: credentials != nil,
                 onRefresh: { Task { await self.refresh() } },
                 onLogin: {
@@ -56,7 +53,7 @@ public struct MenuPopoverView: View {
             )
 
             UsageHistorySection(
-                isLoading: isLoadingHistory,
+                isLoading: state == .loading,
                 settings: appSettings,
                 events: snapshot?.usageEvents ?? [],
                 onReload: { Task { await fetchUsageHistory() } },
@@ -106,35 +103,28 @@ public struct MenuPopoverView: View {
     }
 
     private func completeLogin(cookieHeader: String) async {
-        self.lastErrorMessage = nil
+        self.state = .loading
         do {
             let me = try await service.fetchMe(cookieHeader: cookieHeader)
-            let creds = Credentials(
-                userId: me.userId,
-                workosId: me.workosId,
-                email: me.email,
-                teamId: me.teamId,
-                cookieHeader: cookieHeader
-            )
-            try await self.storage.saveCredentials(creds)
-            self.credentials = creds
+            try await self.storage.saveCredentials(me)
+            self.credentials = me
             await self.reloadOverviewAndPersist()
             self.startAutoRefresh()
         } catch {
-            self.lastErrorMessage = error.localizedDescription
+            self.state = .error(error.localizedDescription)
         }
     }
 
     private func refresh() async {
         guard credentials != nil else { return }
-        self.lastErrorMessage = nil
+        self.state = .loading
         await self.reloadOverviewAndPersist()
     }
 
     private func fetchUsageHistory() async {
         guard let creds = credentials else { return }
-        self.isLoadingHistory = true
-        defer { self.isLoadingHistory = false }
+        self.state = .loading
+        defer { self.state = .loading }
         do {
             let (startMs, endMs) = self.dayRangeMs(for: appSettings.usageHistory.dateRange.start)
             let history = try await service.fetchFilteredUsageEvents(
@@ -157,7 +147,7 @@ public struct MenuPopoverView: View {
             self.snapshot = newSnapshot
             try? await self.storage.saveDashboardSnapshot(newSnapshot)
         } catch {
-            self.lastErrorMessage = error.localizedDescription
+            self.state = .error(error.localizedDescription)
         }
     }
 
@@ -175,11 +165,8 @@ public struct MenuPopoverView: View {
 
     private func reloadOverviewAndPersist() async {
         guard let creds = credentials else { return }
-        self.isLoadingUsage = true
-        self.isLoadingSpend = true
+        self.state = .loading
         defer {
-            self.isLoadingUsage = false
-            self.isLoadingSpend = false
         }
         do {
             async let usageAsync = service.fetchUsage(workosUserId: creds.workosId, cookieHeader: creds.cookieHeader)
@@ -204,9 +191,9 @@ public struct MenuPopoverView: View {
         } catch {
             if case CursorServiceError.sessionExpired = error {
                 await self.setLoggedOut()
-                self.lastErrorMessage = "会话已过期，请重新登录"
+                self.state = .error("会话已过期，请重新登录")   
             } else {
-                self.lastErrorMessage = error.localizedDescription
+                self.state = .error(error.localizedDescription)
             }
         }
     }

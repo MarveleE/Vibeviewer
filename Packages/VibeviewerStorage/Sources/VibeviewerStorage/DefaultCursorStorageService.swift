@@ -15,8 +15,8 @@ public struct DefaultCursorStorageService: CursorStorageService, CursorStorageSy
     }
 
     // MARK: - Credentials
-    public func saveCredentials(_ creds: Credentials) async throws {
-        let data = try JSONEncoder().encode(creds)
+    public func saveCredentials(_ me: Credentials) async throws {
+        let data = try JSONEncoder().encode(me)
         self.defaults.set(data, forKey: CursorStorageKeys.credentials)
     }
 
