@@ -66,8 +66,32 @@ title: Vibeviewer 架构规范（精简版）
    - 是否将需要串行化的持久化/缓存放入 Actor 边界？
 
 5) 文件组织与命名
-   - 目录清晰（Feature/Views、API/Service、API/Targets、API/Plugins、Model/DTOs、Core/Extensions）。
+   - 目录清晰（Feature/Views、API/Service、API/Targets、API/Plugins、Model/Entities、Core/Extensions）。
    - 一文件一个类型；命名体现层级与职责（如 FeatureXView、FeatureXService、GetYAPI、ZResponse）。
+   - 包内目录规范：Sources/<PackageName>/ 按功能分子目录存放，避免所有源码堆在同一层级。
+     - 建议子目录示例：
+       - API：Service / Targets / Plugins / Mapping（DTO→Domain 映射）
+       - Feature：Views / Components / Scenes / Modifiers
+       - Model：Entities
+       - Core：Extensions / Utils
+   - 同类命名一致：相似功能使用统一的前缀或后缀，便于检索与分组。
+     - 约定后缀示例：…Service、…API、…Response、…Request、…View、…Section、…Window、…Plugin、…Mapper。
+     - 同一领域或来源建议共享前缀（如 Cursor…）。
+   - 文件名与类型名一致：每个文件仅包含一个主要类型，且“文件名必须与类型名完全一致”（区分大小写）。
+     - 协议/实现约定：协议使用 FooService，默认实现使用 DefaultFooService（或 LiveFooService）；对外仅暴露协议，通过依赖注入传入实现。
+
+   - Model 层命名规范（Entities 与 DTO 分离）：
+     - 领域实体（Entities，业务对外暴露）：
+       - 使用面向领域的中性名词；默认不带供应商前缀（例如：UserProfile、UsageOverview、TeamSpendOverview、UsageEvent、FilteredUsageHistory、AppSettings、Credentials、DashboardSnapshot）。
+       - 如确需体现来源域（例如“Cursor”领域），应在同一领域内统一使用相同前缀（如 CursorCredentials、CursorDashboardSnapshot），保持一致性与可检索性。
+       - 命名后缀建议：…Overview、…Snapshot、…History、…Event、…Member、…RoleCount 等表达聚合/快照/事件/成员等语义。
+       - 使用 struct 优先、值语义、满足 Sendable；仅跨包暴露需要的 public 类型与成员。
+       - 文件名与类型名一致；单文件单类型。
+     - DTO（仅用于 API 层，位于 API/Mapping/DTOs）：
+       - 采用供应商/来源前缀 + 语义后缀的命名：例如 Cursor…Request、Cursor…Response、Cursor…Event。
+       - 可见性默认 internal，不对 Feature/UI 暴露；仅在 API 层进行 DTO→领域实体映射。
+       - 文件名与类型名一致；单文件单类型；字段命名贴合后端返回（保持直译），由映射层适配到领域命名。
+       - 映射职责位于 API 层（Service/Mapping），UI/Feature 严禁直接依赖 DTO。
 
 6) 代码评审前检查
    - 不必要的 public 是否已移除？是否存在跨层反向引用？

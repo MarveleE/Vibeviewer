@@ -1,8 +1,8 @@
 import Foundation
 
-public struct CursorUsageResponse: Decodable, Sendable {
-    public let models: [String: CursorModelUsage]
-    public let startOfMonth: String
+struct CursorUsageResponse: Decodable, Sendable {
+    let models: [String: CursorModelUsage]
+    let startOfMonth: String
 
     private struct DynamicCodingKeys: CodingKey {
         var stringValue: String
@@ -11,7 +11,7 @@ public struct CursorUsageResponse: Decodable, Sendable {
         init?(intValue: Int) { nil }
     }
 
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: DynamicCodingKeys.self)
         var tempModels: [String: CursorModelUsage] = [:]
         var start = ""

@@ -12,8 +12,8 @@ public struct MenuPopoverView: View {
     @Environment(\.loginWindowManager) private var loginWindow
     @Environment(\.settingsWindowManager) private var settingsWindow
 
-    @State private var credentials: CursorCredentials?
-    @State private var snapshot: CursorDashboardSnapshot?
+    @State private var credentials: Credentials?
+    @State private var snapshot: DashboardSnapshot?
     @State private var isLoading: Bool = false
     @State private var lastErrorMessage: String?
     @State private var refreshTask: Task<Void, Never>?
@@ -24,7 +24,7 @@ public struct MenuPopoverView: View {
     @State private var usageEvents: [VibeviewerModel.UsageEvent] = []
     @State private var isLoadingHistory: Bool = false
 
-    public init(initialCredentials: CursorCredentials? = nil, initialSnapshot: CursorDashboardSnapshot? = nil) {
+    public init(initialCredentials: Credentials? = nil, initialSnapshot: DashboardSnapshot? = nil) {
         self._credentials = State(initialValue: initialCredentials)
         self._snapshot = State(initialValue: initialSnapshot)
     }
@@ -110,7 +110,7 @@ public struct MenuPopoverView: View {
             let planRequestsUsed = usage.models.values.map(\.requestsUsed).reduce(0, +)
             let totalAll = usage.models.values.map(\.totalRequests).reduce(0, +)
             let mySpend = spend.members.first { $0.userId == me.userId }
-            let newSnapshot = CursorDashboardSnapshot(
+            let newSnapshot = DashboardSnapshot(
                 email: me.email,
                 planRequestsUsed: planRequestsUsed,
                 totalRequestsAllModels: totalAll,
@@ -118,7 +118,7 @@ public struct MenuPopoverView: View {
                 hardLimitDollars: mySpend?.hardLimitOverrideDollars ?? 0
             )
 
-            let creds = CursorCredentials(
+            let creds = Credentials(
                 userId: me.userId,
                 workosId: me.workosId,
                 email: me.email,
@@ -146,7 +146,7 @@ public struct MenuPopoverView: View {
             let planRequestsUsed = usage.models.values.map(\.requestsUsed).reduce(0, +)
             let totalAll = usage.models.values.map(\.totalRequests).reduce(0, +)
             let mySpend = spend.members.first { $0.userId == creds.userId }
-            let newSnapshot = CursorDashboardSnapshot(
+            let newSnapshot = DashboardSnapshot(
                 email: creds.email,
                 planRequestsUsed: planRequestsUsed,
                 totalRequestsAllModels: totalAll,

@@ -1,14 +1,14 @@
 import Foundation
 
-public struct TeamMemberSpend: Decodable, Sendable {
-    public let userId: Int
-    public let email: String
-    public let role: String
-    public let spendCents: Int?
-    public let fastPremiumRequests: Int?
-    public let hardLimitOverrideDollars: Int?
+struct CursorTeamMemberSpend: Decodable, Sendable {
+    let userId: Int
+    let email: String
+    let role: String
+    let spendCents: Int?
+    let fastPremiumRequests: Int?
+    let hardLimitOverrideDollars: Int?
 
-    public init(
+    init(
         userId: Int,
         email: String,
         role: String,
@@ -25,25 +25,25 @@ public struct TeamMemberSpend: Decodable, Sendable {
     }
 }
 
-public struct TeamSpendResponse: Decodable, Sendable {
-    public let teamMemberSpend: [TeamMemberSpend]
-    public let subscriptionCycleStart: String
-    public let totalMembers: Int
-    public let totalPages: Int
-    public let totalByRole: [RoleCount]
+struct CursorTeamSpendResponse: Decodable, Sendable {
+    let teamMemberSpend: [CursorTeamMemberSpend]
+    let subscriptionCycleStart: String
+    let totalMembers: Int
+    let totalPages: Int
+    let totalByRole: [RoleCount]
 
-    public struct RoleCount: Decodable, Sendable {
-        public let role: String
-        public let count: Int
+    struct RoleCount: Decodable, Sendable {
+        let role: String
+        let count: Int
 
-        public init(role: String, count: Int) {
+        init(role: String, count: Int) {
             self.role = role
             self.count = count
         }
     }
 
-    public init(
-        teamMemberSpend: [TeamMemberSpend],
+    init(
+        teamMemberSpend: [CursorTeamMemberSpend],
         subscriptionCycleStart: String,
         totalMembers: Int,
         totalPages: Int,

@@ -3,7 +3,7 @@ import VibeviewerModel
 
 @MainActor
 struct DashboardSummaryView: View {
-    let snapshot: CursorDashboardSnapshot?
+    let snapshot: DashboardSnapshot?
 
     var body: some View {
         Group {

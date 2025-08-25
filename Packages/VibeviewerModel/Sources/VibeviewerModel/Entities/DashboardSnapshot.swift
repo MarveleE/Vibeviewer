@@ -1,6 +1,6 @@
 import Foundation
 
-public struct CursorDashboardSnapshot: Codable, Sendable {
+public struct DashboardSnapshot: Codable, Sendable {
     public let email: String
     public let planRequestsUsed: Int
     public let totalRequestsAllModels: Int
@@ -21,3 +21,5 @@ public struct CursorDashboardSnapshot: Codable, Sendable {
         self.hardLimitDollars = hardLimitDollars
     }
 }
+
+

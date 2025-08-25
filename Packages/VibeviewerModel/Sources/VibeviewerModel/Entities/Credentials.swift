@@ -1,6 +1,6 @@
 import Foundation
 
-public struct CursorCredentials: Codable, Sendable {
+public struct Credentials: Codable, Sendable {
     public let userId: Int
     public let workosId: String
     public let email: String
@@ -15,3 +15,5 @@ public struct CursorCredentials: Codable, Sendable {
         self.cookieHeader = cookieHeader
     }
 }
+
+

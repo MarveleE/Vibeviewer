@@ -90,7 +90,7 @@ public struct DefaultCursorService: CursorService {
     }
 
     public func fetchTeamSpend(teamId: Int, cookieHeader: String) async throws -> VibeviewerModel.TeamSpendOverview {
-        let dto: TeamSpendResponse = try await self.performRequest(CursorTeamSpendAPI(teamId: teamId, cookieHeader: cookieHeader))
+        let dto: CursorTeamSpendResponse = try await self.performRequest(CursorTeamSpendAPI(teamId: teamId, cookieHeader: cookieHeader))
         let members: [VibeviewerModel.TeamSpendOverview.Member] = dto.teamMemberSpend.map { m in
             .init(
                 userId: m.userId,

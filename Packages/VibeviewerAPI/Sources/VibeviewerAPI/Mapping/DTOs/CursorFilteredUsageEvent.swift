@@ -1,16 +1,16 @@
 import Foundation
 
-public struct CursorFilteredUsageEvent: Decodable, Sendable, Equatable {
-    public let timestamp: String
-    public let model: String
-    public let kind: String
-    public let requestsCosts: Int?
-    public let usageBasedCosts: String
-    public let isTokenBasedCall: Bool
-    public let owningUser: String
-    public let owningTeam: String
+struct CursorFilteredUsageEvent: Decodable, Sendable, Equatable {
+    let timestamp: String
+    let model: String
+    let kind: String
+    let requestsCosts: Int?
+    let usageBasedCosts: String
+    let isTokenBasedCall: Bool
+    let owningUser: String
+    let owningTeam: String
 
-    public init(
+    init(
         timestamp: String,
         model: String,
         kind: String,
