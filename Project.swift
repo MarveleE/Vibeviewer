@@ -33,6 +33,7 @@ let project = Project(
             bundleId: "com.magicgroot.vibeviewer",
             deploymentTargets: .macOS("14.0"),
             infoPlist: .extendingDefault(with: [
+                "LSUIElement": .boolean(true),
                 "LSMinimumSystemVersion": .string("14.0"),
                 "LSApplicationCategoryType": .string("public.app-category.productivity"),
                 "UIAppFonts": .array([.string("Satoshi-Regular.ttf"), .string("Satoshi-Medium.ttf"), .string("Satoshi-Bold.ttf"), .string("Satoshi-Italic.ttf")]),

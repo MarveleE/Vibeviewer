@@ -16,6 +16,10 @@ public class DashboardSnapshot: Codable, Equatable {
     public let hardLimitDollars: Int
     /// 当前用量历史
     public let usageEvents: [UsageEvent]
+    /// 今日请求次数（由外部在获取 usageEvents 后计算并注入）
+    public let requestToday: Int
+    /// 昨日请求次数（由外部在获取 usageEvents 后计算并注入）
+    public let requestYestoday: Int
 
     public init(
         email: String,
@@ -24,7 +28,9 @@ public class DashboardSnapshot: Codable, Equatable {
         totalRequestsAllModels: Int,
         spendingCents: Int,
         hardLimitDollars: Int,
-        usageEvents: [UsageEvent] = []
+        usageEvents: [UsageEvent] = [],
+        requestToday: Int = 0,
+        requestYestoday: Int = 0
     ) {
         self.email = email
         self.planRequestsUsed = planRequestsUsed
@@ -33,6 +39,8 @@ public class DashboardSnapshot: Codable, Equatable {
         self.spendingCents = spendingCents
         self.hardLimitDollars = hardLimitDollars
         self.usageEvents = usageEvents
+        self.requestToday = requestToday
+        self.requestYestoday = requestYestoday
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -42,6 +50,8 @@ public class DashboardSnapshot: Codable, Equatable {
         case totalRequestsAllModels
         case spendingCents
         case hardLimitDollars
+        case requestToday
+        case requestYestoday
     }
 
     public required init(from decoder: Decoder) throws {
@@ -52,8 +62,10 @@ public class DashboardSnapshot: Codable, Equatable {
         self.totalRequestsAllModels = try container.decode(Int.self, forKey: .totalRequestsAllModels)
         self.spendingCents = try container.decode(Int.self, forKey: .spendingCents)
         self.hardLimitDollars = try container.decode(Int.self, forKey: .hardLimitDollars)
-        // usageEvents 不参与持久化解码，运行期内由 UI 拉取后写入
+        self.requestToday = try container.decode(Int.self, forKey: .requestToday)
+        self.requestYestoday = try container.decode(Int.self, forKey: .requestYestoday)
         self.usageEvents = []
+        // usageEvents  不参与持久化解码，运行期内由 UI 拉取后写入
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -64,7 +76,9 @@ public class DashboardSnapshot: Codable, Equatable {
         try container.encode(self.totalRequestsAllModels, forKey: .totalRequestsAllModels)
         try container.encode(self.spendingCents, forKey: .spendingCents)
         try container.encode(self.hardLimitDollars, forKey: .hardLimitDollars)
-        // usageEvents 不参与持久化编码
+        try container.encode(self.requestToday, forKey: .requestToday)
+        try container.encode(self.requestYestoday, forKey: .requestYestoday)
+        // usageEvents不参与持久化编码
     }
 
     public static func == (lhs: DashboardSnapshot, rhs: DashboardSnapshot) -> Bool {

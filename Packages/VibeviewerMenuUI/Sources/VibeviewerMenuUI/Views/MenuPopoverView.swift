@@ -5,6 +5,7 @@ import VibeviewerAppEnvironment
 import VibeviewerLoginUI
 import VibeviewerModel
 import VibeviewerSettingsUI
+import VibeviewerCore
 import VibeviewerShareUI
 
 @MainActor
@@ -30,7 +31,7 @@ public struct MenuPopoverView: View {
     public var body: some View {
         @Bindable var appSettings = appSettings
 
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             UsageHeaderView { action in
                 switch action {
                 case .dashboard:
@@ -42,36 +43,20 @@ public struct MenuPopoverView: View {
                 MetricsView(metric: .billing(snapshot.billingMetrics))
                 MetricsView(metric: .planRequests(snapshot.planRequestsMetrics))
             }
-            // DashboardSummaryView(snapshot: self.session.snapshot)
 
-            // if case let .error(message) = state {
-            //     ErrorBannerView(message: message)
-            // }
+            Divider().opacity(0.5)
 
-            // ActionButtonsView(
-            //     isLoading: self.state == .loading,
-            //     isLoggedIn: self.session.credentials != nil,
-            //     onRefresh: { Task { await self.refresh() } },
-            //     onLogin: {
-            //         self.loginWindow.show { cookie in
-            //             Task { await self.completeLogin(cookieHeader: cookie) }
-            //         }
-            //     },
-            //     onLogout: { Task { await self.setLoggedOut() } },
-            //     onSettings: { self.settingsWindow.show() }
-            // )
+            RequestsCompareView(requestToday: self.session.snapshot?.requestToday ?? 0, requestYestoday: self.session.snapshot?.requestYestoday ?? 0)
+            
+            Divider().opacity(0.5)
 
-            // UsageHistorySection(
-            //     isLoading: self.state == .loading,
-            //     settings: appSettings,
-            //     events: self.session.snapshot?.usageEvents ?? [],
-            //     onReload: { Task { await self.fetchUsageHistory() } },
-            //     onToday: { appSettings.usageHistory.dateRange.start = Date() }
-            // )
+            UsageEventView(events: self.session.snapshot?.usageEvents ?? [])
+            
+            Divider().opacity(0.5)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 24)
-        .frame(minWidth: 320, minHeight: 480, alignment: .top)
+        .frame(width: 300, alignment: .top)
         .background {
             ZStack {
                 Color(hex: "0D0C0C")
@@ -83,9 +68,9 @@ public struct MenuPopoverView: View {
             .cornerRadius(32 - 4)
         }
         .padding(4)
+        .compositingGroup()
+        .geometryGroup()
         .task { await self.loadInitial() }
-        // .onChange(of: appSettings.usageHistory.dateRange.start) { _, _ in Task { await self.fetchUsageHistory() } }
-        // .onChange(of: appSettings.usageHistory.limit) { _, _ in Task { await self.fetchUsageHistory() } }
     }
 
     private func loadInitial() async {
@@ -148,16 +133,17 @@ public struct MenuPopoverView: View {
         self.state = .loading
         defer { self.state = .loaded }
         do {
-            let (startMs, endMs) = self.dayRangeMs(for: self.appSettings.usageHistory.dateRange.start)
+            let (startMs, endMs) = self.yesterdayToNowRangeMs()
             let history = try await service.fetchFilteredUsageEvents(
                 teamId: creds.teamId,
                 startDateMs: startMs,
                 endDateMs: endMs,
                 userId: creds.userId,
                 page: 1,
-                pageSize: max(self.appSettings.usageHistory.limit, 1),
+                pageSize: 100,
                 cookieHeader: creds.cookieHeader
             )
+            let (reqToday, reqYesterday) = self.splitTodayAndYesterdayCounts(from: history.events)
             let newSnapshot = DashboardSnapshot(
                 email: creds.email,
                 planRequestsUsed: self.session.snapshot?.planRequestsUsed ?? 0,
@@ -165,7 +151,9 @@ public struct MenuPopoverView: View {
                 totalRequestsAllModels: self.session.snapshot?.totalRequestsAllModels ?? 0,
                 spendingCents: self.session.snapshot?.spendingCents ?? 0,
                 hardLimitDollars: self.session.snapshot?.hardLimitDollars ?? 0,
-                usageEvents: history.events
+                usageEvents: history.events,
+                requestToday: reqToday,
+                requestYestoday: reqYesterday
             )
             self.session.snapshot = newSnapshot
             try? await self.storage.saveDashboardSnapshot(newSnapshot)
@@ -175,14 +163,31 @@ public struct MenuPopoverView: View {
     }
 
     private func dayRangeMs(for date: Date) -> (String, String) {
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: date)
-        let nextDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? date
-        let endOfDay = Date(timeInterval: -0.001, since: nextDay)
-        let startMs = String(Int(startOfDay.timeIntervalSince1970 * 1000))
-        let endMs = String(Int(endOfDay.timeIntervalSince1970 * 1000))
-        return (startMs, endMs)
+        let (start, end) = VibeviewerCore.DateUtils.dayRange(for: date)
+        return (VibeviewerCore.DateUtils.millisecondsString(from: start), VibeviewerCore.DateUtils.millisecondsString(from: end))
     }
+
+    private func yesterdayToNowRangeMs() -> (String, String) {
+        let (start, end) = VibeviewerCore.DateUtils.yesterdayToNowRange()
+        return (VibeviewerCore.DateUtils.millisecondsString(from: start), VibeviewerCore.DateUtils.millisecondsString(from: end))
+    }
+
+    private func splitTodayAndYesterdayCounts(from events: [UsageEvent]) -> (Int, Int) {
+        let calendar = Calendar.current
+        var today = 0
+        var yesterday = 0
+        for e in events {
+            guard let date = VibeviewerCore.DateUtils.date(fromMillisecondsString: e.occurredAtMs) else { continue }
+            if calendar.isDateInToday(date) {
+                today += e.requestCostCount
+            } else if calendar.isDateInYesterday(date) {
+                yesterday += e.requestCostCount
+            }
+        }
+        return (today, yesterday)
+    }
+
+    // 日期解析方法已迁移至 Core 的 Date 扩展
 
     private func reloadOverviewAndPersist() async {
         guard let creds = session.credentials else { return }
@@ -205,7 +210,9 @@ public struct MenuPopoverView: View {
                 totalRequestsAllModels: totalAll,
                 spendingCents: mySpend?.spendCents ?? 0,
                 hardLimitDollars: mySpend?.hardLimitOverrideDollars ?? 0,
-                usageEvents: self.session.snapshot?.usageEvents ?? []
+                usageEvents: self.session.snapshot?.usageEvents ?? [],
+                requestToday: self.session.snapshot?.requestToday ?? 0,
+                requestYestoday: self.session.snapshot?.requestYestoday ?? 0
             )
             self.session.snapshot = newSnapshot
             try? await self.storage.saveDashboardSnapshot(newSnapshot)

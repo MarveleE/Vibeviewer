@@ -8,7 +8,7 @@ struct CursorFilteredUsageEvent: Decodable, Sendable, Equatable {
     let usageBasedCosts: String
     let isTokenBasedCall: Bool
     let owningUser: String
-    let owningTeam: String
+    let owningTeam: String?
 
     init(
         timestamp: String,
@@ -18,7 +18,7 @@ struct CursorFilteredUsageEvent: Decodable, Sendable, Equatable {
         usageBasedCosts: String,
         isTokenBasedCall: Bool,
         owningUser: String,
-        owningTeam: String
+        owningTeam: String?
     ) {
         self.timestamp = timestamp
         self.model = model

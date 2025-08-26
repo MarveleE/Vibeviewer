@@ -8,7 +8,11 @@ public struct UsageEvent: Sendable, Equatable {
     public let usageCostDisplay: String
     public let isTokenBased: Bool
     public let userDisplayName: String
-    public let teamDisplayName: String
+    public let teamDisplayName: String?
+
+    public var brand: AIModelBrands {
+        AIModelBrands.brand(for: self.modelName)
+    }
 
     public init(
         occurredAtMs: String,
@@ -18,7 +22,7 @@ public struct UsageEvent: Sendable, Equatable {
         usageCostDisplay: String,
         isTokenBased: Bool,
         userDisplayName: String,
-        teamDisplayName: String
+        teamDisplayName: String?
     ) {
         self.occurredAtMs = occurredAtMs
         self.modelName = modelName

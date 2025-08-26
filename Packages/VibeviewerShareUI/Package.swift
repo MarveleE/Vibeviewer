@@ -19,7 +19,8 @@ let package = Package(
       resources: [
         // 将自定义字体放入 Sources/VibeviewerShareUI/Fonts/ 下
         // 例如：Satoshi-Regular.otf、Satoshi-Medium.otf、Satoshi-Bold.otf、Satoshi-Italic.otf
-        .process("Fonts")
+        .process("Fonts"),
+        .process("Images")
       ]
     ),
     .testTarget(name: "VibeviewerShareUITests", dependencies: ["VibeviewerShareUI"]),

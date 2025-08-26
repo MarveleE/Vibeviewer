@@ -10,6 +10,7 @@ let package = Package(
     .library(name: "VibeviewerMenuUI", targets: ["VibeviewerMenuUI"])
   ],
   dependencies: [
+    .package(path: "../VibeviewerCore"),
     .package(path: "../VibeviewerModel"),
     .package(path: "../VibeviewerAppEnvironment"),
     .package(path: "../VibeviewerAPI"),
@@ -21,6 +22,7 @@ let package = Package(
     .target(
       name: "VibeviewerMenuUI",
       dependencies: [
+        "VibeviewerCore",
         "VibeviewerModel",
         "VibeviewerAppEnvironment",
         "VibeviewerAPI",
