@@ -84,9 +84,14 @@ public struct DefaultCursorService: CursorService {
         let dto: CursorUsageResponse = try await self.performRequest(CursorUsageAPI(workosUserId: workosUserId, cookieHeader: cookieHeader))
         var mapped: [String: VibeviewerModel.UsageOverview.ModelUsage] = [:]
         for (name, usage) in dto.models {
-            mapped[name] = .init(modelName: name, requestsUsed: usage.numRequests, totalRequests: usage.numRequestsTotal)
+            mapped[name] = .init(
+                modelName: name,
+                requestsUsed: usage.numRequests,
+                totalRequests: usage.numRequestsTotal,
+                tokensUsed: usage.numTokens
+            )
         }
-        return VibeviewerModel.UsageOverview(startOfMonthMs: dto.startOfMonth, models: mapped)
+        return VibeviewerModel.UsageOverview(startOfMonthMs: dto.startOfMonth, models: Array(mapped.values))
     }
 
     public func fetchTeamSpend(teamId: Int, cookieHeader: String) async throws -> VibeviewerModel.TeamSpendOverview {

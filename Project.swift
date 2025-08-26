@@ -19,6 +19,7 @@ let project = Project(
         .local(path: "Packages/VibeviewerSettingsUI"),
         .local(path: "Packages/VibeviewerAppEnvironment"),
         .local(path: "Packages/VibeviewerStorage"),
+        .local(path: "Packages/VibeviewerShareUI"),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "5.10",
@@ -34,6 +35,7 @@ let project = Project(
             infoPlist: .extendingDefault(with: [
                 "LSMinimumSystemVersion": .string("14.0"),
                 "LSApplicationCategoryType": .string("public.app-category.productivity"),
+                "UIAppFonts": .array([.string("Satoshi-Regular.ttf"), .string("Satoshi-Medium.ttf"), .string("Satoshi-Bold.ttf"), .string("Satoshi-Italic.ttf")]),
             ]),
             sources: ["Vibeviewer/**"],
             resources: [
@@ -49,6 +51,7 @@ let project = Project(
                 .package(product: "VibeviewerSettingsUI"),
                 .package(product: "VibeviewerAppEnvironment"),
                 .package(product: "VibeviewerStorage"),
+                .package(product: "VibeviewerShareUI"),
             ]
         )
     ]

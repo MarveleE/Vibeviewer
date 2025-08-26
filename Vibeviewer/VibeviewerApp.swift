@@ -14,6 +14,7 @@ import VibeviewerMenuUI
 import VibeviewerModel
 import VibeviewerSettingsUI
 import VibeviewerStorage
+import VibeviewerShareUI
 
 @main
 struct VibeviewerApp: App {
@@ -25,7 +26,7 @@ struct VibeviewerApp: App {
     )
 
     var body: some Scene {
-        MenuBarExtra(isInserted: .constant(true)) {
+        MenuBarExtra {
             MenuPopoverView()
                 .environment(\.cursorService, DefaultCursorService())
                 .environment(\.cursorStorage, DefaultCursorStorageService())
@@ -33,6 +34,9 @@ struct VibeviewerApp: App {
                 .environment(\.settingsWindowManager, SettingsWindowManager.shared)
                 .environment(self.settings)
                 .environment(self.session)
+                .background {
+                    MenuBarExtraWindowHelperView()
+                }
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "bolt.fill")
@@ -40,9 +44,10 @@ struct VibeviewerApp: App {
                     .frame(width: 16, height: 16)
                     .padding(.trailing, 4)
                 Text(self.session.snapshot?.spendingCents.dollarStringFromCents ?? "Vibeviewer")
-                    .font(.headline.bold())
+                    .font(.app(.satoshiBold, size: 15))
                     .foregroundColor(.primary)
             }
         }
+        .menuBarExtraStyle(.window)
     }
 }
