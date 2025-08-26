@@ -16,15 +16,15 @@ public struct VibeButtonStyle: ButtonStyle {
             .font(.app(.satoshiMedium, size: 12))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .overlayBorder(color: tintColor.opacity(0.2), lineWidth: 0.5, cornerRadius: 100)
+            .overlayBorder(color: tintColor.opacity(0.4), lineWidth: 1, cornerRadius: 100)
             .scaleEffect(configuration.isPressed || isPressing ? pressScale : 1.0)
             .animation(.snappy(duration: 0.2), value: configuration.isPressed || isPressing)
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 0)
-                    .updating($isPressing) { _, state, _ in
-                        state = true
-                    }
-            )
+//            .simultaneousGesture(
+//                DragGesture(minimumDistance: 0)
+//                    .updating($isPressing) { _, state, _ in
+//                        state = true
+//                    }
+//            )
     }
 }
 

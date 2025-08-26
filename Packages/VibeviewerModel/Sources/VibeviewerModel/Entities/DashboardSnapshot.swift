@@ -50,6 +50,7 @@ public class DashboardSnapshot: Codable, Equatable {
         case totalRequestsAllModels
         case spendingCents
         case hardLimitDollars
+        case usageEvents
         case requestToday
         case requestYestoday
     }
@@ -62,10 +63,9 @@ public class DashboardSnapshot: Codable, Equatable {
         self.totalRequestsAllModels = try container.decode(Int.self, forKey: .totalRequestsAllModels)
         self.spendingCents = try container.decode(Int.self, forKey: .spendingCents)
         self.hardLimitDollars = try container.decode(Int.self, forKey: .hardLimitDollars)
-        self.requestToday = try container.decode(Int.self, forKey: .requestToday)
+        self.requestToday = try container.decode(Int.self, forKey: .requestToday)           
         self.requestYestoday = try container.decode(Int.self, forKey: .requestYestoday)
-        self.usageEvents = []
-        // usageEvents  不参与持久化解码，运行期内由 UI 拉取后写入
+        self.usageEvents = try container.decode([UsageEvent].self, forKey: .usageEvents)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -76,9 +76,9 @@ public class DashboardSnapshot: Codable, Equatable {
         try container.encode(self.totalRequestsAllModels, forKey: .totalRequestsAllModels)
         try container.encode(self.spendingCents, forKey: .spendingCents)
         try container.encode(self.hardLimitDollars, forKey: .hardLimitDollars)
+        try container.encode(self.usageEvents, forKey: .usageEvents)
         try container.encode(self.requestToday, forKey: .requestToday)
         try container.encode(self.requestYestoday, forKey: .requestYestoday)
-        // usageEvents不参与持久化编码
     }
 
     public static func == (lhs: DashboardSnapshot, rhs: DashboardSnapshot) -> Bool {

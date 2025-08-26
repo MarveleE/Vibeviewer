@@ -24,6 +24,7 @@ struct VibeviewerApp: App {
         credentials: DefaultCursorStorageService.loadCredentialsSync(),
         snapshot: DefaultCursorStorageService.loadDashboardSnapshotSync()
     )
+    @State private var refresher: any DashboardRefreshService = NoopDashboardRefreshService()
 
     var body: some Scene {
         MenuBarExtra {
@@ -32,13 +33,13 @@ struct VibeviewerApp: App {
                 .environment(\.cursorStorage, DefaultCursorStorageService())
                 .environment(\.loginWindowManager, LoginWindowManager.shared)
                 .environment(\.settingsWindowManager, SettingsWindowManager.shared)
+                .environment(\.dashboardRefreshService, self.refresher)
                 .environment(self.settings)
                 .environment(self.session)
                 .background {
                     MenuBarExtraWindowHelperView()
                 }
-                .compositingGroup()
-                .geometryGroup()
+                
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "bolt.fill")
@@ -49,7 +50,19 @@ struct VibeviewerApp: App {
                     .font(.app(.satoshiBold, size: 15))
                     .foregroundColor(.primary)
             }
+            .task {
+                // 启动后台刷新服务
+                let svc = DefaultDashboardRefreshService(
+                    api: DefaultCursorService(),
+                    storage: DefaultCursorStorageService(),
+                    settings: self.settings,
+                    session: self.session
+                )
+                self.refresher = svc
+                await self.refresher.start()
+            }
         }
         .menuBarExtraStyle(.window)
+        .windowResizability(.contentSize)
     }
 }

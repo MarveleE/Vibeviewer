@@ -1,6 +1,6 @@
 import Foundation
 
-public struct UsageEvent: Sendable, Equatable {
+public struct UsageEvent: Codable, Sendable, Equatable {
     public let occurredAtMs: String
     public let modelName: String
     public let kind: String

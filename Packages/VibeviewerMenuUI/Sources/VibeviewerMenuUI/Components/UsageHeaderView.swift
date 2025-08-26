@@ -14,14 +14,9 @@ struct UsageHeaderView: View {
 
     var body: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Usage")
-                    .font(.app(.satoshiMedium, size: 16))
-                    .foregroundStyle(.primary)
-                Text("2min ago")
-                    .font(.app(.satoshiRegular, size: 10))
-                    .foregroundStyle(.tertiary)
-            }
+            Text("Usage")
+                .font(.app(.satoshiMedium, size: 16))
+                .foregroundStyle(.primary)
             Spacer()
 
             HStack(spacing: 12) {
