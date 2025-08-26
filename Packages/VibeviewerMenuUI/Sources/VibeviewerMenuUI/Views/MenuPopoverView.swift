@@ -35,7 +35,11 @@ public struct MenuPopoverView: View {
             UsageHeaderView { action in
                 switch action {
                 case .dashboard:
-                    self.settingsWindow.show()
+                    self.openDashboard()
+                case .logout:
+                    Task {
+                        await self.setLoggedOut()
+                    }
                 }
             }
 
@@ -73,29 +77,15 @@ public struct MenuPopoverView: View {
         .compositingGroup()
         .geometryGroup()
     }
-
-    private func completeLogin(cookieHeader: String) async {
-        self.state = .loading
-        do {
-            let me = try await service.fetchMe(cookieHeader: cookieHeader)
-            try await self.storage.saveCredentials(me)
-            self.session.credentials = me
-            await self.refresher.refreshNow()
-        } catch {
-            self.state = .error(error.localizedDescription)
-        }
-    }
-
-    private func refresh() async {
-        guard self.session.credentials != nil else { return }
-        self.state = .loading
-        await self.refresher.refreshNow()
-    }
     
     private func setLoggedOut() async {
         await self.storage.clearCredentials()
         await self.storage.clearDashboardSnapshot()
         self.session.credentials = nil
         self.session.snapshot = nil
+    }
+
+    private func openDashboard() {
+        NSWorkspace.shared.open(URL(string: "https://app.cursor.com/dashboard")!)
     }
 }

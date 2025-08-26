@@ -6,6 +6,7 @@ import VibeviewerShareUI
 struct UsageHeaderView: View {
     enum Action {
         case dashboard
+        case logout
     }
 
     var action: (Action) -> Void
@@ -20,9 +21,16 @@ struct UsageHeaderView: View {
             Spacer()
 
             HStack(spacing: 12) {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 14))
-                    .foregroundStyle(.secondary)
+                Menu("", systemImage: "ellipsis") {
+                    Button("Log out") {
+                        action(.logout)
+                    }
+                }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .frame(width: 16)
+                .foregroundStyle(.secondary)
+                .tint(.secondary)
 
                 Button("Dashboard") {
                     action(.dashboard)

@@ -13,6 +13,7 @@ struct UsageEventView: View {
             ForEach(Array(events.prefix(3).enumerated()), id: \.element.occurredAtMs) { index, event in
                 EventItemView(event: event, isHovered: isHovered)
                     .scaleEffect(isHovered ? 1.0 : (1 - (Double(index) * 0.05)))
+                    .blur(radius: isHovered ? 0 : Double(index) * 1.5)
                     .opacity(1 - (Double(index) * 0.1))
                     .zIndex(-Double(index))
             }
