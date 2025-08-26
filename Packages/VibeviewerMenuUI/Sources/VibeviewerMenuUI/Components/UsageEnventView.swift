@@ -42,17 +42,16 @@ struct UsageEventView: View {
 
                 Spacer()
 
-                Text(event.modelName)
-                    .font(.app(.satoshiMedium, size: 12))
-                    .foregroundStyle(.primary)
-
-                Spacer()
-
-                Text("\(event.requestCostCount), \(event.usageCostDisplay)")
+                Text("\(event.usageCostDisplay)")
                     .font(.app(.satoshiMedium, size: 12))
                     .foregroundStyle(.secondary)
             }
             .padding(8)
+            .overlay {
+                Text(event.modelName)
+                    .font(.app(.satoshiMedium, size: 12))
+                    .foregroundStyle(.primary)
+            }
             .background {
                 ZStack {
                     if isHovered {
