@@ -13,29 +13,54 @@ struct UsageHeaderView: View {
 
     @Environment(AppSession.self) private var session
 
+    @State var isShowLogout: Bool = false
+
+    @State var isHovering: Bool = false
+
     var body: some View {
         HStack {
-            Text("Usage")
+            Text("VibeViewer")
                 .font(.app(.satoshiMedium, size: 16))
                 .foregroundStyle(.primary)
             Spacer()
 
             HStack(spacing: 12) {
-                Menu("", systemImage: "ellipsis") {
-                    Button("Log out") {
-                        action(.logout)
+                Group {
+                    if isShowLogout {
+                        Button("Log out") { 
+                            action(.logout)
+                        }
+                        .buttonStyle(.vibe(Color(hex: "FF4D4D")))
+                        .transition(.blurReplace)
+                    } else {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                isShowLogout.toggle()
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .padding(.vertical, 4)
+                                .contentShape(.rect)
+                        }
+                        .foregroundStyle(.secondary)
+                        .buttonStyle(.plain)
+                        .transition(.blurReplace)
                     }
                 }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.hidden)
-                .frame(width: 16)
-                .foregroundStyle(.secondary)
-                .tint(.secondary)
 
                 Button("Dashboard") {
                     action(.dashboard)
                 }
                 .buttonStyle(.vibe(.secondary))
+            }
+        }
+        .onHover { isHovering = $0 }
+        .animation(.easeInOut(duration: 0.2), value: isHovering)
+        .onChange(of: isHovering) { _, isHovering in
+            if !isHovering {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isShowLogout = false
+                }
             }
         }
     }

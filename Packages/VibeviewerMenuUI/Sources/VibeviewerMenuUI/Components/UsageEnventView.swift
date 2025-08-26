@@ -13,8 +13,8 @@ struct UsageEventView: View {
             ForEach(Array(events.prefix(3).enumerated()), id: \.element.occurredAtMs) { index, event in
                 EventItemView(event: event, isHovered: isHovered)
                     .scaleEffect(isHovered ? 1.0 : (1 - (Double(index) * 0.05)))
-                    .blur(radius: isHovered ? 0 : Double(index) * 1.5)
-                    .opacity(1 - (Double(index) * 0.1))
+                    .blur(radius: isHovered ? 0 : Double(index) * 2)
+                    .opacity(1 - (Double(index) * 0.2))
                     .zIndex(-Double(index))
             }
         }
@@ -63,6 +63,7 @@ struct UsageEventView: View {
                 }
             }
             .cornerRadiusWithCorners(8)
+            .overlayBorder(color: .black.opacity(0.1), lineWidth: 1, cornerRadius: 8)
         }
     }
 }

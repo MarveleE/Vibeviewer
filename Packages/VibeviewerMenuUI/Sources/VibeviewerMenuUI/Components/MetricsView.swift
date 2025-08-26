@@ -34,16 +34,26 @@ struct MetricsView: View {
     struct MetricContentView: View {
         let dataSource: MetricsViewDataSource
 
+        @State var isHovering: Bool = false
+
+        var tintColor: Color {
+            if isHovering {
+                return dataSource.tint
+            } else {
+                return dataSource.tint.opacity(0.5)
+            }
+        }
+
         var body: some View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .center, spacing: 12) {
                     HStack(alignment: .center, spacing: 4) {
                         Image(systemName: dataSource.icon)
                             .font(.system(size: 16))
-                            .foregroundStyle(dataSource.tint)
+                            .foregroundStyle(tintColor)
                         Text(dataSource.title)
                             .font(.app(.satoshiBold, size: 12))
-                            .foregroundStyle(dataSource.tint)
+                            .foregroundStyle(tintColor)
                     }
 
                     Spacer()
@@ -63,7 +73,7 @@ struct MetricsView: View {
                     }
                 }
 
-                progressBar(color: dataSource.tint)
+                progressBar(color: tintColor)
 
                 if let description = dataSource.description {
                     Text(description)
@@ -71,6 +81,8 @@ struct MetricsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            .animation(.easeInOut(duration: 0.2), value: isHovering)
+            .onHover { isHovering = $0 }
         }
 
         @ViewBuilder
@@ -100,7 +112,7 @@ extension DashboardSnapshot {
             currentValue: spendingCents.dollarStringFromCents,
             targetValue: (hardLimitDollars * 100).dollarStringFromCents,
             progress: min(Double(spendingCents) / Double(hardLimitDollars * 100), 1),
-            tint: Color(hex: "55E07A").opacity(0.5)
+            tint: Color(hex: "55E07A")
         )
     }
 
@@ -112,7 +124,7 @@ extension DashboardSnapshot {
             currentValue: "\(totalRequestsAllModels)",
             targetValue: "\(planIncludeRequestCount)",
             progress: min(Double(planRequestsUsed) / Double(planIncludeRequestCount), 1),
-            tint: Color(hex: "559DE0").opacity(0.5)
+            tint: Color(hex: "559DE0")
         )
     }
 }

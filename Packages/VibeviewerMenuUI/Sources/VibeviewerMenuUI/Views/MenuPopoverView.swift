@@ -65,9 +65,9 @@ public struct MenuPopoverView: View {
         .frame(width: 300, alignment: .top)
         .background {
             ZStack {
-                Color(hex: "0D0C0C")
+                Color(hex: "1F1E1E")
                 Circle()
-                    .fill(Color(hex: "6D8A84"))
+                    .fill(Color(hex: "354E48"))
                     .padding(80)
                     .blur(radius: 120)
             }
@@ -86,6 +86,6 @@ public struct MenuPopoverView: View {
     }
 
     private func openDashboard() {
-        NSWorkspace.shared.open(URL(string: "https://app.cursor.com/dashboard")!)
+        NSWorkspace.shared.open(URL(string: "https://cursor.com/dashboard?tab=usage")!)
     }
 }
