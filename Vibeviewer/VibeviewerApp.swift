@@ -39,7 +39,6 @@ struct VibeviewerApp: App {
                 .background {
                     MenuBarExtraWindowHelperView()
                 }
-                
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "bolt.fill")

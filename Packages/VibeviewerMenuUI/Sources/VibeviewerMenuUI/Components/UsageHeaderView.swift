@@ -47,6 +47,7 @@ struct UsageHeaderView: View {
                         .transition(.blurReplace)
                     }
                 }
+                .opacity(session.credentials != nil ? 1 : 0)
 
                 Button("Dashboard") {
                     action(.dashboard)

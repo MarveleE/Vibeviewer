@@ -46,19 +46,21 @@ public struct MenuPopoverView: View {
             if let snapshot = self.session.snapshot {
                 MetricsView(metric: .billing(snapshot.billingMetrics))
                 MetricsView(metric: .planRequests(snapshot.planRequestsMetrics))
+
+                 Divider().opacity(0.5)
+
+                RequestsCompareView(requestToday: self.session.snapshot?.requestToday ?? 0, requestYestoday: self.session.snapshot?.requestYestoday ?? 0)
+                
+                Divider().opacity(0.5)
+
+                UsageEventView(events: self.session.snapshot?.usageEvents ?? [])
+                
+                Divider().opacity(0.5)
+
+                MenuFooterView(email: self.session.credentials?.email ?? "")
+            } else {
+                loginButtonView
             }
-
-            Divider().opacity(0.5)
-
-            RequestsCompareView(requestToday: self.session.snapshot?.requestToday ?? 0, requestYestoday: self.session.snapshot?.requestYestoday ?? 0)
-            
-            Divider().opacity(0.5)
-
-            UsageEventView(events: self.session.snapshot?.usageEvents ?? [])
-            
-            Divider().opacity(0.5)
-
-            MenuFooterView(email: self.session.credentials?.email ?? "")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 24)
@@ -76,6 +78,24 @@ public struct MenuPopoverView: View {
         .padding(4)
         .compositingGroup()
         .geometryGroup()
+    }
+
+    private var loginButtonView: some View {
+        Button {
+            loginWindow.show(onCookieCaptured: { cookie in
+                Task {
+                    guard let me = try? await self.service.fetchMe(cookieHeader: cookie) else { return }
+                    try? await self.storage.saveCredentials(me)
+                    await self.refresher.start()
+                    self.session.credentials = me
+                    self.session.snapshot = await self.storage.loadDashboardSnapshot()
+                }
+            })
+        } label: {
+            Text("Login to Cursor")
+        }
+        .buttonStyle(.vibe(.primary))
+        .maxFrame(true, false)
     }
     
     private func setLoggedOut() async {
