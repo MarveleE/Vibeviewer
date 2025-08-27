@@ -1,28 +1,32 @@
-import Observation
 import SwiftUI
+import VibeviewerShareUI
 import VibeviewerAppEnvironment
 import VibeviewerModel
-import VibeviewerShareUI
 
-public struct SettingsView: View {
+struct SettingsView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(AppSettings.self) private var appSettings
-    @Environment(\.cursorStorage) private var storage
-    @Environment(\.launchAtLoginService) private var launchAtLoginService
     
     @State private var refreshFrequency: String = ""
     @State private var usageHistoryLimit: String = ""
     @State private var pauseOnScreenSleep: Bool = false
-    @State private var launchAtLogin: Bool = false
-
-    public init() {}
-
-    public var body: some View {
+    
+    var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack {
                 Text("Settings")
                     .font(.app(.satoshiBold, size: 18))
                 
                 Spacer()
+                
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
             }
             
             VStack(alignment: .leading, spacing: 16) {
@@ -46,33 +50,27 @@ public struct SettingsView: View {
                 
                 Toggle("Pause refresh when screen sleeps", isOn: $pauseOnScreenSleep)
                     .font(.app(.satoshiMedium, size: 12))
-                
-                Toggle("Launch at login", isOn: $launchAtLogin)
-                    .font(.app(.satoshiMedium, size: 12))
             }
             
             HStack {
                 Spacer()
                 
                 Button("Cancel") {
-                    NSApplication.shared.keyWindow?.close()
+                    dismiss()
                 }
                 .buttonStyle(.vibe(Color(hex: "F58283").opacity(0.8)))
                 
                 Button("Save") {
                     saveSettings()
-                    NSApplication.shared.keyWindow?.close()
+                    dismiss()
                 }
                 .buttonStyle(.vibe(Color(hex: "5B67E2").opacity(0.8)))
             }
         }
         .padding(20)
-        .frame(width: 400, height: 300)
+        .frame(width: 320, height: 240)
         .onAppear {
             loadSettings()
-        }
-        .task { 
-            try? await self.appSettings.save(using: self.storage) 
         }
     }
     
@@ -80,7 +78,6 @@ public struct SettingsView: View {
         refreshFrequency = String(appSettings.overview.refreshInterval)
         usageHistoryLimit = String(appSettings.usageHistory.limit)
         pauseOnScreenSleep = appSettings.pauseOnScreenSleep
-        launchAtLogin = launchAtLoginService.isEnabled
     }
     
     private func saveSettings() {
@@ -93,8 +90,5 @@ public struct SettingsView: View {
         }
         
         appSettings.pauseOnScreenSleep = pauseOnScreenSleep
-        
-        _ = launchAtLoginService.setEnabled(launchAtLogin)
-        appSettings.launchAtLogin = launchAtLogin
     }
 }

@@ -13,7 +13,6 @@ struct UsageHistorySection: View {
         VStack(alignment: .leading, spacing: 8) {
             Divider()
             HStack {
-                DatePicker("选择日期", selection: self.$settings.usageHistory.dateRange.start, displayedComponents: .date)
                 Spacer()
                 Stepper("条数: \(self.settings.usageHistory.limit)", value: self.$settings.usageHistory.limit, in: 1 ... 100)
                     .frame(minWidth: 120)

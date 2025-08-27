@@ -57,7 +57,7 @@ public struct MenuPopoverView: View {
                 
                 Divider().opacity(0.5)
 
-                MenuFooterView(email: self.session.credentials?.email ?? "")
+                MenuFooterView()
             } else {
                 loginButtonView
             }

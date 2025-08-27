@@ -19,6 +19,7 @@ let package = Package(
     .package(path: "../VibeviewerAPI"),
     .package(path: "../VibeviewerModel"),
     .package(path: "../VibeviewerStorage"),
+    .package(path: "../VibeviewerCore"),
     
   ],
   targets: [
@@ -30,6 +31,7 @@ let package = Package(
         "VibeviewerAPI",
         "VibeviewerModel",
         "VibeviewerStorage",
+        "VibeviewerCore",
       ]
     ),
     .testTarget(

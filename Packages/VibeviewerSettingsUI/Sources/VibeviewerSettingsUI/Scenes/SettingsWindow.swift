@@ -17,9 +17,9 @@ public final class SettingsWindowManager {
         }
         let vc = NSHostingController(rootView: SettingsView().environment(self.appSettings))
         let window = NSWindow(contentViewController: vc)
-        window.title = "设置"
-        window.setContentSize(NSSize(width: 560, height: 420))
-        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+        window.title = "Settings"
+        window.setContentSize(NSSize(width: 320, height: 240))
+        window.styleMask = [.titled, .closable]
         window.isReleasedWhenClosed = false
         let ctrl = NSWindowController(window: window)
         self.controller = ctrl

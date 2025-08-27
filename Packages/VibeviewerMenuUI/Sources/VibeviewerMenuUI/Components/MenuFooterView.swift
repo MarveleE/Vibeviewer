@@ -2,16 +2,22 @@ import SwiftUI
 import VibeviewerShareUI
 import VibeviewerAppEnvironment
 import VibeviewerModel
+import VibeviewerSettingsUI
 
 struct MenuFooterView: View {
-    let email: String
     @Environment(\.dashboardRefreshService) private var refresher
+    @Environment(\.settingsWindowManager) private var settingsWindow
     
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            Text(email)
-                .font(.app(.satoshiRegular, size: 10))
-                .foregroundStyle(.secondary)
+            Button {
+                settingsWindow.show()
+            } label: {
+                Image(systemName: "gear")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
             
             Spacer()
 

@@ -9,6 +9,7 @@ import Observation
 import SwiftUI
 import VibeviewerAPI
 import VibeviewerAppEnvironment
+import VibeviewerCore
 import VibeviewerLoginUI
 import VibeviewerMenuUI
 import VibeviewerModel
@@ -34,6 +35,7 @@ struct VibeviewerApp: App {
                 .environment(\.loginWindowManager, LoginWindowManager.shared)
                 .environment(\.settingsWindowManager, SettingsWindowManager.shared)
                 .environment(\.dashboardRefreshService, self.refresher)
+                .environment(\.launchAtLoginService, DefaultLaunchAtLoginService())
                 .environment(self.settings)
                 .environment(self.session)
                 .background {
