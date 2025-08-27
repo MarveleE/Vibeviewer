@@ -1,6 +1,7 @@
 import SwiftUI
 import VibeviewerModel
 import VibeviewerShareUI
+import Foundation
 
 struct MetricsViewDataSource: Equatable { 
     var icon: String
@@ -104,11 +105,76 @@ struct MetricsView: View {
 }
 
 extension DashboardSnapshot {
+    // MARK: - Subscription Expiry Configuration
+    
+    /// Configuration for subscription expiry date calculation
+    /// Modify this enum to change expiry date behavior with minimal code changes
+    private enum SubscriptionExpiryRule {
+        case endOfCurrentMonth
+        case specificDaysFromNow(Int)
+        case endOfNextMonth
+        // Add more cases as needed
+    }
+    
+    /// Current expiry rule - change this to modify expiry date calculation
+    private var currentExpiryRule: SubscriptionExpiryRule {
+        .endOfCurrentMonth // Can be easily changed to any other rule
+    }
+    
+    // MARK: - Helper Properties for Expiry Date Calculation
+    
+    /// Current subscription expiry date based on configured rule
+    private var subscriptionExpiryDate: Date {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        switch currentExpiryRule {
+        case .endOfCurrentMonth:
+            let endOfMonth = calendar.dateInterval(of: .month, for: now)?.end ?? now
+            return calendar.date(byAdding: .day, value: -1, to: endOfMonth) ?? now
+            
+        case .specificDaysFromNow(let days):
+            return calendar.date(byAdding: .day, value: days, to: now) ?? now
+            
+        case .endOfNextMonth:
+            let nextMonth = calendar.date(byAdding: .month, value: 1, to: now) ?? now
+            let endOfNextMonth = calendar.dateInterval(of: .month, for: nextMonth)?.end ?? now
+            return calendar.date(byAdding: .day, value: -1, to: endOfNextMonth) ?? now
+        }
+    }
+    
+    /// Formatted expiry date string in yy:mm:dd format
+    private var expiryDateString: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yy:MM:dd"
+        return formatter.string(from: subscriptionExpiryDate)
+    }
+    
+    /// Remaining days until subscription expiry
+    private var remainingDays: Int {
+        let calendar = Calendar.current
+        let days = calendar.dateComponents([.day], from: Date(), to: subscriptionExpiryDate).day ?? 0
+        return max(days, 1) // At least 1 day to avoid division by zero
+    }
+    
+    /// Remaining balance in cents
+    private var remainingBalanceCents: Int {
+        return max((hardLimitDollars * 100) - spendingCents, 0)
+    }
+    
+    /// Average daily spending allowance from remaining balance
+    private var averageDailyAllowance: String {
+        let dailyAllowanceCents = remainingBalanceCents / remainingDays
+        return dailyAllowanceCents.dollarStringFromCents
+    }
+    
     var billingMetrics: MetricsViewDataSource {
-        MetricsViewDataSource(
+        let description = "Expires \(expiryDateString), \(averageDailyAllowance)/day remaining"
+        
+        return MetricsViewDataSource(
             icon: "dollarsign.circle.fill",
             title: "Usage Spending",
-            description: "Your current spending",
+            description: description,
             currentValue: spendingCents.dollarStringFromCents,
             targetValue: (hardLimitDollars * 100).dollarStringFromCents,
             progress: min(Double(spendingCents) / Double(hardLimitDollars * 100), 1),
@@ -117,10 +183,12 @@ extension DashboardSnapshot {
     }
 
     var planRequestsMetrics: MetricsViewDataSource {
-        MetricsViewDataSource(
+        let description = "Expires \(expiryDateString)"
+        
+        return MetricsViewDataSource(
             icon: "calendar.circle.fill",
             title: "Total Requests",
-            description: "Your current plan requests",
+            description: description,
             currentValue: "\(totalRequestsAllModels)",
             targetValue: "\(planIncludeRequestCount)",
             progress: min(Double(planRequestsUsed) / Double(planIncludeRequestCount), 1),
