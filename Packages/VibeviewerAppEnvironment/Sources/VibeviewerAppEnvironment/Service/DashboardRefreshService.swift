@@ -8,8 +8,11 @@ import VibeviewerCore
 /// 后台刷新服务协议
 public protocol DashboardRefreshService: Sendable {
     @MainActor var isRefreshing: Bool { get }
+    @MainActor var isPaused: Bool { get }
     @MainActor func start() async
     @MainActor func stop()
+    @MainActor func pause()
+    @MainActor func resume() async
     @MainActor func refreshNow() async
 }
 
@@ -17,8 +20,11 @@ public protocol DashboardRefreshService: Sendable {
 public struct NoopDashboardRefreshService: DashboardRefreshService {
     public init() {}
     public var isRefreshing: Bool { false }
+    public var isPaused: Bool { false }
     @MainActor public func start() async {}
     @MainActor public func stop() {}
+    @MainActor public func pause() {}
+    @MainActor public func resume() async {}
     @MainActor public func refreshNow() async {}
 }
 
@@ -31,6 +37,7 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
     private let session: AppSession
     private var loopTask: Task<Void, Never>?
     public private(set) var isRefreshing: Bool = false
+    public private(set) var isPaused: Bool = false
 
     public init(
         api: CursorService,
@@ -52,6 +59,11 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
         self.loopTask = Task { [weak self] in
             guard let self else { return }
             while !Task.isCancelled {
+                // 如果暂停，则等待一段时间后再检查
+                if self.isPaused {
+                    try? await Task.sleep(for: .seconds(30)) // 暂停时每30秒检查一次状态
+                    continue
+                }
                 await self.refreshNow()
                 // 固定 5 分钟刷新一次
                 try? await Task.sleep(for: .seconds(5 * 60))
@@ -64,8 +76,18 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
         self.loopTask = nil
     }
 
+    public func pause() {
+        self.isPaused = true
+    }
+
+    public func resume() async {
+        self.isPaused = false
+        // 立即刷新一次
+        await self.refreshNow()
+    }
+
     public func refreshNow() async {
-        if self.isRefreshing { return }
+        if self.isRefreshing || self.isPaused { return }
         self.isRefreshing = true
         defer { self.isRefreshing = false }
         await self.bootstrapIfNeeded()

@@ -51,13 +51,18 @@ struct VibeviewerApp: App {
             }
             .task {
                 // 启动后台刷新服务
-                let svc = DefaultDashboardRefreshService(
+                let dashboardRefreshSvc = DefaultDashboardRefreshService(
                     api: DefaultCursorService(),
                     storage: DefaultCursorStorageService(),
                     settings: self.settings,
                     session: self.session
                 )
-                self.refresher = svc
+                let screenPowerSvc = DefaultScreenPowerStateService()
+                let powerAwareSvc = PowerAwareDashboardRefreshService(
+                    refreshService: dashboardRefreshSvc,
+                    screenPowerService: screenPowerSvc
+                )
+                self.refresher = powerAwareSvc
                 await self.refresher.start()
             }
         }
