@@ -43,7 +43,7 @@ public extension AIModelBrands {
         case .gemini:
             return moduleImage("gemini")
         case .grok:
-            return moduleImage("grok")
+            return moduleImage("grok").renderingMode(.template)
         case .kimi:
             return moduleImage("kimi")
         case .default:
