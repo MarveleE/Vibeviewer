@@ -96,3 +96,9 @@ public struct MenuBarExtraWindowHelperView: NSViewRepresentable {
     
     public func makeNSView(context: Context) -> WindowHelper { WindowHelper() }
 }
+
+public extension View {
+    func menuBarExtraWindowCorner() -> some View {
+        self.background(MenuBarExtraWindowHelperView())
+    }
+}

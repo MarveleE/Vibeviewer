@@ -38,37 +38,42 @@ struct VibeviewerApp: App {
                 .environment(\.launchAtLoginService, DefaultLaunchAtLoginService())
                 .environment(self.settings)
                 .environment(self.session)
-                .background {
-                    MenuBarExtraWindowHelperView()
-                }
+                .menuBarExtraWindowCorner()
         } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "bolt.fill")
-                    .resizable()
-                    .frame(width: 16, height: 16)
-                    .padding(.trailing, 4)
-                Text(self.session.snapshot?.spendingCents.dollarStringFromCents ?? "Vibeviewer")
-                    .font(.app(.satoshiBold, size: 15))
-                    .foregroundColor(.primary)
-            }
-            .task {
-                // 启动后台刷新服务
-                let dashboardRefreshSvc = DefaultDashboardRefreshService(
-                    api: DefaultCursorService(),
-                    storage: DefaultCursorStorageService(),
-                    settings: self.settings,
-                    session: self.session
-                )
-                let screenPowerSvc = DefaultScreenPowerStateService()
-                let powerAwareSvc = PowerAwareDashboardRefreshService(
-                    refreshService: dashboardRefreshSvc,
-                    screenPowerService: screenPowerSvc
-                )
-                self.refresher = powerAwareSvc
-                await self.refresher.start()
-            }
+            menuBarLabel()
         }
         .menuBarExtraStyle(.window)
         .windowResizability(.contentSize)
+    }
+
+    private func menuBarLabel() -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: "bolt.fill")
+                .resizable()
+                .frame(width: 16, height: 16)
+                .padding(.trailing, 4)
+            Text(self.session.snapshot?.spendingCents.dollarStringFromCents ?? "Vibeviewer")
+                .font(.app(.satoshiBold, size: 15))
+                .foregroundColor(.primary)
+        }
+            .task {
+                await self.setupDashboardRefreshService()
+            }
+    }
+
+    private func setupDashboardRefreshService() async {
+        let dashboardRefreshSvc = DefaultDashboardRefreshService(
+            api: DefaultCursorService(),
+            storage: DefaultCursorStorageService(),
+            settings: self.settings,
+            session: self.session
+        )
+        let screenPowerSvc = DefaultScreenPowerStateService()
+        let powerAwareSvc = PowerAwareDashboardRefreshService(
+            refreshService: dashboardRefreshSvc,
+            screenPowerService: screenPowerSvc
+        )
+        self.refresher = powerAwareSvc
+        await self.refresher.start()
     }
 }
