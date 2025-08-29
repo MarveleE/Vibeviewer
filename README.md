@@ -24,6 +24,7 @@ An open-source macOS menu bar app that surfaces workspace/team usage and spend a
 ### Notes
 - Currently developed and tested against **team accounts** only. Individual/free accounts are not yet verified — contributions for compatibility are welcome.
 - Thanks to the modular layered design, although Cursor is the present data source, other similar apps can be integrated by implementing the corresponding data-layer interfaces — PRs are welcome.
+- The app currently has no logo — designers are welcome to contribute one.
 
 > Brand and data sources are for demonstration. The UI never sees concrete networking implementations — only service protocols and default implementations are exposed.
 
