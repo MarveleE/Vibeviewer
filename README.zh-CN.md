@@ -183,4 +183,6 @@ swift test --package-path Packages/VibeviewerShareUI
 
 感谢所有为模块化 Swift 包架构、SwiftUI 生态与开发者工具做出贡献的社区成员。也感谢你对 Vibeviewer 的关注与改进！
 
+UI 灵感来自 X 用户 @hi_caicai 的作品：[Minto: Vibe Coding Tracker](https://apps.apple.com/ca/app/minto-vibe-coding-tracker/id6749605275?mt=12)。
+
 

@@ -183,4 +183,6 @@ This project is open-sourced under the MIT License. See `LICENSE` for details.
 
 Thanks to the community for contributions to modular Swift packages, SwiftUI, and developer tooling — and thanks for helping improve Vibeviewer!
 
+UI inspiration from X user @hi_caicai — see [Minto: Vibe Coding Tracker](https://apps.apple.com/ca/app/minto-vibe-coding-tracker/id6749605275?mt=12).
+
 
