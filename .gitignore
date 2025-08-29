@@ -11,6 +11,14 @@ xcuserdata/
 *.xcodeproj
 *.xcworkspace
 
+## macos
+*.dmg
+*.app
+*.app.zip
+*.app.tar.gz
+*.app.tar.bz2
+*.app.tar.xz
+
 ## compatibility with Xcode 3 and earlier (ignoring not required starting Xcode 4)
 build/
 DerivedData/
