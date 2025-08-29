@@ -7,6 +7,10 @@ REPO_ROOT=$(cd -- "${SCRIPT_DIR}/.." && pwd)
 cd "${REPO_ROOT}"
 
 echo "[tuist] Generating project..."
+tuist install || {
+  echo "[tuist] install failed" >&2
+  exit 1
+}
 tuist generate || {
   echo "[tuist] generate failed" >&2
   exit 1
