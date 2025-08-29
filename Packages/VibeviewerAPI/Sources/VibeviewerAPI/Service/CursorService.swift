@@ -20,7 +20,7 @@ struct DefaultCursorNetworkClient: CursorNetworkClient {
     func decodableRequest<T>(_ target: T, decodingStrategy: JSONDecoder.KeyDecodingStrategy) async throws -> T
         .ResultType where T: DecodableTargetType
     {
-        try await GroNetwork.decodableRequest(target, decodingStrategy: decodingStrategy)
+        try await HttpClient.decodableRequest(target, decodingStrategy: decodingStrategy)
     }
 }
 

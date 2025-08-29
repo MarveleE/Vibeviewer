@@ -1,64 +1,65 @@
 ---
 alwaysApply: false
 ---
-# API 文件编写规范（VibeviewerAPI）
+# API Authoring Guidelines (VibeviewerAPI)
 
-## 目标
-- 统一 API 的命名、目录、抽象、依赖注入与解码范式
-- 所有 API 置于单一 Module：`VibeviewerAPI`，实现依赖隔离与模块化
-- 标准化 `DecodableTargetType` 与基于 Moya/Alamofire 的 `GroNetwork.decodableRequest(_:)`（仅 async/await）使用
+## Goals
+- Unify API naming, directories, abstractions, dependency injection, and decoding patterns
+- Keep all APIs in a single module `VibeviewerAPI` to enforce isolation and modularity
+- Standardize `DecodableTargetType` and the `HttpClient.decodableRequest(_:)` usage (async/await only) on top of Moya/Alamofire
 
-## 强制约束
-- API Target 使用 `struct` 声明（禁止 `enum`/`case` 风格 Target）
-- 只使用 async/await 的解码调用，禁止回调风格
-- API 声明与 Model 声明分离：
-  - API Target/Service → `VibeviewerAPI`
-  - 数据模型/聚合状态 → `VibeviewerModel`
-- View/上层仅通过依赖注入使用 `Service` 协议，不得直接调用 API Target 或 `GroNetwork`
-- API 模块对外仅暴露 `Service` 协议与默认实现；API Target、网络细节与公共 Header 配置均为内部实现
+## Hard rules
+- API targets must be declared with `struct` (no `enum`/case-style targets)
+- Use async/await-only decoding; callback-based styles are forbidden
+- Separate API declarations from model declarations:
+  - API Targets/Services → `VibeviewerAPI`
+  - Data models/aggregations → `VibeviewerModel`
+- Views/upper layers must use `Service` protocols via dependency injection, and must not call API targets or `HttpClient` directly
+- The API module only exposes `Service` protocols and default implementations; API targets, networking details, and common header configuration remain internal
 
-## 依赖与导入
-- API 模块仅引入：
-  - `import Foundation`
-  - `import Moya`
-  - `import Alamofire`（通过 `GroNetwork` 使用）
-  - `import VibeviewerModel`
-- 禁止在 API 模块引入 UI 相关依赖（`SwiftUI`/`AppKit`/`UIKit`）
+## Dependencies & imports
+- API module imports only:
+  - `Foundation`
+  - `Moya`
+  - `Alamofire` (used via `HttpClient`)
+  - `VibeviewerModel`
+- Never import UI frameworks in the API module (`SwiftUI`/`AppKit`/`UIKit`)
 
-## 命名规范
-- Target：功能名 + `API`，如 `YourFeatureAPI`
-- 协议：`YourFeatureService`
-- 默认实现：`DefaultYourFeatureService`
-- 模型：`YourFeatureResponse`、`YourFeatureDetail` 等
+## Naming conventions
+- Targets: Feature name + `API`, e.g., `YourFeatureAPI`
+- Protocols: `YourFeatureService`
+- Default implementations: `DefaultYourFeatureService`
+- Models: `YourFeatureResponse`, `YourFeatureDetail`, etc.
 
-## 目录结构（VibeviewerAPI）
-```
+## Directory structure (VibeviewerAPI)
+```text
 VibeviewerAPI/
   Sources/VibeviewerAPI/
-    Shared/
-      APICommon.swift                   # 基础配置/常量（baseURL、referer 等）
-      MoyaNetworkTypes.swift            # DecodableTargetType 协议
-      MoyaProvider+DecodableRequest.swift
+    Mapping/
+      ... DTOs & Mappers
+    Plugins/
       RequestHeaderConfigurationPlugin.swift
       RequestErrorHandlingPlugin.swift
       SimpleNetworkLoggerPlugin.swift
-      GroNetwork.swift                  # 统一封装的 Moya Provider & 会话
-      GroNetworkError.swift
-    Cursor/                             # 功能分组目录（示例）
-      CursorGetMeAPI.swift              # internal Target
-      CursorUsageAPI.swift              # internal Target
-      CursorTeamSpendAPI.swift          # internal Target
-      CursorService.swift               # public 协议 + 默认实现（仅暴露 Service）
+    Service/
+      MoyaProvider+DecodableRequest.swift
+      HttpClient.swift                  # Unified Moya provider & session wrapper
+      HttpClientError.swift
+    Targets/
+      CursorGetMeAPI.swift              # internal target
+      CursorUsageAPI.swift              # internal target
+      CursorTeamSpendAPI.swift          # internal target
+    CursorService.swift                 # public protocol + default implementation (service only)
 ```
 
-## Target 与解码规范
-- Target 遵循 `DecodableTargetType`：
+## Target and decoding conventions
+- Targets conform to `DecodableTargetType`:
   - `associatedtype ResultType: Decodable`
-  - `var decodeAtKeyPath: String? { get }`（默认 `nil`）
-  - 实现 `baseURL`、`path`、`method`、`task`、`headers`、`sampleData`
-  - 如无必要，不覆盖 `validationType`
+  - `var decodeAtKeyPath: String? { get }` (default `nil`)
+  - Implement `baseURL`, `path`, `method`, `task`, `headers`, `sampleData`
+  - Avoid overriding `validationType` unless necessary
 
-示例：
+Example:
 ```swift
 import Foundation
 import Moya
@@ -78,9 +79,9 @@ struct UserProfileDetailAPI: DecodableTargetType {
 }
 ```
 
-## Service 抽象与依赖注入
-- 对外协议 + 默认实现（仅暴露 Service，不暴露网络细节）
-- 默认实现的 `public init(decoding:)` 不泄露内部协议类型；提供 `internal init(network:decoding:)` 便于测试注入
+## Service abstraction & dependency injection
+- Expose protocol + default implementation (expose services only; hide networking details)
+- The default `public init(decoding:)` must not leak internal protocol types; provide `internal init(network:decoding:)` for test injection
 
 ```swift
 import Foundation
@@ -95,13 +96,13 @@ public struct DefaultUserProfileService: UserProfileService {
     private let network: NetworkClient
     private let decoding: JSONDecoder.KeyDecodingStrategy
 
-    // 面向业务使用：不暴露内部 NetworkClient 抽象
+    // Business-facing: do not expose internal NetworkClient abstraction
     public init(decoding: JSONDecoder.KeyDecodingStrategy = .useDefaultKeys) {
         self.network = DefaultNetworkClient()
         self.decoding = decoding
     }
 
-    // 面向测试注入：在 API 模块内可用（同层或 @testable）
+    // Test injection: available within the API module (same package or @testable)
     init(network: any NetworkClient, decoding: JSONDecoder.KeyDecodingStrategy = .useDefaultKeys) {
         self.network = network
         self.decoding = decoding
@@ -116,10 +117,10 @@ public struct DefaultUserProfileService: UserProfileService {
 }
 ```
 
-> 说明：`DefaultNetworkClient`、`NetworkClient` 协议，以及 `GroNetwork` 的具体实现细节均保持 `internal`，不对外暴露。
+> Note: `DefaultNetworkClient`, the `NetworkClient` protocol, and the concrete `HttpClient` implementation details remain `internal` and are not exposed.
 
-## View 层使用（依赖注入）
-禁止在 View 层直接调用 Target 或 `GroNetwork`。通过注入 `Service` 使用：
+## View usage (dependency injection)
+Views must not call API targets or `HttpClient` directly. Use injected services instead:
 ```swift
 import VibeviewerAPI
 import VibeviewerModel
@@ -128,21 +129,21 @@ let service: UserProfileService = DefaultUserProfileService()
 let model = try await service.fetchDetail(userId: "1")
 ```
 
-## 错误处理与日志
-- 默认启用 `SimpleNetworkLoggerPlugin` 打印请求/响应
-- 默认启用 `RequestErrorHandlingPlugin`：
-  - 超时/断网 → 统一提示
-  - 可通过策略协议自定义过滤
+## Error handling & logging
+- Enable `SimpleNetworkLoggerPlugin` by default to log requests/responses
+- Enable `RequestErrorHandlingPlugin` by default:
+  - Timeouts/offline → unified handling
+  - Customizable via strategy protocols
 
-## 测试与 Mock 规范
-- 在 `VibeviewerAPI` 模块内，通过 `internal init(network:decoding:)` 注入 `FakeNetworkClient` 实现，替代真实网络
-- 为每个 Target 提供 `sampleData`，建议使用最小可用真实 JSON，保障解析健壮性
-- 需要外部测试时使用 `@testable import VibeviewerAPI` 获取内部可见性
+## Testing & mock conventions
+- Within the `VibeviewerAPI` module, inject a `FakeNetworkClient` via `internal init(network:decoding:)` to replace real networking
+- Provide `sampleData` for each target; prefer minimal realistic JSON to ensure robust decoding
+- Use `@testable import VibeviewerAPI` to access internal symbols when external tests are required
 
-## 与模块化指南对齐（architecture.mdc）
-- API 模块不引入 UI 框架
-- 对外仅暴露 `Service` 协议与默认实现；隐藏 Target 与网络细节
-- 依赖方向：`VibeviewerModel` ← `VibeviewerAPI` ← `VibeviewerFeature`
-- 严格“一文件一个类型/职责”，功能聚合清晰，依赖单向
+## Alignment with modular architecture (architecture.mdc)
+- Do not import UI frameworks in the API module
+- Expose only `Service` protocols and default implementations; hide targets and networking details
+- Dependency direction: `VibeviewerModel` ← `VibeviewerAPI` ← `VibeviewerFeature`
+- Strict “one file, one type/responsibility”; clear feature aggregation; one-way dependencies
 
 

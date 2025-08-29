@@ -9,6 +9,7 @@ xcuserdata/
 *.xcscmblueprint
 *.xccheckout
 *.xcodeproj
+*.xcworkspace
 
 ## compatibility with Xcode 3 and earlier (ignoring not required starting Xcode 4)
 build/
@@ -97,3 +98,4 @@ Derived/
 Tuist/Derived/
 Tuist/Cache/
 Tuist/Graph/
+buildServer.json

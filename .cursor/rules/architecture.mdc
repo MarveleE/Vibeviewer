@@ -1,104 +1,105 @@
 ---
 alwaysApply: true
-title: Vibeviewer 架构规范（精简版）
+title: Vibeviewer Architecture Guidelines 
 ---
 
-## 背景
+## Background
 
-- 本项目采用 Swift Package 模块化分层，目标：最小可见面、单向依赖、单一职责、可测试性与可替换性。
-- 分层与依赖方向（只能自上而下）：
-  - Core/Shared → 提供通用工具与扩展（不依赖业务层）
-  - Model → 纯数据/DTO/领域实体（可依赖 Core）
-  - API/Service → 网络/IO/三方 SDK 编排与 DTO→领域模型映射（依赖 Model + 三方）
-  - Feature/UI → SwiftUI 视图与交互（依赖 API 暴露的服务协议与领域模型，不依赖网络库）
-- 架构风格：SwiftUI 原生 MV（非 MVVM）。状态用 @State/@Observable；依赖注入用 @Environment；并发使用 async/await 与 @MainActor。
+- The project uses a layered, modular Swift Package architecture with goals: minimal public surface, one-way dependencies, single responsibility, testability, and replaceability.
+- Layers and dependency direction (top-down only):
+  - Core/Shared → common utilities and extensions (no business-layer dependencies)
+  - Model → pure data/DTO/domain entities (may depend on Core)
+  - API/Service → networking/IO/3rd-party orchestration and DTO→domain mapping (depends on Model + 3rd-party)
+  - Feature/UI → SwiftUI views and interactions (depends on API-exposed service protocols and domain models; must not depend on networking libraries)
+- Architectural style: Native SwiftUI MV (not MVVM). State via @State/@Observable; dependency injection via @Environment; concurrency with async/await and @MainActor.
 
-## Do（应该做）
+## Do (Recommended)
 
-- 模块定位与职责
-  - 在新增代码前，先判断是否属于 UI/Service/Model/Core，并放入对应包与目录；一文件一个类型/职责。
-  - API 层只暴露“服务协议 + 默认实现”，内部封装网络库/目标请求/插件。
-  - 服务函数返回“领域模型（Model 层实体）或清晰的错误类型”，避免将 DTO 透出到 UI。
+- Module placement & responsibilities
+  - Before adding code, decide whether it belongs to UI/Service/Model/Core and place it in the corresponding package/directory; one type/responsibility per file.
+  - The API layer exposes only “service protocol + default implementation”; networking library/targets/plugins are encapsulated internally.
+  - Service functions return domain models (Model-layer entities) or clear error types; avoid leaking DTOs to the UI.
 
-- 领域模型与映射
-  - 将 API 响应 DTO 抽象为领域实体（如 UserProfile / UsageOverview / TeamSpendOverview / UsageEvent / FilteredUsageHistory）。
-  - 在 API 层完成 DTO→领域模型映射；UI 仅消费领域模型。
+- Domain models & mapping
+  - Abstract API response DTOs into domain entities (e.g., UserProfile / UsageOverview / TeamSpendOverview / UsageEvent / FilteredUsageHistory).
+  - Perform DTO→domain mapping in the API layer; UI consumes domain-only.
 
-- 依赖与可见性
-  - 依赖单向：Core ← Model ← API ← Feature。
-  - 默认 internal；仅在跨包使用时 public；优先通过协议（protocol）而非具体类型暴露。
+- Dependencies & visibility
+  - One-way: Core ← Model ← API ← Feature.
+  - Default to internal; use public only for cross-package use; prefer protocols over concrete types.
 
-- SwiftUI 与并发
-  - UI 通过 @Environment 注入服务；副作用置于 .task / .onChange 中，自动随视图生命周期取消。
-  - UI 更新在 @MainActor；网络/IO 在后台并用 async/await；跨隔离类型需 Sendable。
+- SwiftUI & concurrency
+  - Inject services via @Environment; place side effects in .task / .onChange so they automatically cancel with the view lifecycle.
+  - UI updates occur on @MainActor; networking/IO on background using async/await; cross-isolation types must be Sendable.
 
-- 测试与可替换性
-  - 为服务提供可注入的网络客户端接口；默认实现与可测试构造路径分离。
-  - 工具/算法写入 Core，纯函数优先，便于单测与复用。
+- Testing & replaceability
+  - Provide an injectable network client interface for services; separate default implementation from testable construction paths.
+  - Put utilities/algorithms into Core; prefer pure functions for unit testing and reuse.
 
-## Don't（避免）
+## Don't (Avoid)
 
-- UI 直接依赖网络库、调用请求或感知后端错误细节。
-- Feature 依赖 API 的内部细节（如 Targets/Plugins/具体网络实现）。
-- 将 API DTO 直接暴露给 UI（造成全局耦合与易碎性）。
-- 反向依赖（如 Model 依赖 Feature，API 依赖 UI）。
-- 引入 MVVM/ViewModel 作为默认方案；或在 onAppear 中随意使用 Task { }（请用 .task）。
-- 过度 public 化类型/初始化器；在一个文件中放多个不相关类型。
+- UI directly depending on networking libraries, triggering requests, or being exposed to backend error details.
+- Feature depending on API internals (e.g., Targets/Plugins/concrete networking implementations).
+- Exposing API DTOs directly to the UI (causes global coupling and fragility).
+- Reverse dependencies (e.g., Model depends on Feature; API depends on UI).
+- Introducing MVVM/ViewModel as the default; or using Task { } in onAppear (use .task instead).
+- Overusing public types/initializers; placing multiple unrelated types in one file.
 
-## 思考要求（落位与评审清单）
+## Review checklist
 
-1) 四象限自检（放置决策）
-   - UI/交互/渲染 → Feature/UI
-   - 网络/磁盘/鉴权/三方 → API/Service
-   - 纯数据/DTO/状态聚合 → Model
-   - 通用工具/扩展/算法 → Core
+1) Quadrant self-check (placement)
+   - UI/interaction/rendering → Feature/UI
+   - Networking/disk/auth/3rd-party → API/Service
+   - Pure data/DTO/state aggregation → Model
+   - Utilities/extensions/algorithms → Core
 
-2) 暴露面与替换性
-   - 是否可以通过协议暴露，隐藏实现细节？默认 internal 是否足够？
-   - 服务是否仅返回领域模型/错误枚举？是否便于替换/Mock？
+2) Surface area & replaceability
+   - Can it be exposed via protocol to hide details? Is internal sufficient by default?
+   - Do services return only domain models/error enums? Is it easy to replace/mock?
 
-3) 依赖方向与耦合
-   - 是否违背 Core ← Model ← API ← Feature 的单向依赖？
-   - UI 是否仍引用了 DTO 或网络实现？若是，回到 API 做映射与抽象。
+3) Dependency direction & coupling
+   - Any violation of Core ← Model ← API ← Feature one-way dependency?
+   - Does the UI still reference DTOs or networking implementations? If yes, move mapping/abstraction to the API layer.
 
-4) 并发与线程安全
-   - UI 更新是否在 @MainActor？跨隔离类型是否 Sendable？是否使用 async/await？
-   - 是否将需要串行化的持久化/缓存放入 Actor 边界？
+4) Concurrency & thread safety
+   - Are UI updates on @MainActor? Are cross-isolation types Sendable? Are we using async/await?
+   - Should serialization-required persistence/cache be placed within an Actor boundary?
 
-5) 文件组织与命名
-   - 目录清晰（Feature/Views、API/Service、API/Targets、API/Plugins、Model/Entities、Core/Extensions）。
-   - 一文件一个类型；命名体现层级与职责（如 FeatureXView、FeatureXService、GetYAPI、ZResponse）。
-   - 包内目录规范：Sources/<PackageName>/ 按功能分子目录存放，避免所有源码堆在同一层级。
-     - 建议子目录示例：
-       - API：Service / Targets / Plugins / Mapping（DTO→Domain 映射）
-       - Feature：Views / Components / Scenes / Modifiers
-       - Model：Entities
-       - Core：Extensions / Utils
-   - 同类命名一致：相似功能使用统一的前缀或后缀，便于检索与分组。
-     - 约定后缀示例：…Service、…API、…Response、…Request、…View、…Section、…Window、…Plugin、…Mapper。
-     - 同一领域或来源建议共享前缀（如 Cursor…）。
-   - 文件名与类型名一致：每个文件仅包含一个主要类型，且“文件名必须与类型名完全一致”（区分大小写）。
-     - 协议/实现约定：协议使用 FooService，默认实现使用 DefaultFooService（或 LiveFooService）；对外仅暴露协议，通过依赖注入传入实现。
+5) File organization & naming
+   - Clear directories (Feature/Views, API/Service, API/Targets, API/Plugins, Model/Entities, Core/Extensions).
+   - One type per file; names reflect layer and responsibility (e.g., FeatureXView, FeatureXService, GetYAPI, ZResponse).
+   - Package directory structure: Sources/<PackageName>/ organized by feature subfolders; avoid dumping all source at one level.
+     - Suggested subfolders:
+       - API: Service / Targets / Plugins / Mapping (DTO→Domain mapping)
+       - Feature: Views / Components / Scenes / Modifiers
+       - Model: Entities
+       - Core: Extensions / Utils
+   - Consistent naming: use a shared prefix/suffix for similar features for discoverability.
+     - Suffix examples: …Service, …API, …Response, …Request, …View, …Section, …Window, …Plugin, …Mapper.
+     - Use a consistent domain/vendor prefix where needed (e.g., Cursor…).
+   - File name equals type name: each file contains only one primary type; exact case-sensitive match.
+     - Protocol/implementation convention: protocol uses FooService; default implementation uses DefaultFooService (or LiveFooService). Expose only protocols and inject implementations.
 
-   - Model 层命名规范（Entities 与 DTO 分离）：
-     - 领域实体（Entities，业务对外暴露）：
-       - 使用面向领域的中性名词；默认不带供应商前缀（例如：UserProfile、UsageOverview、TeamSpendOverview、UsageEvent、FilteredUsageHistory、AppSettings、Credentials、DashboardSnapshot）。
-       - 如确需体现来源域（例如“Cursor”领域），应在同一领域内统一使用相同前缀（如 CursorCredentials、CursorDashboardSnapshot），保持一致性与可检索性。
-       - 命名后缀建议：…Overview、…Snapshot、…History、…Event、…Member、…RoleCount 等表达聚合/快照/事件/成员等语义。
-       - 使用 struct 优先、值语义、满足 Sendable；仅跨包暴露需要的 public 类型与成员。
-       - 文件名与类型名一致；单文件单类型。
-     - DTO（仅用于 API 层，位于 API/Mapping/DTOs）：
-       - 采用供应商/来源前缀 + 语义后缀的命名：例如 Cursor…Request、Cursor…Response、Cursor…Event。
-       - 可见性默认 internal，不对 Feature/UI 暴露；仅在 API 层进行 DTO→领域实体映射。
-       - 文件名与类型名一致；单文件单类型；字段命名贴合后端返回（保持直译），由映射层适配到领域命名。
-       - 映射职责位于 API 层（Service/Mapping），UI/Feature 严禁直接依赖 DTO。
+   - Model-layer naming (Entities vs DTOs):
+     - Entities (exposed to business/UI):
+       - Use domain-oriented neutral nouns; avoid vendor prefixes by default (e.g., UserProfile, UsageOverview, TeamSpendOverview, UsageEvent, FilteredUsageHistory, AppSettings, Credentials, DashboardSnapshot).
+       - If source domain must be shown (e.g., “Cursor”), use a consistent prefix within that domain (e.g., CursorCredentials, CursorDashboardSnapshot) for consistency and discoverability.
+       - Suggested suffixes: …Overview, …Snapshot, …History, …Event, …Member, …RoleCount.
+       - Prefer struct, value semantics, and Sendable; expose public types/members only when needed cross-package.
+       - File name equals type name; single-type files.
+     - DTOs (API layer only, under API/Mapping/DTOs):
+       - Use vendor/source prefix + semantic suffix: e.g., Cursor…Request, Cursor…Response, Cursor…Event.
+       - Default visibility is internal; do not expose to Feature/UI; map to domain in the API layer only.
+       - File name equals type name; single-type files; field names mirror backend responses (literal), adapted to domain naming via mapping.
+       - Mapping lives in the API layer (Service/Mapping); UI/Feature must never depend on DTOs.
 
-6) 代码评审前检查
-   - 不必要的 public 是否已移除？是否存在跨层反向引用？
-   - UI 是否通过 @Environment 注入服务且不包含网络细节？
-   - DTO→领域模型映射是否完整、健壮、可测试？
+## Pre-PR checks
+   - Remove unnecessary public modifiers; check for reverse dependencies across layers.
+   - Ensure UI injects services via @Environment and contains no networking details.
+   - Ensure DTO→domain mapping is complete, robust, and testable.
 
-备注：如需使用 iOS 26 新特性，遵循可用性检查与渐进增强策略；确保旧版本有合理降级。
+Note: When using iOS 26 features, follow availability checks and progressive enhancement; ensure reasonable fallbacks for older OS versions.
 
-## 常见问题
- - 在新增/删除模块代码后，lint提示找不到该类，且你确定这个类是存在的，通过XCodeBuild MCP重新编译这个package后再试
+## FAQ
+ - After adding/removing module code, if lint reports a missing class but you are sure it exists, rebuild the package with XcodeBuild MCP and try again.
+

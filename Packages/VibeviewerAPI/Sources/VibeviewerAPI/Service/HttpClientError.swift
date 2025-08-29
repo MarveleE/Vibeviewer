@@ -1,6 +1,8 @@
 import Foundation
 
-enum GroNetworkError: Error {
+enum HttpClientError: Error {
     case missingParams
     case invalidateParams
 }
+
+

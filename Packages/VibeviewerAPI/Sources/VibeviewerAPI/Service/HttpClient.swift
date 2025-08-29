@@ -3,7 +3,7 @@ import Foundation
 import Moya
 
 @available(iOS 13, macOS 10.15, tvOS 13, *)
-enum GroNetwork {
+enum HttpClient {
     private static var _provider: MoyaProvider<MultiTarget>?
 
     static var provider: MoyaProvider<MultiTarget> {
@@ -175,7 +175,7 @@ enum GroNetwork {
         .ResultType
     {
         try await withCheckedThrowingContinuation { continuation in
-            GroNetwork.decodableRequest(decodingStrategy: decodingStrategy, target, callbackQueue: nil) {
+            HttpClient.decodableRequest(decodingStrategy: decodingStrategy, target, callbackQueue: nil) {
                 result in
                 switch result {
                 case let .success(response):
@@ -192,7 +192,7 @@ enum GroNetwork {
         async throws -> Data?
     {
         try await withCheckedThrowingContinuation { continuation in
-            GroNetwork.request(target, callbackQueue: nil, progressHandler: progressHandler) {
+            HttpClient.request(target, callbackQueue: nil, progressHandler: progressHandler) {
                 result in
                 switch result {
                 case let .success(response):
@@ -204,3 +204,5 @@ enum GroNetwork {
         }
     }
 }
+
+
