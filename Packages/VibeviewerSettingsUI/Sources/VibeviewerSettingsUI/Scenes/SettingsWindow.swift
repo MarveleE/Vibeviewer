@@ -10,10 +10,8 @@ public final class SettingsWindowManager {
 
     public func show() {
         if let controller {
-            controller.showWindow(nil)
-            controller.window?.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            return
+            controller.close()
+            self.controller = nil
         }
         let vc = NSHostingController(rootView: SettingsView().environment(self.appSettings))
         let window = NSWindow(contentViewController: vc)

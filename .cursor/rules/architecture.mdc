@@ -36,6 +36,9 @@ title: Vibeviewer Architecture Guidelines
   - Provide an injectable network client interface for services; separate default implementation from testable construction paths.
   - Put utilities/algorithms into Core; prefer pure functions for unit testing and reuse.
 
+- Troble Shooting
+ - if you facing an lint error by "can't not found xxx in scope" when you edit/new/delete some interface on Package, that means you need to call XCodeBuildMCP to rebuild that package, so that other package can update the codebase to fix that error
+
 ## Don't (Avoid)
 
 - UI directly depending on networking libraries, triggering requests, or being exposed to backend error details.

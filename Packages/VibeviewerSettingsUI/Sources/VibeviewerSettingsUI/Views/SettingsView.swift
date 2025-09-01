@@ -13,6 +13,7 @@ public struct SettingsView: View {
     @State private var usageHistoryLimit: String = ""
     @State private var pauseOnScreenSleep: Bool = false
     @State private var launchAtLogin: Bool = false
+    @State private var appearanceSelection: VibeviewerModel.AppAppearance = .system
 
     public init() {}
 
@@ -26,6 +27,13 @@ public struct SettingsView: View {
             }
             
             VStack(alignment: .leading, spacing: 16) {
+                Picker("Appearance", selection: $appearanceSelection) {
+                    Text("System").tag(VibeviewerModel.AppAppearance.system)
+                    Text("Light").tag(VibeviewerModel.AppAppearance.light)
+                    Text("Dark").tag(VibeviewerModel.AppAppearance.dark)
+                }
+                .pickerStyle(.segmented)
+                
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Refresh Frequency (minutes)")
                         .font(.app(.satoshiMedium, size: 12))
@@ -81,6 +89,7 @@ public struct SettingsView: View {
         usageHistoryLimit = String(appSettings.usageHistory.limit)
         pauseOnScreenSleep = appSettings.pauseOnScreenSleep
         launchAtLogin = launchAtLoginService.isEnabled
+        appearanceSelection = appSettings.appearance
     }
     
     private func saveSettings() {
@@ -96,5 +105,6 @@ public struct SettingsView: View {
         
         _ = launchAtLoginService.setEnabled(launchAtLogin)
         appSettings.launchAtLogin = launchAtLogin
+        appSettings.appearance = appearanceSelection
     }
 }

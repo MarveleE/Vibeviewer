@@ -39,6 +39,11 @@ struct VibeviewerApp: App {
                 .environment(self.settings)
                 .environment(self.session)
                 .menuBarExtraWindowCorner()
+                .onAppear {
+                    SettingsWindowManager.shared.appSettings = self.settings
+                }
+                .id(self.settings.appearance)
+                .applyPreferredColorScheme(self.settings.appearance)
         } label: {
             menuBarLabel()
         }
@@ -56,9 +61,9 @@ struct VibeviewerApp: App {
                 .font(.app(.satoshiBold, size: 15))
                 .foregroundColor(.primary)
         }
-            .task {
-                await self.setupDashboardRefreshService()
-            }
+        .task {
+            await self.setupDashboardRefreshService()
+        }
     }
 
     private func setupDashboardRefreshService() async {
@@ -77,3 +82,4 @@ struct VibeviewerApp: App {
         await self.refresher.start()
     }
 }
+
