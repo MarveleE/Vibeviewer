@@ -18,6 +18,8 @@ public struct MenuPopoverView: View {
     @Environment(AppSettings.self) private var appSettings
     @Environment(AppSession.self) private var session
 
+    @Environment(\.colorScheme) private var colorScheme
+
     enum ViewState: Equatable {
         case loading
         case loaded
@@ -64,20 +66,17 @@ public struct MenuPopoverView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 24)
-        .frame(width: 300, alignment: .top)
         .background {
             ZStack {
-                Color(hex: "1F1E1E")
+                Color(hex: colorScheme == .dark ? "1F1E1E" : "F9F9F9")
                 Circle()
-                    .fill(Color(hex: "354E48"))
+                    .fill(Color(hex: colorScheme == .dark ? "354E48" : "F2A48B"))
                     .padding(80)
-                    .blur(radius: 120)
+                    .blur(radius: 100)
             }
             .cornerRadiusWithCorners(32 - 4)
         }
-        .padding(4)
-        .compositingGroup()
-        .geometryGroup()
+        .padding(session.credentials != nil ? 4 : 0)
     }
 
     private var loginButtonView: some View {

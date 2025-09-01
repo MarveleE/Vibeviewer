@@ -37,11 +37,13 @@ struct MetricsView: View {
 
         @State var isHovering: Bool = false
 
+        @Environment(\.colorScheme) private var colorScheme
+
         var tintColor: Color {
             if isHovering {
                 return dataSource.tint
             } else {
-                return dataSource.tint.opacity(0.5)
+                return dataSource.tint.opacity(colorScheme == .dark ? 0.5 : 0.8)
             }
         }
 
