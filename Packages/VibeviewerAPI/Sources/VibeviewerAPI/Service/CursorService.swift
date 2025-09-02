@@ -141,13 +141,26 @@ public struct DefaultCursorService: CursorService {
                 occurredAtMs: e.timestamp,
                 modelName: e.model,
                 kind: e.kind,
-                requestCostCount: e.requestsCosts ?? 0,
+                // 次数与花费无关：当后端未返回 requestsCosts 时，默认计为 1 次
+                requestCostCount: e.requestsCosts ?? 1,
                 usageCostDisplay: e.usageBasedCosts,
+                usageCostCents: Self.parseCents(fromDollarString: e.usageBasedCosts),
                 isTokenBased: e.isTokenBasedCall,
                 userDisplayName: e.owningUser,
                 teamDisplayName: e.owningTeam
             )
         }
         return VibeviewerModel.FilteredUsageHistory(totalCount: dto.totalUsageEventsCount, events: events)
+    }
+}
+
+private extension DefaultCursorService {
+    static func parseCents(fromDollarString s: String) -> Int {
+        // "$0.04" -> 4
+        let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let idx = trimmed.firstIndex(where: { ($0 >= "0" && $0 <= "9") || $0 == "." }) else { return 0 }
+        let numberPart = trimmed[idx...]
+        guard let value = Double(numberPart) else { return 0 }
+        return Int((value * 100.0).rounded())
     }
 }

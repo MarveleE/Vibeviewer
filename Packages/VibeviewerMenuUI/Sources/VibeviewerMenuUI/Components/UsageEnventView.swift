@@ -6,93 +6,9 @@ import VibeviewerCore
 struct UsageEventView: View {
     var events: [UsageEvent]
     @Environment(AppSettings.self) private var appSettings
-    
-    struct HourGroup: Identifiable, Equatable {
-        let id: Date
-        let hourStart: Date
-        let title: String
-        let events: [UsageEvent]
-
-        var totalRequests: Int {
-            events.reduce(0) { $0 + $1.requestCostCount }
-        }
-
-        var totalCostDollars: Double {
-            events.reduce(0.0) { partial, e in
-                partial + Self.parseDollarString(e.usageCostDisplay)
-            }
-        }
-
-        var totalCostDisplay: String {
-            String(format: "$%.2f", totalCostDollars)
-        }
-
-        private static func parseDollarString(_ s: String) -> Double {
-            // Expect format like "$0.04"; fallback to 0 for invalid
-            let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard let idx = trimmed.firstIndex(where: { ($0 >= "0" && $0 <= "9") || $0 == "." }) else { return 0 }
-            let numberPart = trimmed[idx...]
-            return Double(numberPart) ?? 0
-        }
-
-        static func group(events: [UsageEvent], calendar: Calendar = .current) -> [HourGroup] {
-            var buckets: [Date: [UsageEvent]] = [:]
-            for event in events {
-                guard let date = DateUtils.date(fromMillisecondsString: event.occurredAtMs),
-                      let hourStart = calendar.dateInterval(of: .hour, for: date)?.start else { continue }
-                buckets[hourStart, default: []].append(event)
-            }
-
-            let sortedStarts = buckets.keys.sorted(by: >)
-            let formatter = DateFormatter()
-            formatter.locale = Locale(identifier: "en_US_POSIX")
-            formatter.timeZone = .current
-            formatter.dateFormat = "yyyy-MM-dd HH:00"
-
-            return sortedStarts.map { start in
-                HourGroup(
-                    id: start,
-                    hourStart: start,
-                    title: formatter.string(from: start),
-                    events: buckets[start] ?? []
-                )
-            }
-        }
-    }
-
-    private var limitedEvents: [UsageEvent] {
-        Array(events.prefix(appSettings.usageHistory.limit))
-    }
-
-    private var hourlyGroups: [HourGroup] {
-        HourGroup.group(events: limitedEvents)
-    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            ForEach(hourlyGroups) { group in
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 8) {
-                        Text(group.title)
-                            .font(.app(.satoshiBold, size: 12))
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        HStack(spacing: 10) {
-                            Text("req: \(group.totalRequests)")
-                            Text("cost: \(group.totalCostDisplay)")
-                        }
-                        .font(.app(.satoshiMedium, size: 12))
-                        .foregroundStyle(.secondary)
-                    }
-                    .padding(.leading, 2)
-
-                    ForEach(group.events, id: \.occurredAtMs) { event in
-                        EventItemView(event: event)
-                    }
-                }
-            }
-        }
-        .contentShape(.rect)
+        UsageEventViewBody(events: events, limit: appSettings.usageHistory.limit)
     }
 
     struct EventItemView: View {
@@ -113,9 +29,73 @@ struct UsageEventView: View {
 
                 Spacer()
 
-                Text("\(event.usageCostDisplay)")
+                Text(event.usageCostDisplay)
                     .font(.app(.satoshiMedium, size: 12))
                     .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+struct UsageEventViewBody: View {
+    let events: [UsageEvent]
+    let limit: Int
+
+    private var groups: [UsageEventHourGroup] {
+        Array(events.prefix(limit)).groupedByHour()
+    }
+
+    var body: some View {
+        UsageEventGroupsView(groups: groups)
+    }
+}
+
+struct UsageEventGroupsView: View {
+    let groups: [UsageEventHourGroup]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            ForEach(groups) { group in
+                HourGroupSectionView(group: group)
+            }
+        }
+    }
+}
+
+struct HourGroupSectionView: View {
+    let group: UsageEventHourGroup
+
+    var body: some View {
+        let totalRequestsText: String = String(group.totalRequests)
+        let totalCostText: String = group.totalCostCents.dollarStringFromCents
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text(group.title)
+                    .font(.app(.satoshiBold, size: 12))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                HStack(spacing: 6) {
+                    HStack(alignment: .center, spacing: 2) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.app(.satoshiMedium, size: 10))
+                            .foregroundStyle(.primary)
+                        Text(totalRequestsText)
+                            .font(.app(.satoshiMedium, size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    HStack(alignment: .center, spacing: 2) {
+                        Image(systemName: "dollarsign.circle")
+                            .font(.app(.satoshiMedium, size: 10))
+                            .foregroundStyle(.primary)
+                        Text(totalCostText)
+                            .font(.app(.satoshiMedium, size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            ForEach(group.events, id: \.occurredAtMs) { event in
+                UsageEventView.EventItemView(event: event)
             }
         }
     }
