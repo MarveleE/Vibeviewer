@@ -68,8 +68,12 @@ public struct SettingsView: View {
                 .buttonStyle(.vibe(Color(hex: "F58283").opacity(0.8)))
                 
                 Button("Save") {
-                    saveSettings()
-                    NSApplication.shared.keyWindow?.close()
+                    Task { @MainActor in
+                        saveSettings()
+                        // Persist settings then close window
+                        try? await self.appSettings.save(using: self.storage)
+                        NSApplication.shared.keyWindow?.close()
+                    }
                 }
                 .buttonStyle(.vibe(Color(hex: "5B67E2").opacity(0.8)))
             }

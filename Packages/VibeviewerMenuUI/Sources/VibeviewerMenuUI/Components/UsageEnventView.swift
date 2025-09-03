@@ -5,65 +5,98 @@ import VibeviewerCore
 
 struct UsageEventView: View {
     var events: [UsageEvent]
-    
-    @State var isHovered: Bool = false
+    @Environment(AppSettings.self) private var appSettings
 
     var body: some View {
-        VStack(alignment: .leading, spacing: isHovered ? 6 : -16) {
-            ForEach(Array(events.prefix(3).enumerated()), id: \.element.occurredAtMs) { index, event in
-                EventItemView(event: event, isHovered: isHovered)
-                    .scaleEffect(isHovered ? 1.0 : (1 - (Double(index) * 0.05)))
-                    .blur(radius: isHovered ? 0 : Double(index) * 2)
-                    .opacity(1 - (Double(index) * 0.2))
-                    .zIndex(-Double(index))
-            }
-        }
-        .contentShape(.rect)
-        .onTapGesture { 
-            withAnimation(.spring(duration: 0.35)) {
-                isHovered.toggle()
-            }
-        }
+        UsageEventViewBody(events: events, limit: appSettings.usageHistory.limit)
     }
 
     struct EventItemView: View {
         let event: UsageEvent
-        let isHovered: Bool
 
         var body: some View {
-            HStack(spacing: 8) {
+            HStack(spacing: 12) {
                 event.brand.logo
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 16, height: 16)
+                    .frame(width: 18, height: 18)
+                    .padding(6)
+                    .background(.thinMaterial, in: .circle)
 
-                Text(DateUtils.timeString(fromMillisecondsString: event.occurredAtMs, format: .hms))
-                    .font(.app(.satoshiRegular, size: 12))
-                    .foregroundStyle(.secondary)
+                Text(event.modelName)
+                    .font(.app(.satoshiBold, size: 14))
+                    .foregroundStyle(.primary)
 
                 Spacer()
 
-                Text("\(event.usageCostDisplay)")
+                Text(event.usageCostDisplay)
                     .font(.app(.satoshiMedium, size: 12))
                     .foregroundStyle(.secondary)
             }
-            .padding(8)
-            .overlay {
-                Text(event.modelName)
-                    .font(.app(.satoshiMedium, size: 12))
-                    .foregroundStyle(.primary)
+        }
+    }
+}
+
+struct UsageEventViewBody: View {
+    let events: [UsageEvent]
+    let limit: Int
+
+    private var groups: [UsageEventHourGroup] {
+        Array(events.prefix(limit)).groupedByHour()
+    }
+
+    var body: some View {
+        UsageEventGroupsView(groups: groups)
+    }
+}
+
+struct UsageEventGroupsView: View {
+    let groups: [UsageEventHourGroup]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            ForEach(groups) { group in
+                HourGroupSectionView(group: group)
             }
-            .background {
-                ZStack {
-                    if isHovered {
-                        Color.white.opacity(0.1)
-                    } else {
-                        Rectangle().fill(.thinMaterial)
+        }
+    }
+}
+
+struct HourGroupSectionView: View {
+    let group: UsageEventHourGroup
+
+    var body: some View {
+        let totalRequestsText: String = String(group.totalRequests)
+        let totalCostText: String = group.totalCostCents.dollarStringFromCents
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text(group.title)
+                    .font(.app(.satoshiBold, size: 12))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                HStack(spacing: 6) {
+                    HStack(alignment: .center, spacing: 2) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.app(.satoshiMedium, size: 10))
+                            .foregroundStyle(.primary)
+                        Text(totalRequestsText)
+                            .font(.app(.satoshiMedium, size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    HStack(alignment: .center, spacing: 2) {
+                        Image(systemName: "dollarsign.circle")
+                            .font(.app(.satoshiMedium, size: 10))
+                            .foregroundStyle(.primary)
+                        Text(totalCostText)
+                            .font(.app(.satoshiMedium, size: 12))
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
-            .cornerRadiusWithCorners(8)
-            .overlayBorder(color: .black.opacity(0.1), lineWidth: 1, cornerRadius: 8)
+
+            ForEach(group.events, id: \.occurredAtMs) { event in
+                UsageEventView.EventItemView(event: event)
+            }
         }
     }
 }
