@@ -4,10 +4,6 @@ import Foundation
 public class DashboardSnapshot: Codable, Equatable {
     // 用户邮箱
     public let email: String
-    /// 当前月已用请求数
-    public let planRequestsUsed: Int
-    /// 当前月计划内可用请求数
-    public let planIncludeRequestCount: Int
     /// 当前月总请求数(包含计划内请求 + 计划外请求(Billing))
     public let totalRequestsAllModels: Int
     /// 当前月已用花费
@@ -20,73 +16,83 @@ public class DashboardSnapshot: Codable, Equatable {
     public let requestToday: Int
     /// 昨日请求次数（由外部在获取 usageEvents 后计算并注入）
     public let requestYestoday: Int
+    /// 使用情况摘要
+    public let usageSummary: UsageSummary?
 
     public init(
         email: String,
-        planRequestsUsed: Int,
-        planIncludeRequestCount: Int,
         totalRequestsAllModels: Int,
         spendingCents: Int,
         hardLimitDollars: Int,
         usageEvents: [UsageEvent] = [],
         requestToday: Int = 0,
-        requestYestoday: Int = 0
+        requestYestoday: Int = 0,
+        usageSummary: UsageSummary? = nil
     ) {
         self.email = email
-        self.planRequestsUsed = planRequestsUsed
-        self.planIncludeRequestCount = planIncludeRequestCount
         self.totalRequestsAllModels = totalRequestsAllModels
         self.spendingCents = spendingCents
         self.hardLimitDollars = hardLimitDollars
         self.usageEvents = usageEvents
         self.requestToday = requestToday
         self.requestYestoday = requestYestoday
+        self.usageSummary = usageSummary
     }
 
     private enum CodingKeys: String, CodingKey {
         case email
-        case planRequestsUsed
-        case planIncludeRequestCount
         case totalRequestsAllModels
         case spendingCents
         case hardLimitDollars
         case usageEvents
         case requestToday
         case requestYestoday
+        case usageSummary
     }
 
     public required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.email = try container.decode(String.self, forKey: .email)
-        self.planRequestsUsed = try container.decode(Int.self, forKey: .planRequestsUsed)
-        self.planIncludeRequestCount = (try? container.decode(Int.self, forKey: .planIncludeRequestCount)) ?? 0
         self.totalRequestsAllModels = try container.decode(Int.self, forKey: .totalRequestsAllModels)
         self.spendingCents = try container.decode(Int.self, forKey: .spendingCents)
         self.hardLimitDollars = try container.decode(Int.self, forKey: .hardLimitDollars)
         self.requestToday = try container.decode(Int.self, forKey: .requestToday)           
         self.requestYestoday = try container.decode(Int.self, forKey: .requestYestoday)
         self.usageEvents = try container.decode([UsageEvent].self, forKey: .usageEvents)
+        self.usageSummary = try? container.decode(UsageSummary.self, forKey: .usageSummary)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.email, forKey: .email)
-        try container.encode(self.planRequestsUsed, forKey: .planRequestsUsed)
-        try container.encode(self.planIncludeRequestCount, forKey: .planIncludeRequestCount)
         try container.encode(self.totalRequestsAllModels, forKey: .totalRequestsAllModels)
         try container.encode(self.spendingCents, forKey: .spendingCents)
         try container.encode(self.hardLimitDollars, forKey: .hardLimitDollars)
         try container.encode(self.usageEvents, forKey: .usageEvents)
         try container.encode(self.requestToday, forKey: .requestToday)
         try container.encode(self.requestYestoday, forKey: .requestYestoday)
+        if let usageSummary = self.usageSummary {
+            try container.encode(usageSummary, forKey: .usageSummary)
+        }
+    }
+
+    /// 计算 plan + onDemand 的总消耗金额（以分为单位）
+    public var totalUsageCents: Int {
+        guard let usageSummary = usageSummary else {
+            return spendingCents
+        }
+        
+        let planUsed = usageSummary.individualUsage.plan.used
+        let onDemandUsed = usageSummary.individualUsage.onDemand?.used ?? 0
+        
+        return planUsed + onDemandUsed
     }
 
     public static func == (lhs: DashboardSnapshot, rhs: DashboardSnapshot) -> Bool {
         lhs.email == rhs.email &&
-            lhs.planRequestsUsed == rhs.planRequestsUsed &&
-            lhs.planIncludeRequestCount == rhs.planIncludeRequestCount &&
             lhs.totalRequestsAllModels == rhs.totalRequestsAllModels &&
             lhs.spendingCents == rhs.spendingCents &&
-            lhs.hardLimitDollars == rhs.hardLimitDollars
+            lhs.hardLimitDollars == rhs.hardLimitDollars &&
+            lhs.usageSummary == rhs.usageSummary
     }
 }

@@ -47,7 +47,10 @@ public struct MenuPopoverView: View {
 
             if let snapshot = self.session.snapshot {
                 MetricsView(metric: .billing(snapshot.billingMetrics))
-                MetricsView(metric: .planRequests(snapshot.planRequestsMetrics))
+                
+                if let onDemandMetrics = snapshot.onDemandMetrics {
+                    MetricsView(metric: .onDemand(onDemandMetrics))
+                }
 
                  Divider().opacity(0.5)
 

@@ -57,7 +57,18 @@ struct VibeviewerApp: App {
                 .resizable()
                 .frame(width: 16, height: 16)
                 .padding(.trailing, 4)
-            Text(self.session.snapshot?.spendingCents.dollarStringFromCents ?? "Vibeviewer")
+            Text({
+                guard let snapshot = self.session.snapshot else { return "Vibeviewer" }
+                
+                if let usageSummary = snapshot.usageSummary {
+                    let planUsed = usageSummary.individualUsage.plan.used
+                    let onDemandUsed = usageSummary.individualUsage.onDemand?.used ?? 0
+                    let totalUsageCents = planUsed + onDemandUsed
+                    return totalUsageCents.dollarStringFromCents
+                } else {
+                    return snapshot.spendingCents.dollarStringFromCents
+                }
+            }())
                 .font(.app(.satoshiBold, size: 15))
                 .foregroundColor(.primary)
         }
