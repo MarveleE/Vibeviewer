@@ -65,6 +65,7 @@ struct UsageEventView: View {
         private var modelNameView: some View {
             Text(event.modelName)
                 .font(.app(.satoshiBold, size: 14))
+                .lineLimit(1)
                 // .foregroundStyle(event.kind.isError ? AnyShapeStyle(Color.red.secondary) : AnyShapeStyle(.primary))
         }
 
