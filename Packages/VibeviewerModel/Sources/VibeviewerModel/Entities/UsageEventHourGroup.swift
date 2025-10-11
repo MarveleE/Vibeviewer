@@ -9,6 +9,15 @@ public struct UsageEventHourGroup: Identifiable, Sendable, Equatable {
 
     public var totalRequests: Int { events.map(\.requestCostCount).reduce(0, +) }
     public var totalCostCents: Int { events.map(\.usageCostCents).reduce(0, +) }
+    
+    /// 计算实际总费用显示（美元格式）
+    public var calculatedTotalCostDisplay: String {
+        let totalCents = events.reduce(0.0) { sum, event in
+            sum + (event.tokenUsage?.totalCents ?? 0.0) + event.cursorTokenFee
+        }
+        let dollars = totalCents / 100.0
+        return String(format: "$%.2f", dollars)
+    }
 
     public init(id: Date, hourStart: Date, title: String, events: [UsageEvent]) {
         self.id = id
@@ -19,7 +28,7 @@ public struct UsageEventHourGroup: Identifiable, Sendable, Equatable {
 }
 
 public extension Array where Element == UsageEvent {
-    public func groupedByHour(calendar: Calendar = .current) -> [UsageEventHourGroup] {
+    func groupedByHour(calendar: Calendar = .current) -> [UsageEventHourGroup] {
         var buckets: [Date: [UsageEvent]] = [:]
         for event in self {
             guard let date = DateUtils.date(fromMillisecondsString: event.occurredAtMs),

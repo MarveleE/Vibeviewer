@@ -26,8 +26,7 @@ struct DefaultCursorNetworkClient: CursorNetworkClient {
 
 public protocol CursorService {
     func fetchMe(cookieHeader: String) async throws -> Credentials
-    func fetchUsage(workosUserId: String, cookieHeader: String) async throws -> UsageOverview
-    func fetchTeamSpend(teamId: Int, cookieHeader: String) async throws -> TeamSpendOverview
+    func fetchUsageSummary(cookieHeader: String) async throws -> VibeviewerModel.UsageSummary
     func fetchFilteredUsageEvents(
         teamId: Int,
         startDateMs: String,
@@ -80,39 +79,65 @@ public struct DefaultCursorService: CursorService {
         )
     }
 
-    public func fetchUsage(workosUserId: String, cookieHeader: String) async throws -> VibeviewerModel.UsageOverview {
-        let dto: CursorUsageResponse = try await self.performRequest(CursorUsageAPI(workosUserId: workosUserId, cookieHeader: cookieHeader))
-        var mapped: [String: VibeviewerModel.UsageOverview.ModelUsage] = [:]
-        for (name, usage) in dto.models {
-            mapped[name] = .init(
-                modelName: name,
-                requestsUsed: usage.numRequests,
-                totalRequests: usage.numRequestsTotal,
-                tokensUsed: usage.numTokens
+    public func fetchUsageSummary(cookieHeader: String) async throws -> VibeviewerModel.UsageSummary {
+        let dto: CursorUsageSummaryResponse = try await self.performRequest(CursorUsageSummaryAPI(cookieHeader: cookieHeader))
+        
+        // 解析日期
+        let dateFormatter = ISO8601DateFormatter()
+        let billingCycleStart = dateFormatter.date(from: dto.billingCycleStart) ?? Date()
+        let billingCycleEnd = dateFormatter.date(from: dto.billingCycleEnd) ?? Date()
+        
+        // 映射计划使用情况
+        let planUsage = VibeviewerModel.PlanUsage(
+            used: dto.individualUsage.plan.used,
+            limit: dto.individualUsage.plan.limit,
+            remaining: dto.individualUsage.plan.remaining,
+            breakdown: VibeviewerModel.PlanBreakdown(
+                included: dto.individualUsage.plan.breakdown.included,
+                bonus: dto.individualUsage.plan.breakdown.bonus,
+                total: dto.individualUsage.plan.breakdown.total
             )
-        }
-        return VibeviewerModel.UsageOverview(startOfMonthMs: dto.startOfMonth, models: Array(mapped.values))
-    }
-
-    public func fetchTeamSpend(teamId: Int, cookieHeader: String) async throws -> VibeviewerModel.TeamSpendOverview {
-        let dto: CursorTeamSpendResponse = try await self.performRequest(CursorTeamSpendAPI(teamId: teamId, cookieHeader: cookieHeader))
-        let members: [VibeviewerModel.TeamSpendOverview.Member] = dto.teamMemberSpend.map { m in
-            .init(
-                userId: m.userId,
-                email: m.email,
-                role: m.role,
-                spendCents: m.spendCents ?? 0,
-                fastPremiumRequests: m.fastPremiumRequests ?? 0,
-                hardLimitOverrideDollars: m.hardLimitOverrideDollars ?? 0
-            )
-        }
-        let roles: [VibeviewerModel.TeamSpendOverview.RoleCount] = dto.totalByRole.map { .init(role: $0.role, count: $0.count) }
-        return VibeviewerModel.TeamSpendOverview(
-            subscriptionCycleStartMs: dto.subscriptionCycleStart,
-            members: members,
-            totalMembers: dto.totalMembers,
-            totalPages: dto.totalPages,
-            totalByRole: roles
+        )
+        
+        // 映射按需使用情况（如果存在）
+        let onDemandUsage: VibeviewerModel.OnDemandUsage? = {
+            if dto.individualUsage.onDemand.used > 0 || dto.individualUsage.onDemand.limit > 0 {
+                return VibeviewerModel.OnDemandUsage(
+                    used: dto.individualUsage.onDemand.used,
+                    limit: dto.individualUsage.onDemand.limit,
+                    remaining: dto.individualUsage.onDemand.remaining
+                )
+            }
+            return nil
+        }()
+        
+        // 映射个人使用情况
+        let individualUsage = VibeviewerModel.IndividualUsage(
+            plan: planUsage,
+            onDemand: onDemandUsage
+        )
+        
+        // 映射团队使用情况（如果存在）
+        let teamUsage: VibeviewerModel.TeamUsage? = {
+            if dto.teamUsage.onDemand.used > 0 || dto.teamUsage.onDemand.limit > 0 {
+                return VibeviewerModel.TeamUsage(
+                    onDemand: VibeviewerModel.OnDemandUsage(
+                        used: dto.teamUsage.onDemand.used,
+                        limit: dto.teamUsage.onDemand.limit,
+                        remaining: dto.teamUsage.onDemand.remaining
+                    )
+                )
+            }
+            return nil
+        }()
+        
+        return VibeviewerModel.UsageSummary(
+            billingCycleStart: billingCycleStart,
+            billingCycleEnd: billingCycleEnd,
+            membershipType: dto.membershipType,
+            limitType: dto.limitType,
+            individualUsage: individualUsage,
+            teamUsage: teamUsage
         )
     }
 
@@ -137,17 +162,29 @@ public struct DefaultCursorService: CursorService {
             )
         )
         let events: [VibeviewerModel.UsageEvent] = dto.usageEventsDisplay.map { e in
-            VibeviewerModel.UsageEvent(
+            let tokenUsage = VibeviewerModel.TokenUsage(
+                outputTokens: e.tokenUsage.outputTokens,
+                inputTokens: e.tokenUsage.inputTokens,
+                totalCents: e.tokenUsage.totalCents,
+                cacheWriteTokens: e.tokenUsage.cacheWriteTokens,
+                cacheReadTokens: e.tokenUsage.cacheReadTokens
+            )
+            
+            // 计算请求次数：基于 token 使用情况，如果没有 token 信息则默认为 1
+            let requestCount = Self.calculateRequestCount(from: e.tokenUsage)
+            
+            return VibeviewerModel.UsageEvent(
                 occurredAtMs: e.timestamp,
                 modelName: e.model,
                 kind: e.kind,
-                // 次数与花费无关：当后端未返回 requestsCosts 时，默认计为 1 次
-                requestCostCount: e.requestsCosts ?? 1,
+                requestCostCount: requestCount,
                 usageCostDisplay: e.usageBasedCosts,
                 usageCostCents: Self.parseCents(fromDollarString: e.usageBasedCosts),
                 isTokenBased: e.isTokenBasedCall,
                 userDisplayName: e.owningUser,
-                teamDisplayName: e.owningTeam
+                teamDisplayName: e.owningTeam,
+                cursorTokenFee: e.cursorTokenFee,
+                tokenUsage: tokenUsage
             )
         }
         return VibeviewerModel.FilteredUsageHistory(totalCount: dto.totalUsageEventsCount, events: events)
@@ -162,5 +199,20 @@ private extension DefaultCursorService {
         let numberPart = trimmed[idx...]
         guard let value = Double(numberPart) else { return 0 }
         return Int((value * 100.0).rounded())
+    }
+    
+    static func calculateRequestCount(from tokenUsage: CursorTokenUsage) -> Int {
+        // 基于 token 使用情况计算请求次数
+        // 如果有 output tokens 或 input tokens，说明有实际的请求
+        let hasOutputTokens = (tokenUsage.outputTokens ?? 0) > 0
+        let hasInputTokens = (tokenUsage.inputTokens ?? 0) > 0
+        
+        if hasOutputTokens || hasInputTokens {
+            // 如果有 token 使用，至少算作 1 次请求
+            return 1
+        } else {
+            // 如果没有 token 使用，可能是缓存读取或其他类型的请求
+            return 1
+        }
     }
 }

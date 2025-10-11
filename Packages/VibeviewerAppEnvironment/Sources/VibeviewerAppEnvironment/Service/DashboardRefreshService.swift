@@ -94,27 +94,22 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
         guard let creds = self.session.credentials else { return }
 
         do {
-            // 概览并发拉取
-            async let usageAsync = self.api.fetchUsage(workosUserId: creds.workosId, cookieHeader: creds.cookieHeader)
-            async let spendAsync = self.api.fetchTeamSpend(teamId: creds.teamId, cookieHeader: creds.cookieHeader)
-            let usage = try await usageAsync
-            let spend = try await spendAsync
+            // 获取使用情况摘要（包含个人使用数据）
+            let usageSummary = try await self.api.fetchUsageSummary(cookieHeader: creds.cookieHeader)
 
-            let planRequestsUsed = usage.models.map(\.requestsUsed).reduce(0, +)
-            let totalAll = usage.models.map(\.totalRequests).reduce(0, +)
-            let mySpend = spend.members.first { $0.userId == creds.userId }
+            // totalRequestsAllModels 将基于使用事件计算，而非API返回的请求数据
+            let totalAll = 0 // 暂时设为0，后续通过使用事件更新
 
             let current = self.session.snapshot
             let overview = DashboardSnapshot(
                 email: creds.email,
-                planRequestsUsed: planRequestsUsed,
-                planIncludeRequestCount: mySpend?.fastPremiumRequests ?? (current?.planIncludeRequestCount ?? 0),
                 totalRequestsAllModels: totalAll,
-                spendingCents: mySpend?.spendCents ?? (current?.spendingCents ?? 0),
-                hardLimitDollars: mySpend?.hardLimitOverrideDollars ?? (current?.hardLimitDollars ?? 0),
+                spendingCents: usageSummary.individualUsage.plan.used,
+                hardLimitDollars: usageSummary.individualUsage.plan.limit / 100, // 从美分转换为美元
                 usageEvents: current?.usageEvents ?? [],
                 requestToday: current?.requestToday ?? 0,
-                requestYestoday: current?.requestYestoday ?? 0
+                requestYestoday: current?.requestYestoday ?? 0,
+                usageSummary: usageSummary
             )
             self.session.snapshot = overview
             try? await self.storage.saveDashboardSnapshot(overview)
@@ -134,14 +129,13 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
             let (reqToday, reqYesterday) = self.splitTodayAndYesterdayCounts(from: history.events)
             let merged = DashboardSnapshot(
                 email: overview.email,
-                planRequestsUsed: overview.planRequestsUsed,
-                planIncludeRequestCount: overview.planIncludeRequestCount,
                 totalRequestsAllModels: overview.totalRequestsAllModels,
                 spendingCents: overview.spendingCents,
                 hardLimitDollars: overview.hardLimitDollars,
                 usageEvents: history.events,
                 requestToday: reqToday,
-                requestYestoday: reqYesterday
+                requestYestoday: reqYesterday,
+                usageSummary: usageSummary
             )
             self.session.snapshot = merged
             try? await self.storage.saveDashboardSnapshot(merged)

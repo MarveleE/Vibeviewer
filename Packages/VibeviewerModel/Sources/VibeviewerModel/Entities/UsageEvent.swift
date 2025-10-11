@@ -11,9 +11,18 @@ public struct UsageEvent: Codable, Sendable, Equatable {
     public let isTokenBased: Bool
     public let userDisplayName: String
     public let teamDisplayName: String?
+    public let cursorTokenFee: Double
+    public let tokenUsage: TokenUsage?
 
     public var brand: AIModelBrands {
         AIModelBrands.brand(for: self.modelName)
+    }
+    
+    /// 计算实际费用显示（美元格式）
+    public var calculatedCostDisplay: String {
+        let totalCents = (tokenUsage?.totalCents ?? 0.0) + cursorTokenFee
+        let dollars = totalCents / 100.0
+        return String(format: "$%.2f", dollars)
     }
 
     public init(
@@ -25,7 +34,9 @@ public struct UsageEvent: Codable, Sendable, Equatable {
         usageCostCents: Int = 0,
         isTokenBased: Bool,
         userDisplayName: String,
-        teamDisplayName: String?
+        teamDisplayName: String?,
+        cursorTokenFee: Double = 0.0,
+        tokenUsage: TokenUsage? = nil
     ) {
         self.occurredAtMs = occurredAtMs
         self.modelName = modelName
@@ -36,6 +47,8 @@ public struct UsageEvent: Codable, Sendable, Equatable {
         self.isTokenBased = isTokenBased
         self.userDisplayName = userDisplayName
         self.teamDisplayName = teamDisplayName
+        self.cursorTokenFee = cursorTokenFee
+        self.tokenUsage = tokenUsage
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -48,6 +61,8 @@ public struct UsageEvent: Codable, Sendable, Equatable {
         case isTokenBased
         case userDisplayName
         case teamDisplayName
+        case cursorTokenFee
+        case tokenUsage
     }
 
     public init(from decoder: Decoder) throws {
@@ -61,6 +76,8 @@ public struct UsageEvent: Codable, Sendable, Equatable {
         self.isTokenBased = try container.decode(Bool.self, forKey: .isTokenBased)
         self.userDisplayName = try container.decode(String.self, forKey: .userDisplayName)
         self.teamDisplayName = try container.decodeIfPresent(String.self, forKey: .teamDisplayName)
+        self.cursorTokenFee = (try? container.decode(Double.self, forKey: .cursorTokenFee)) ?? 0.0
+        self.tokenUsage = try container.decodeIfPresent(TokenUsage.self, forKey: .tokenUsage)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -74,5 +91,7 @@ public struct UsageEvent: Codable, Sendable, Equatable {
         try container.encode(self.isTokenBased, forKey: .isTokenBased)
         try container.encode(self.userDisplayName, forKey: .userDisplayName)
         try container.encode(self.teamDisplayName, forKey: .teamDisplayName)
+        try container.encode(self.cursorTokenFee, forKey: .cursorTokenFee)
+        try container.encodeIfPresent(self.tokenUsage, forKey: .tokenUsage)
     }
 }

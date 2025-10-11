@@ -1,5 +1,6 @@
 import SwiftUI
 import VibeviewerModel
+import VibeviewerCore
 import VibeviewerShareUI
 import Foundation
 
@@ -16,7 +17,7 @@ struct MetricsViewDataSource: Equatable {
 struct MetricsView: View {
     enum MetricType {
         case billing(MetricsViewDataSource)
-        case planRequests(MetricsViewDataSource)
+        case onDemand(MetricsViewDataSource)
     }
 
     var metric: MetricType
@@ -26,7 +27,7 @@ struct MetricsView: View {
             switch metric {
             case .billing(let dataSource):
                 MetricContentView(dataSource: dataSource)
-            case .planRequests(let dataSource):
+            case .onDemand(let dataSource):
                 MetricContentView(dataSource: dataSource)
             }
         }
@@ -171,30 +172,53 @@ extension DashboardSnapshot {
     }
     
     var billingMetrics: MetricsViewDataSource {
-        let description = "Expires \(expiryDateString), \(averageDailyAllowance)/day remaining"
-        
-        return MetricsViewDataSource(
-            icon: "dollarsign.circle.fill",
-            title: "Usage Spending",
-            description: description,
-            currentValue: spendingCents.dollarStringFromCents,
-            targetValue: (hardLimitDollars * 100).dollarStringFromCents,
-            progress: min(Double(spendingCents) / Double(hardLimitDollars * 100), 1),
-            tint: Color(hex: "55E07A")
-        )
+        // 如果有新的usageSummary数据，优先使用
+        if let usageSummary = usageSummary {
+            let description = "Expires \(expiryDateString)"
+            
+            // UsageSummary 的 used/limit 已经是美分，直接转换为美元显示
+            return MetricsViewDataSource(
+                icon: "dollarsign.circle.fill",
+                title: "Plan Usage",
+                description: description,
+                currentValue: usageSummary.individualUsage.plan.used.dollarStringFromCents,
+                targetValue: usageSummary.individualUsage.plan.limit.dollarStringFromCents,
+                progress: min(Double(usageSummary.individualUsage.plan.used) / Double(usageSummary.individualUsage.plan.limit), 1),
+                tint: Color(hex: "55E07A")
+            )
+        } else {
+            // 回退到旧的数据源
+            let description = "Expires \(expiryDateString), \(averageDailyAllowance)/day remaining"
+            
+            return MetricsViewDataSource(
+                icon: "dollarsign.circle.fill",
+                title: "Usage Spending",
+                description: description,
+                currentValue: spendingCents.dollarStringFromCents,
+                targetValue: (hardLimitDollars * 100).dollarStringFromCents,
+                progress: min(Double(spendingCents) / Double(hardLimitDollars * 100), 1),
+                tint: Color(hex: "55E07A")
+            )
+        }
     }
 
-    var planRequestsMetrics: MetricsViewDataSource {
+    var onDemandMetrics: MetricsViewDataSource? {
+        guard let usageSummary = usageSummary,
+              let onDemand = usageSummary.individualUsage.onDemand else {
+            return nil
+        }
+        
         let description = "Expires \(expiryDateString)"
         
+        // UsageSummary 的 used/limit 已经是美分，直接转换为美元显示
         return MetricsViewDataSource(
-            icon: "calendar.circle.fill",
-            title: "Total Requests",
+            icon: "bolt.circle.fill",
+            title: "On-Demand Usage",
             description: description,
-            currentValue: "\(totalRequestsAllModels)",
-            targetValue: "\(planIncludeRequestCount)",
-            progress: min(Double(planRequestsUsed) / Double(planIncludeRequestCount), 1),
-            tint: Color(hex: "559DE0")
+            currentValue: onDemand.used.dollarStringFromCents,
+            targetValue: onDemand.limit.dollarStringFromCents,
+            progress: min(Double(onDemand.used) / Double(onDemand.limit), 1),
+            tint: Color(hex: "FF6B6B")
         )
     }
 }

@@ -26,7 +26,7 @@ struct StorageServiceTests {
         suite.removePersistentDomain(forName: "test.snapshot.")
         let storage = DefaultCursorStorageService(userDefaults: suite)
 
-        let snap = DashboardSnapshot(email: "e@x.com", planRequestsUsed: 1, planIncludeRequestCount: 0, totalRequestsAllModels: 2, spendingCents: 3, hardLimitDollars: 4)
+        let snap = DashboardSnapshot(email: "e@x.com", totalRequestsAllModels: 2, spendingCents: 3, hardLimitDollars: 4)
         try await storage.saveDashboardSnapshot(snap)
         let loaded = await storage.loadDashboardSnapshot()
         #expect(loaded == snap)
