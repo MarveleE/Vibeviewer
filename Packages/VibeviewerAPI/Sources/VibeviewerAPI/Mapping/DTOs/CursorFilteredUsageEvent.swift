@@ -26,7 +26,7 @@ struct CursorFilteredUsageEvent: Decodable, Sendable, Equatable {
     let timestamp: String
     let model: String
     let kind: String
-    let requestsCosts: Double
+    let requestsCosts: Double?
     let usageBasedCosts: String
     let isTokenBasedCall: Bool
     let owningUser: String
@@ -38,7 +38,7 @@ struct CursorFilteredUsageEvent: Decodable, Sendable, Equatable {
         timestamp: String,
         model: String,
         kind: String,
-        requestsCosts: Double,
+        requestsCosts: Double?,
         usageBasedCosts: String,
         isTokenBasedCall: Bool,
         owningUser: String,
