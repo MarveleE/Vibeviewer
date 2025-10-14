@@ -3,14 +3,14 @@ import Foundation
 struct CursorTokenUsage: Decodable, Sendable, Equatable {
     let outputTokens: Int?
     let inputTokens: Int?
-    let totalCents: Double
+    let totalCents: Double?
     let cacheWriteTokens: Int?
     let cacheReadTokens: Int?
 
     init(
         outputTokens: Int?,
         inputTokens: Int?,
-        totalCents: Double,
+        totalCents: Double?,
         cacheWriteTokens: Int?,
         cacheReadTokens: Int?
     ) {
