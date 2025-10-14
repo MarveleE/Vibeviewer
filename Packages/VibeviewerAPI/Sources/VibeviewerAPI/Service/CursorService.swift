@@ -165,7 +165,7 @@ public struct DefaultCursorService: CursorService {
             let tokenUsage = VibeviewerModel.TokenUsage(
                 outputTokens: e.tokenUsage.outputTokens,
                 inputTokens: e.tokenUsage.inputTokens,
-                totalCents: e.tokenUsage.totalCents,
+                totalCents: e.tokenUsage.totalCents ?? 0.0,
                 cacheWriteTokens: e.tokenUsage.cacheWriteTokens,
                 cacheReadTokens: e.tokenUsage.cacheReadTokens
             )
