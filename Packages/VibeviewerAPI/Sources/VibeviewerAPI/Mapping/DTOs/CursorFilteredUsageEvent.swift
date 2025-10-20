@@ -30,7 +30,6 @@ struct CursorFilteredUsageEvent: Decodable, Sendable, Equatable {
     let usageBasedCosts: String
     let isTokenBasedCall: Bool
     let owningUser: String
-    let owningTeam: String
     let cursorTokenFee: Double
     let tokenUsage: CursorTokenUsage
 
@@ -42,7 +41,6 @@ struct CursorFilteredUsageEvent: Decodable, Sendable, Equatable {
         usageBasedCosts: String,
         isTokenBasedCall: Bool,
         owningUser: String,
-        owningTeam: String,
         cursorTokenFee: Double,
         tokenUsage: CursorTokenUsage
     ) {
@@ -53,7 +51,6 @@ struct CursorFilteredUsageEvent: Decodable, Sendable, Equatable {
         self.usageBasedCosts = usageBasedCosts
         self.isTokenBasedCall = isTokenBasedCall
         self.owningUser = owningUser
-        self.owningTeam = owningTeam
         self.cursorTokenFee = cursorTokenFee
         self.tokenUsage = tokenUsage
     }

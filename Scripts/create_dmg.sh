@@ -3,7 +3,7 @@ set -e
 
 # Configuration
 APP_NAME="Vibeviewer"
-VERSION="1.0.2"
+VERSION="1.1.1"
 CONFIGURATION="Release"
 SCHEME="Vibeviewer"
 WORKSPACE="Vibeviewer.xcworkspace"

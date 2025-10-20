@@ -61,6 +61,13 @@ public struct DefaultCursorStorageService: CursorStorageService, CursorStorageSy
         }
         return AppSettings()
     }
+    
+    // MARK: - AppSession Management
+    
+    public func clearAppSession() async {
+        await clearCredentials()
+        await clearDashboardSnapshot()
+    }
 
     // MARK: - Sync Helpers
 

@@ -8,12 +8,14 @@ public struct SettingsView: View {
     @Environment(AppSettings.self) private var appSettings
     @Environment(\.cursorStorage) private var storage
     @Environment(\.launchAtLoginService) private var launchAtLoginService
+    @Environment(AppSession.self) private var session
     
     @State private var refreshFrequency: String = ""
     @State private var usageHistoryLimit: String = ""
     @State private var pauseOnScreenSleep: Bool = false
     @State private var launchAtLogin: Bool = false
     @State private var appearanceSelection: VibeviewerModel.AppAppearance = .system
+    @State private var showingClearSessionAlert: Bool = false
 
     public init() {}
 
@@ -62,10 +64,18 @@ public struct SettingsView: View {
             HStack {
                 Spacer()
                 
-                Button("Cancel") {
+                Button("Close") {
                     NSApplication.shared.keyWindow?.close()
                 }
                 .buttonStyle(.vibe(Color(hex: "F58283").opacity(0.8)))
+                
+                // 清空 AppSession 按钮
+                Button("Clear App Cache") {
+                    showingClearSessionAlert = true
+                }
+                .buttonStyle(.vibe(.secondary.opacity(0.8)))
+                .font(.app(.satoshiMedium, size: 12))
+                
                 
                 Button("Save") {
                     Task { @MainActor in
@@ -79,12 +89,22 @@ public struct SettingsView: View {
             }
         }
         .padding(20)
-        .frame(width: 400, height: 300)
+        .frame(width: 500, height: 400)
         .onAppear {
             loadSettings()
         }
         .task { 
             try? await self.appSettings.save(using: self.storage) 
+        }
+        .alert("Clear App Session", isPresented: $showingClearSessionAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Clear", role: .destructive) {
+                Task { @MainActor in
+                    await clearAppSession()
+                }
+            }
+        } message: {
+            Text("This will clear all stored credentials and dashboard data. You will need to log in again.")
         }
     }
     
@@ -110,5 +130,17 @@ public struct SettingsView: View {
         _ = launchAtLoginService.setEnabled(launchAtLogin)
         appSettings.launchAtLogin = launchAtLogin
         appSettings.appearance = appearanceSelection
+    }
+    
+    private func clearAppSession() async {
+        // 清空存储的 AppSession 数据
+        await storage.clearAppSession()
+        
+        // 重置内存中的 AppSession
+        session.credentials = nil
+        session.snapshot = nil
+        
+        // 关闭设置窗口
+        NSApplication.shared.keyWindow?.close()
     }
 }

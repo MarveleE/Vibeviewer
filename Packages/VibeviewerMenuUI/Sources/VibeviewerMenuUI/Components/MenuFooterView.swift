@@ -7,6 +7,7 @@ import VibeviewerSettingsUI
 struct MenuFooterView: View {
     @Environment(\.dashboardRefreshService) private var refresher
     @Environment(\.settingsWindowManager) private var settingsWindow
+    @Environment(AppSession.self) private var session
     
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
@@ -18,6 +19,14 @@ struct MenuFooterView: View {
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
+            
+            // 显示会员类型徽章
+            if let membershipType = session.snapshot?.usageSummary?.membershipType {
+                MembershipBadge(
+                    membershipType: membershipType,
+                    isEnterpriseUser: session.credentials?.isEnterpriseUser ?? false
+                )
+            }
             
             Spacer()
 
