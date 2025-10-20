@@ -26,6 +26,7 @@ struct RequestsCompareView: View {
             Text("\(value)")
                 .font(.app(.satoshiRegular, size: 68))
                 .foregroundStyle(isToday ? Color(hex: "B09E56") : .secondary)
+                .contentTransition(.numericText())
             Text(title)
                 .font(.app(.satoshiBold, size: 12))
                 .foregroundStyle(.primary)

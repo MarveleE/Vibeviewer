@@ -18,6 +18,8 @@ public class DashboardSnapshot: Codable, Equatable {
     public let requestYestoday: Int
     /// 使用情况摘要
     public let usageSummary: UsageSummary?
+    /// 团队计划下个人可用的免费额度（分）。仅 Team Plan 生效
+    public let freeUsageCents: Int
 
     public init(
         email: String,
@@ -27,7 +29,8 @@ public class DashboardSnapshot: Codable, Equatable {
         usageEvents: [UsageEvent] = [],
         requestToday: Int = 0,
         requestYestoday: Int = 0,
-        usageSummary: UsageSummary? = nil
+        usageSummary: UsageSummary? = nil,
+        freeUsageCents: Int = 0
     ) {
         self.email = email
         self.totalRequestsAllModels = totalRequestsAllModels
@@ -37,6 +40,7 @@ public class DashboardSnapshot: Codable, Equatable {
         self.requestToday = requestToday
         self.requestYestoday = requestYestoday
         self.usageSummary = usageSummary
+        self.freeUsageCents = freeUsageCents
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -48,6 +52,7 @@ public class DashboardSnapshot: Codable, Equatable {
         case requestToday
         case requestYestoday
         case usageSummary
+        case freeUsageCents
     }
 
     public required init(from decoder: Decoder) throws {
@@ -60,6 +65,7 @@ public class DashboardSnapshot: Codable, Equatable {
         self.requestYestoday = try container.decode(Int.self, forKey: .requestYestoday)
         self.usageEvents = try container.decode([UsageEvent].self, forKey: .usageEvents)
         self.usageSummary = try? container.decode(UsageSummary.self, forKey: .usageSummary)
+        self.freeUsageCents = (try? container.decode(Int.self, forKey: .freeUsageCents)) ?? 0
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -74,6 +80,9 @@ public class DashboardSnapshot: Codable, Equatable {
         if let usageSummary = self.usageSummary {
             try container.encode(usageSummary, forKey: .usageSummary)
         }
+        if self.freeUsageCents > 0 {
+            try container.encode(self.freeUsageCents, forKey: .freeUsageCents)
+        }
     }
 
     /// 计算 plan + onDemand 的总消耗金额（以分为单位）
@@ -84,8 +93,9 @@ public class DashboardSnapshot: Codable, Equatable {
         
         let planUsed = usageSummary.individualUsage.plan.used
         let onDemandUsed = usageSummary.individualUsage.onDemand?.used ?? 0
+        let freeUsage = freeUsageCents
         
-        return planUsed + onDemandUsed
+        return planUsed + onDemandUsed + freeUsage
     }
 
     public static func == (lhs: DashboardSnapshot, rhs: DashboardSnapshot) -> Bool {
@@ -93,6 +103,7 @@ public class DashboardSnapshot: Codable, Equatable {
             lhs.totalRequestsAllModels == rhs.totalRequestsAllModels &&
             lhs.spendingCents == rhs.spendingCents &&
             lhs.hardLimitDollars == rhs.hardLimitDollars &&
-            lhs.usageSummary == rhs.usageSummary
+            lhs.usageSummary == rhs.usageSummary &&
+            lhs.freeUsageCents == rhs.freeUsageCents
     }
 }

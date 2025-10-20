@@ -9,7 +9,7 @@ struct MetricsViewDataSource: Equatable {
     var title: String
     var description: String?
     var currentValue: String
-    var targetValue: String
+    var targetValue: String?
     var progress: Double
     var tint: Color
 }
@@ -18,6 +18,7 @@ struct MetricsView: View {
     enum MetricType {
         case billing(MetricsViewDataSource)
         case onDemand(MetricsViewDataSource)
+            case free(MetricsViewDataSource)
     }
 
     var metric: MetricType
@@ -28,6 +29,8 @@ struct MetricsView: View {
             case .billing(let dataSource):
                 MetricContentView(dataSource: dataSource)
             case .onDemand(let dataSource):
+                MetricContentView(dataSource: dataSource)
+            case .free(let dataSource):
                 MetricContentView(dataSource: dataSource)
             }
         }
@@ -63,17 +66,25 @@ struct MetricsView: View {
                     Spacer()
 
                     HStack(alignment: .lastTextBaseline, spacing: 0) {
-                        Text(dataSource.currentValue)
-                            .font(.app(.satoshiBold, size: 16))
-                            .foregroundStyle(.primary)
+                        if let target = dataSource.targetValue, !target.isEmpty {
+                            Text(target)
+                                .font(.app(.satoshiRegular, size: 12))
+                                .foregroundStyle(.secondary)
 
-                        Text(" / ")
-                            .font(.app(.satoshiRegular, size: 12))
-                            .foregroundStyle(.secondary)
+                            Text(" / ")
+                                .font(.app(.satoshiRegular, size: 12))
+                                .foregroundStyle(.secondary)
 
-                        Text(dataSource.targetValue)
-                            .font(.app(.satoshiRegular, size: 12))
-                            .foregroundStyle(.secondary)
+                            Text(dataSource.currentValue)
+                                .font(.app(.satoshiBold, size: 16))
+                                .foregroundStyle(.primary)
+                                .contentTransition(.numericText())
+                        } else {
+                            Text(dataSource.currentValue)
+                                .font(.app(.satoshiBold, size: 16))
+                                .foregroundStyle(.primary)
+                                .contentTransition(.numericText())
+                        }
                     }
                 }
 
@@ -219,6 +230,20 @@ extension DashboardSnapshot {
             targetValue: onDemand.limit.dollarStringFromCents,
             progress: min(Double(onDemand.used) / Double(onDemand.limit), 1),
             tint: Color(hex: "FF6B6B")
+        )
+    }
+
+    var freeUsageMetrics: MetricsViewDataSource? {
+        guard freeUsageCents > 0 else { return nil }
+        let description = "Free credits (team plan)"
+        return MetricsViewDataSource(
+            icon: "gift.circle.fill",
+            title: "Free Usage",
+            description: description,
+            currentValue: freeUsageCents.dollarStringFromCents,
+            targetValue: nil,
+            progress: 0,
+            tint: Color(hex: "4DA3FF")
         )
     }
 }
