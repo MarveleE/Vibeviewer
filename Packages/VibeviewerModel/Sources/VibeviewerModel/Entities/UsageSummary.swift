@@ -3,7 +3,7 @@ import Foundation
 public struct UsageSummary: Sendable, Equatable, Codable {
     public let billingCycleStart: Date
     public let billingCycleEnd: Date
-    public let membershipType: String
+    public let membershipType: MembershipType
     public let limitType: String
     public let individualUsage: IndividualUsage
     public let teamUsage: TeamUsage?
@@ -11,7 +11,7 @@ public struct UsageSummary: Sendable, Equatable, Codable {
     public init(
         billingCycleStart: Date,
         billingCycleEnd: Date,
-        membershipType: String,
+        membershipType: MembershipType,
         limitType: String,
         individualUsage: IndividualUsage,
         teamUsage: TeamUsage? = nil

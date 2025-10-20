@@ -41,6 +41,7 @@ struct VibeviewerApp: App {
                 .menuBarExtraWindowCorner()
                 .onAppear {
                     SettingsWindowManager.shared.appSettings = self.settings
+                    SettingsWindowManager.shared.appSession = self.session
                 }
                 .id(self.settings.appearance)
                 .applyPreferredColorScheme(self.settings.appearance)

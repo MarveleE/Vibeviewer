@@ -11,7 +11,7 @@ struct StorageServiceTests {
         suite.removePersistentDomain(forName: "test.credentials.")
         let storage = DefaultCursorStorageService(userDefaults: suite)
 
-        let creds = Credentials(userId: 123_456, workosId: "w1", email: "e@x.com", teamId: 1, cookieHeader: "c")
+        let creds = Credentials(userId: 123_456, workosId: "w1", email: "e@x.com", teamId: 1, cookieHeader: "c", isEnterpriseUser: false)
         try await storage.saveCredentials(creds)
         let loaded = await storage.loadCredentials()
         #expect(loaded == creds)

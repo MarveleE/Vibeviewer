@@ -16,6 +16,9 @@ public protocol CursorStorageService: Sendable {
     // App Settings
     func saveSettings(_ settings: AppSettings) async throws
     func loadSettings() async -> AppSettings
+    
+    // AppSession Management
+    func clearAppSession() async
 }
 
 // Synchronous preload helpers for app launch use-cases

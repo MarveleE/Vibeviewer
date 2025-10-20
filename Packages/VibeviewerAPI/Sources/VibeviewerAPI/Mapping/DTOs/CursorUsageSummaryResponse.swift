@@ -6,7 +6,7 @@ struct CursorUsageSummaryResponse: Decodable, Sendable, Equatable {
     let membershipType: String
     let limitType: String
     let individualUsage: CursorIndividualUsage
-    let teamUsage: CursorTeamUsage
+    let teamUsage: CursorTeamUsage?
     
     init(
         billingCycleStart: String,
@@ -14,7 +14,7 @@ struct CursorUsageSummaryResponse: Decodable, Sendable, Equatable {
         membershipType: String,
         limitType: String,
         individualUsage: CursorIndividualUsage,
-        teamUsage: CursorTeamUsage
+        teamUsage: CursorTeamUsage? = nil
     ) {
         self.billingCycleStart = billingCycleStart
         self.billingCycleEnd = billingCycleEnd
@@ -27,9 +27,9 @@ struct CursorUsageSummaryResponse: Decodable, Sendable, Equatable {
 
 struct CursorIndividualUsage: Decodable, Sendable, Equatable {
     let plan: CursorPlanUsage
-    let onDemand: CursorOnDemandUsage
+    let onDemand: CursorOnDemandUsage?
     
-    init(plan: CursorPlanUsage, onDemand: CursorOnDemandUsage) {
+    init(plan: CursorPlanUsage, onDemand: CursorOnDemandUsage? = nil) {
         self.plan = plan
         self.onDemand = onDemand
     }
@@ -74,9 +74,9 @@ struct CursorOnDemandUsage: Decodable, Sendable, Equatable {
 }
 
 struct CursorTeamUsage: Decodable, Sendable, Equatable {
-    let onDemand: CursorOnDemandUsage
+    let onDemand: CursorOnDemandUsage?
     
-    init(onDemand: CursorOnDemandUsage) {
+    init(onDemand: CursorOnDemandUsage? = nil) {
         self.onDemand = onDemand
     }
 }

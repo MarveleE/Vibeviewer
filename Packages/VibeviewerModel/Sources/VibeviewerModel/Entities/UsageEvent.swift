@@ -10,7 +10,6 @@ public struct UsageEvent: Codable, Sendable, Equatable {
     public let usageCostCents: Int
     public let isTokenBased: Bool
     public let userDisplayName: String
-    public let teamDisplayName: String?
     public let cursorTokenFee: Double
     public let tokenUsage: TokenUsage?
 
@@ -34,7 +33,6 @@ public struct UsageEvent: Codable, Sendable, Equatable {
         usageCostCents: Int = 0,
         isTokenBased: Bool,
         userDisplayName: String,
-        teamDisplayName: String?,
         cursorTokenFee: Double = 0.0,
         tokenUsage: TokenUsage? = nil
     ) {
@@ -46,7 +44,6 @@ public struct UsageEvent: Codable, Sendable, Equatable {
         self.usageCostCents = usageCostCents
         self.isTokenBased = isTokenBased
         self.userDisplayName = userDisplayName
-        self.teamDisplayName = teamDisplayName
         self.cursorTokenFee = cursorTokenFee
         self.tokenUsage = tokenUsage
     }
@@ -75,7 +72,6 @@ public struct UsageEvent: Codable, Sendable, Equatable {
         self.usageCostCents = (try? container.decode(Int.self, forKey: .usageCostCents)) ?? 0
         self.isTokenBased = try container.decode(Bool.self, forKey: .isTokenBased)
         self.userDisplayName = try container.decode(String.self, forKey: .userDisplayName)
-        self.teamDisplayName = try container.decodeIfPresent(String.self, forKey: .teamDisplayName)
         self.cursorTokenFee = (try? container.decode(Double.self, forKey: .cursorTokenFee)) ?? 0.0
         self.tokenUsage = try container.decodeIfPresent(TokenUsage.self, forKey: .tokenUsage)
     }
@@ -90,7 +86,6 @@ public struct UsageEvent: Codable, Sendable, Equatable {
         try container.encode(self.usageCostCents, forKey: .usageCostCents)
         try container.encode(self.isTokenBased, forKey: .isTokenBased)
         try container.encode(self.userDisplayName, forKey: .userDisplayName)
-        try container.encode(self.teamDisplayName, forKey: .teamDisplayName)
         try container.encode(self.cursorTokenFee, forKey: .cursorTokenFee)
         try container.encodeIfPresent(self.tokenUsage, forKey: .tokenUsage)
     }

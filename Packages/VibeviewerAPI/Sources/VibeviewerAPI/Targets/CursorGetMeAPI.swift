@@ -11,7 +11,7 @@ struct CursorGetMeAPI: DecodableTargetType {
     var task: Task { .requestPlain }
     var headers: [String: String]? { APIHeadersBuilder.jsonHeaders(cookieHeader: self.cookieHeader) }
     var sampleData: Data {
-        Data("{\"authId\":\"\",\"userId\":0,\"email\":\"\",\"workosId\":\"\",\"teamId\":0}".utf8)
+        Data("{\"authId\":\"\",\"userId\":0,\"email\":\"\",\"workosId\":\"\",\"teamId\":0,\"isEnterpriseUser\":false}".utf8)
     }
 
     private let cookieHeader: String?

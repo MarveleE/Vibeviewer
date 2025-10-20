@@ -74,8 +74,9 @@ public struct DefaultCursorService: CursorService {
             userId: dto.userId,
             workosId: dto.workosId,
             email: dto.email,
-            teamId: dto.teamId,
-            cookieHeader: cookieHeader
+            teamId: dto.teamId ?? 0,
+            cookieHeader: cookieHeader,
+            isEnterpriseUser: dto.isEnterpriseUser
         )
     }
 
@@ -101,11 +102,12 @@ public struct DefaultCursorService: CursorService {
         
         // 映射按需使用情况（如果存在）
         let onDemandUsage: VibeviewerModel.OnDemandUsage? = {
-            if dto.individualUsage.onDemand.used > 0 || dto.individualUsage.onDemand.limit > 0 {
+            guard let individualOnDemand = dto.individualUsage.onDemand else { return nil }
+            if individualOnDemand.used > 0 || individualOnDemand.limit > 0 {
                 return VibeviewerModel.OnDemandUsage(
-                    used: dto.individualUsage.onDemand.used,
-                    limit: dto.individualUsage.onDemand.limit,
-                    remaining: dto.individualUsage.onDemand.remaining
+                    used: individualOnDemand.used,
+                    limit: individualOnDemand.limit,
+                    remaining: individualOnDemand.remaining
                 )
             }
             return nil
@@ -119,22 +121,27 @@ public struct DefaultCursorService: CursorService {
         
         // 映射团队使用情况（如果存在）
         let teamUsage: VibeviewerModel.TeamUsage? = {
-            if dto.teamUsage.onDemand.used > 0 || dto.teamUsage.onDemand.limit > 0 {
+            guard let teamUsageData = dto.teamUsage,
+                  let teamOnDemand = teamUsageData.onDemand else { return nil }
+            if teamOnDemand.used > 0 || teamOnDemand.limit > 0 {
                 return VibeviewerModel.TeamUsage(
                     onDemand: VibeviewerModel.OnDemandUsage(
-                        used: dto.teamUsage.onDemand.used,
-                        limit: dto.teamUsage.onDemand.limit,
-                        remaining: dto.teamUsage.onDemand.remaining
+                        used: teamOnDemand.used,
+                        limit: teamOnDemand.limit,
+                        remaining: teamOnDemand.remaining
                     )
                 )
             }
             return nil
         }()
         
+        // 映射会员类型
+        let membershipType = VibeviewerModel.MembershipType(rawValue: dto.membershipType) ?? .free
+        
         return VibeviewerModel.UsageSummary(
             billingCycleStart: billingCycleStart,
             billingCycleEnd: billingCycleEnd,
-            membershipType: dto.membershipType,
+            membershipType: membershipType,
             limitType: dto.limitType,
             individualUsage: individualUsage,
             teamUsage: teamUsage
@@ -182,7 +189,6 @@ public struct DefaultCursorService: CursorService {
                 usageCostCents: Self.parseCents(fromDollarString: e.usageBasedCosts),
                 isTokenBased: e.isTokenBasedCall,
                 userDisplayName: e.owningUser,
-                teamDisplayName: e.owningTeam,
                 cursorTokenFee: e.cursorTokenFee,
                 tokenUsage: tokenUsage
             )
