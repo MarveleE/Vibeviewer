@@ -15,7 +15,11 @@ English | [简体中文](README.zh-CN.md)
 An open-source macOS menu bar app that surfaces workspace/team usage and spend at a glance, with sign-in, settings, auto-refresh, and sharing capabilities. The project follows a modular Swift Package architecture and a pure SwiftUI MV (not MVVM) approach, emphasizing clear boundaries and replaceability.
 
 ### Features
-- **Menu bar summary**: Show key metrics (e.g., total spend) and reveal details in a popover.
+- **Menu bar summary**: Popover shows key metrics and recent activity:
+  - **Billing overview**, **Free usage** (when available), **On‑demand** (when available)
+  - **Total credits usage** with smooth numeric transitions
+  - **Requests compare (Today vs Yesterday)** and **Usage events**
+  - Top actions: **Open Dashboard** and **Log out**
 - **Sign-in & Settings**: Dedicated windows with persisted credentials and preferences.
 - **Power-aware refresh**: Smart refresh strategy reacting to screen power/activity state.
 - **Modular architecture**: One-way dependencies Core ← Model ← API ← Feature; DTO→Domain mapping lives in API only.
