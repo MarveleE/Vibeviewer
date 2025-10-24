@@ -38,6 +38,13 @@ public protocol CursorService {
         pageSize: Int,
         cookieHeader: String
     ) async throws -> VibeviewerModel.FilteredUsageHistory
+    func fetchUserAnalytics(
+        teamId: Int,
+        userId: Int,
+        startDateMs: String,
+        endDateMs: String,
+        cookieHeader: String
+    ) async throws -> VibeviewerModel.UserAnalytics
 }
 
 public struct DefaultCursorService: CursorService {
@@ -218,6 +225,88 @@ public struct DefaultCursorService: CursorService {
         let overrideDollars = me.hardLimitOverrideDollars ?? 0
         let freeCents = max(included - overrideDollars * 100, 0)
         return freeCents
+    }
+
+    public func fetchUserAnalytics(
+        teamId: Int,
+        userId: Int,
+        startDateMs: String,
+        endDateMs: String,
+        cookieHeader: String
+    ) async throws -> VibeviewerModel.UserAnalytics {
+        let dto: CursorUserAnalyticsResponse = try await self.performRequest(
+            CursorUserAnalyticsAPI(
+                teamId: teamId,
+                userId: userId,
+                startDateMs: startDateMs,
+                endDateMs: endDateMs,
+                cookieHeader: cookieHeader
+            )
+        )
+        
+        // 映射每日指标
+        let dailyMetrics: [VibeviewerModel.DailyMetric] = dto.dailyMetrics.map { metric in
+            // 映射模型使用情况
+            let modelUsage = (metric.modelUsage ?? []).map { model in
+                VibeviewerModel.ModelUsageCount(name: model.name, count: model.count)
+            }
+            
+            // 映射扩展使用情况
+            let extensionUsage = (metric.extensionUsage ?? []).map { ext in
+                VibeviewerModel.ExtensionUsageCount(name: ext.name, count: ext.count)
+            }
+            
+            // 映射 Tab 扩展使用情况
+            let tabExtensionUsage = (metric.tabExtensionUsage ?? []).map { ext in
+                VibeviewerModel.ExtensionUsageCount(name: ext.name, count: ext.count)
+            }
+            
+            // 映射客户端版本使用情况
+            let clientVersionUsage = (metric.clientVersionUsage ?? []).map { version in
+                VibeviewerModel.ClientVersionUsageCount(name: version.name, count: version.count)
+            }
+            
+            return VibeviewerModel.DailyMetric(
+                date: metric.date,
+                activeUsers: metric.activeUsers,
+                linesAdded: metric.linesAdded,
+                linesDeleted: metric.linesDeleted,
+                acceptedLinesAdded: metric.acceptedLinesAdded,
+                acceptedLinesDeleted: metric.acceptedLinesDeleted,
+                totalApplies: metric.totalApplies,
+                totalAccepts: metric.totalAccepts,
+                totalRejects: metric.totalRejects,
+                totalTabsShown: metric.totalTabsShown,
+                totalTabsAccepted: metric.totalTabsAccepted,
+                chatRequests: metric.chatRequests,
+                agentRequests: metric.agentRequests,
+                cmdkUsages: metric.cmdkUsages,
+                subscriptionIncludedReqs: metric.subscriptionIncludedReqs,
+                modelUsage: modelUsage,
+                extensionUsage: extensionUsage,
+                tabExtensionUsage: tabExtensionUsage,
+                clientVersionUsage: clientVersionUsage
+            )
+        }
+        
+        // 映射分析周期
+        let period = VibeviewerModel.AnalyticsPeriod(
+            startDate: dto.period.startDate,
+            endDate: dto.period.endDate
+        )
+        
+        return VibeviewerModel.UserAnalytics(
+            dailyMetrics: dailyMetrics,
+            period: period,
+            applyLinesRank: dto.applyLinesRank,
+            tabsAcceptedRank: dto.tabsAcceptedRank,
+            totalTeamMembers: dto.totalTeamMembers,
+            totalApplyLines: dto.totalApplyLines,
+            teamAverageApplyLines: dto.teamAverageApplyLines,
+            totalTabsAccepted: dto.totalTabsAccepted,
+            teamAverageTabsAccepted: dto.teamAverageTabsAccepted,
+            totalMembersInTeam: dto.totalMembersInTeam
+        )
     }
 }
 

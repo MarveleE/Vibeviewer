@@ -96,6 +96,7 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
         do {
             // 并发发起与凭据无依赖的请求（使用 Task 而非 async let，规避静态分析误报）
             let (startMs, endMs) = self.yesterdayToNowRangeMs()
+            let (analyticsStartMs, analyticsEndMs) = self.sevenDaysAgoToNowRangeMs()
             let usageSummaryTask = Task { () throws -> UsageSummary in
                 try await self.api.fetchUsageSummary(cookieHeader: creds.cookieHeader)
             }
@@ -107,6 +108,15 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
                     userId: creds.userId,
                     page: 1,
                     pageSize: 100,
+                    cookieHeader: creds.cookieHeader
+                )
+            }
+            let analyticsTask = Task { () throws -> UserAnalytics in
+                try await self.api.fetchUserAnalytics(
+                    teamId: creds.teamId,
+                    userId: creds.userId,
+                    startDateMs: analyticsStartMs,
+                    endDateMs: analyticsEndMs,
                     cookieHeader: creds.cookieHeader
                 )
             }
@@ -138,13 +148,15 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
                 requestToday: current?.requestToday ?? 0,
                 requestYestoday: current?.requestYestoday ?? 0,
                 usageSummary: usageSummary,
-                freeUsageCents: freeCents
+                freeUsageCents: freeCents,
+                userAnalytics: current?.userAnalytics
             )
             self.session.snapshot = overview
             try? await self.storage.saveDashboardSnapshot(overview)
 
-            // 等待并合并历史事件
+            // 等待并合并历史事件和分析数据
             let history = try await historyTask.value
+            let analytics = try? await analyticsTask.value
             let (reqToday, reqYesterday) = self.splitTodayAndYesterdayCounts(from: history.events)
             let merged = DashboardSnapshot(
                 email: overview.email,
@@ -155,7 +167,8 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
                 requestToday: reqToday,
                 requestYestoday: reqYesterday,
                 usageSummary: usageSummary,
-                freeUsageCents: overview.freeUsageCents
+                freeUsageCents: overview.freeUsageCents,
+                userAnalytics: analytics
             )
             self.session.snapshot = merged
             try? await self.storage.saveDashboardSnapshot(merged)
@@ -175,6 +188,11 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
 
     private func yesterdayToNowRangeMs() -> (String, String) {
         let (start, end) = VibeviewerCore.DateUtils.yesterdayToNowRange()
+        return (VibeviewerCore.DateUtils.millisecondsString(from: start), VibeviewerCore.DateUtils.millisecondsString(from: end))
+    }
+    
+    private func sevenDaysAgoToNowRangeMs() -> (String, String) {
+        let (start, end) = VibeviewerCore.DateUtils.sevenDaysAgoToNowRange()
         return (VibeviewerCore.DateUtils.millisecondsString(from: start), VibeviewerCore.DateUtils.millisecondsString(from: end))
     }
 
