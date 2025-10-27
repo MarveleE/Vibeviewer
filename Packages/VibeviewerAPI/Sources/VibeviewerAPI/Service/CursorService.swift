@@ -39,7 +39,6 @@ public protocol CursorService {
         cookieHeader: String
     ) async throws -> VibeviewerModel.FilteredUsageHistory
     func fetchUserAnalytics(
-        teamId: Int,
         userId: Int,
         startDateMs: String,
         endDateMs: String,
@@ -177,7 +176,7 @@ public struct DefaultCursorService: CursorService {
                 cookieHeader: cookieHeader
             )
         )
-        let events: [VibeviewerModel.UsageEvent] = dto.usageEventsDisplay.map { e in
+        let events: [VibeviewerModel.UsageEvent] = (dto.usageEventsDisplay ?? []).map { e in
             let tokenUsage = VibeviewerModel.TokenUsage(
                 outputTokens: e.tokenUsage.outputTokens,
                 inputTokens: e.tokenUsage.inputTokens,
@@ -202,7 +201,7 @@ public struct DefaultCursorService: CursorService {
                 tokenUsage: tokenUsage
             )
         }
-        return VibeviewerModel.FilteredUsageHistory(totalCount: dto.totalUsageEventsCount, events: events)
+        return VibeviewerModel.FilteredUsageHistory(totalCount: dto.totalUsageEventsCount ?? 0, events: events)
     }
 
     public func fetchTeamFreeUsageCents(teamId: Int, userId: Int, cookieHeader: String) async throws -> Int {
@@ -228,7 +227,6 @@ public struct DefaultCursorService: CursorService {
     }
 
     public func fetchUserAnalytics(
-        teamId: Int,
         userId: Int,
         startDateMs: String,
         endDateMs: String,
@@ -236,7 +234,6 @@ public struct DefaultCursorService: CursorService {
     ) async throws -> VibeviewerModel.UserAnalytics {
         let dto: CursorUserAnalyticsResponse = try await self.performRequest(
             CursorUserAnalyticsAPI(
-                teamId: teamId,
                 userId: userId,
                 startDateMs: startDateMs,
                 endDateMs: endDateMs,

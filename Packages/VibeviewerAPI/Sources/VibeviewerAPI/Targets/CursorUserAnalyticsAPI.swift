@@ -5,7 +5,6 @@ import VibeviewerModel
 struct CursorUserAnalyticsAPI: DecodableTargetType {
     typealias ResultType = CursorUserAnalyticsResponse
 
-    let teamId: Int
     let userId: Int
     let startDateMs: String
     let endDateMs: String
@@ -16,7 +15,6 @@ struct CursorUserAnalyticsAPI: DecodableTargetType {
     var method: Moya.Method { .post }
     var task: Task {
         let params: [String: Any] = [
-            "teamId": self.teamId,
             "userId": self.userId,
             "startDate": self.startDateMs,
             "endDate": self.endDateMs
@@ -39,8 +37,7 @@ struct CursorUserAnalyticsAPI: DecodableTargetType {
         """.utf8)
     }
 
-    init(teamId: Int, userId: Int, startDateMs: String, endDateMs: String, cookieHeader: String?) {
-        self.teamId = teamId
+    init(userId: Int, startDateMs: String, endDateMs: String, cookieHeader: String?) {
         self.userId = userId
         self.startDateMs = startDateMs
         self.endDateMs = endDateMs

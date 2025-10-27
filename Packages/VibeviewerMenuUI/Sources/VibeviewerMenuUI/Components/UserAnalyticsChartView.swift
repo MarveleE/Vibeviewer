@@ -8,6 +8,7 @@ public struct UserAnalyticsChartView: View {
     let analytics: UserAnalytics
     
     @State private var selectedDate: String?
+    @State private var hoveredDate: String?
     
     public init(analytics: UserAnalytics) {
         self.analytics = analytics
@@ -39,63 +40,90 @@ public struct UserAnalyticsChartView: View {
     // MARK: - Subviews
     
     private var titleView: some View {
-        Text("订阅包含请求数趋势")
+        Text("Usage")
             .font(.app(.satoshiBold, size: 14))
             .foregroundStyle(.primary)
     }
     
     private var chartView: some View {
-        Chart {
-            ForEach(chartData, id: \.date) { item in
-                BarMark(
-                    x: .value("日期", item.dateLabel),
-                    y: .value("请求数", item.value)
-                )
-                .foregroundStyle(barColor(for: item.dateLabel))
-                .cornerRadius(4)
-            }
-        }
-        .chartXSelection(value: $selectedDate)
-        .chartYAxis {
-            AxisMarks(position: .leading) { value in
-                AxisValueLabel {
-                    if let intValue = value.as(Int.self) {
-                        Text("\(intValue)")
-                            .font(.app(.satoshiRegular, size: 10))
-                            .foregroundStyle(.secondary)
-                    }
+        ZStack(alignment: .top) {
+            Chart {
+                ForEach(chartData, id: \.date) { item in
+                    BarMark(
+                        x: .value("Date", item.dateLabel),
+                        y: .value("Requests", item.value)
+                    )
+                    .foregroundStyle(barColor(for: item.dateLabel))
+                    .cornerRadius(4)
+                    .opacity(shouldDimBar(for: item.dateLabel) ? 0.4 : 1.0)
                 }
-                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-                    .foregroundStyle(.secondary.opacity(0.2))
-            }
-        }
-        .chartXAxis {
-            AxisMarks { value in
-                AxisValueLabel {
-                    if let stringValue = value.as(String.self) {
-                        Text(stringValue)
-                            .font(.app(.satoshiRegular, size: 9))
-                            .foregroundStyle(.secondary)
-                    }
+                
+                // 使用 RuleMark 显示选中列的竖线标记
+                if let selectedDate = selectedDate {
+                    RuleMark(x: .value("Selected", selectedDate))
+                        .lineStyle(StrokeStyle(lineWidth: 2, dash: [4]))
+                        .foregroundStyle(Color.blue.opacity(0.3))
                 }
             }
-        }
-        .frame(height: 180)
-        .overlay(alignment: .top) {
+            .chartXSelection(value: $selectedDate)
+            .chartYAxis {
+                AxisMarks(position: .leading) { value in
+                    AxisValueLabel {
+                        if let intValue = value.as(Int.self) {
+                            Text("\(intValue)")
+                                .font(.app(.satoshiRegular, size: 10))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                        .foregroundStyle(.secondary.opacity(0.2))
+                }
+            }
+            .chartXAxis {
+                AxisMarks { value in
+                    AxisValueLabel {
+                        if let stringValue = value.as(String.self) {
+                            Text(stringValue)
+                                .font(.app(.satoshiRegular, size: 9))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .frame(height: 180)
+            .animation(.easeInOut(duration: 0.2), value: selectedDate)
+            
+            // Tooltip 悬浮显示，不使用 overlay
             if let selectedDate = selectedDate,
                let selectedItem = chartData.first(where: { $0.dateLabel == selectedDate }) {
                 tooltipView(for: selectedItem)
-                    .offset(y: -10)
+                    .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                    .padding(.top, 8)
             }
         }
     }
     
     private func barColor(for dateLabel: String) -> AnyShapeStyle {
-        if selectedDate == dateLabel {
-            return AnyShapeStyle(Color.blue.opacity(0.8))
-        } else {
+        let isSelected = selectedDate == dateLabel
+        let isHovered = hoveredDate == dateLabel
+        
+        switch (isSelected, isHovered) {
+        case (true, _):
+            // 选中状态：深蓝色且更醒目
+            return AnyShapeStyle(Color.blue.opacity(0.9))
+        case (false, true):
+            // 悬停状态：中等蓝色
+            return AnyShapeStyle(Color.blue.opacity(0.65))
+        default:
+            // 默认状态：使用渐变色
             return AnyShapeStyle(Color.blue.gradient)
         }
+    }
+    
+    private func shouldDimBar(for dateLabel: String) -> Bool {
+        // 如果有选中项，且当前项未被选中，则变暗
+        guard selectedDate != nil else { return false }
+        return selectedDate != dateLabel
     }
     
     private func tooltipView(for item: ChartDataPoint) -> some View {
@@ -103,7 +131,7 @@ public struct UserAnalyticsChartView: View {
             Text(item.dateLabel)
                 .font(.app(.satoshiMedium, size: 11))
                 .foregroundStyle(.secondary)
-            Text("\(item.value) 次请求")
+            Text("\(item.value) requests")
                 .font(.app(.satoshiBold, size: 13))
                 .foregroundStyle(.primary)
         }
@@ -120,7 +148,7 @@ public struct UserAnalyticsChartView: View {
         HStack(spacing: 16) {
             if let total = totalValue {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("总计")
+                    Text("Total")
                         .font(.app(.satoshiRegular, size: 10))
                         .foregroundStyle(.secondary)
                     Text("\(total)")
@@ -131,7 +159,7 @@ public struct UserAnalyticsChartView: View {
             
             if let avg = averageValue {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("日均")
+                    Text("Average")
                         .font(.app(.satoshiRegular, size: 10))
                         .foregroundStyle(.secondary)
                     Text(String(format: "%.1f", avg))
@@ -142,7 +170,7 @@ public struct UserAnalyticsChartView: View {
             
             if let max = maxValue {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("峰值")
+                    Text("Peak")
                         .font(.app(.satoshiRegular, size: 10))
                         .foregroundStyle(.secondary)
                     Text("\(max)")

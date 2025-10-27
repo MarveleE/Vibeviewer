@@ -94,36 +94,33 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
         guard let creds = self.session.credentials else { return }
 
         do {
-            // 并发发起与凭据无依赖的请求（使用 Task 而非 async let，规避静态分析误报）
+            // 计算时间范围
             let (startMs, endMs) = self.yesterdayToNowRangeMs()
             let (analyticsStartMs, analyticsEndMs) = self.sevenDaysAgoToNowRangeMs()
-            let usageSummaryTask = Task { () throws -> UsageSummary in
-                try await self.api.fetchUsageSummary(cookieHeader: creds.cookieHeader)
-            }
-            let historyTask = Task { () throws -> FilteredUsageHistory in
-                try await self.api.fetchFilteredUsageEvents(
-                    teamId: creds.teamId,
-                    startDateMs: startMs,
-                    endDateMs: endMs,
-                    userId: creds.userId,
-                    page: 1,
-                    pageSize: 100,
-                    cookieHeader: creds.cookieHeader
-                )
-            }
-            let analyticsTask = Task { () throws -> UserAnalytics in
-                try await self.api.fetchUserAnalytics(
-                    teamId: creds.teamId,
-                    userId: creds.userId,
-                    startDateMs: analyticsStartMs,
-                    endDateMs: analyticsEndMs,
-                    cookieHeader: creds.cookieHeader
-                )
-            }
+            
+            // 使用 async let 并发发起所有三个独立的 API 请求
+            async let usageSummary = try await self.api.fetchUsageSummary(
+                cookieHeader: creds.cookieHeader
+            )
+            async let history = try await self.api.fetchFilteredUsageEvents(
+                teamId: creds.teamId,
+                startDateMs: startMs,
+                endDateMs: endMs,
+                userId: creds.userId,
+                page: 1,
+                pageSize: 100,
+                cookieHeader: creds.cookieHeader
+            )
+            async let analytics = try await self.api.fetchUserAnalytics(
+                userId: creds.userId,
+                startDateMs: analyticsStartMs,
+                endDateMs: analyticsEndMs,
+                cookieHeader: creds.cookieHeader
+            )
 
-            // 先拿到 usageSummary，用于判断 Team Plan
-            let usageSummary = try await usageSummaryTask.value
-
+            // 等待 usageSummary，用于判断 Team Plan
+            let usageSummaryValue = try await usageSummary
+            
             // totalRequestsAllModels 将基于使用事件计算，而非API返回的请求数据
             let totalAll = 0 // 暂时设为0，后续通过使用事件更新
 
@@ -131,8 +128,12 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
 
             // Team Plan free usage（依赖 usageSummary 判定）
             func computeFreeCents() async -> Int {
-                if usageSummary.membershipType == .enterprise && creds.isEnterpriseUser == false {
-                    return (try? await self.api.fetchTeamFreeUsageCents(teamId: creds.teamId, userId: creds.userId, cookieHeader: creds.cookieHeader)) ?? 0
+                if usageSummaryValue.membershipType == .enterprise && creds.isEnterpriseUser == false {
+                    return (try? await self.api.fetchTeamFreeUsageCents(
+                        teamId: creds.teamId,
+                        userId: creds.userId,
+                        cookieHeader: creds.cookieHeader
+                    )) ?? 0
                 }
                 return 0
             }
@@ -142,33 +143,38 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
             let overview = DashboardSnapshot(
                 email: creds.email,
                 totalRequestsAllModels: totalAll,
-                spendingCents: usageSummary.individualUsage.plan.used,
-                hardLimitDollars: usageSummary.individualUsage.plan.limit / 100,
+                spendingCents: usageSummaryValue.individualUsage.plan.used,
+                hardLimitDollars: usageSummaryValue.individualUsage.plan.limit / 100,
                 usageEvents: current?.usageEvents ?? [],
                 requestToday: current?.requestToday ?? 0,
                 requestYestoday: current?.requestYestoday ?? 0,
-                usageSummary: usageSummary,
+                usageSummary: usageSummaryValue,
                 freeUsageCents: freeCents,
                 userAnalytics: current?.userAnalytics
             )
             self.session.snapshot = overview
             try? await self.storage.saveDashboardSnapshot(overview)
 
-            // 等待并合并历史事件和分析数据
-            let history = try await historyTask.value
-            let analytics = try? await analyticsTask.value
-            let (reqToday, reqYesterday) = self.splitTodayAndYesterdayCounts(from: history.events)
+            // 等待并合并历史事件和分析数据（这两个已经在并发执行）
+            let historyValue = try await history
+            let analyticsValue: UserAnalytics?
+            do {
+                analyticsValue = try await analytics
+            } catch {
+                analyticsValue = nil
+            }
+            let (reqToday, reqYesterday) = self.splitTodayAndYesterdayCounts(from: historyValue.events)
             let merged = DashboardSnapshot(
                 email: overview.email,
                 totalRequestsAllModels: overview.totalRequestsAllModels,
                 spendingCents: overview.spendingCents,
                 hardLimitDollars: overview.hardLimitDollars,
-                usageEvents: history.events,
+                usageEvents: historyValue.events,
                 requestToday: reqToday,
                 requestYestoday: reqYesterday,
-                usageSummary: usageSummary,
+                usageSummary: usageSummaryValue,
                 freeUsageCents: overview.freeUsageCents,
-                userAnalytics: analytics
+                userAnalytics: analyticsValue
             )
             self.session.snapshot = merged
             try? await self.storage.saveDashboardSnapshot(merged)

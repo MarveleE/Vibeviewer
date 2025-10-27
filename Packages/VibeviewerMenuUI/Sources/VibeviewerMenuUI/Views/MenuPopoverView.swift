@@ -60,9 +60,9 @@ public struct MenuPopoverView: View {
 
                 totalCreditsUsageView
 
-                Divider().opacity(0.5)
+                // Divider().opacity(0.5)
                 
-                RequestsCompareView(requestToday: self.session.snapshot?.requestToday ?? 0, requestYestoday: self.session.snapshot?.requestYestoday ?? 0)
+                // RequestsCompareView(requestToday: self.session.snapshot?.requestToday ?? 0, requestYestoday: self.session.snapshot?.requestYestoday ?? 0)
                 
                 Divider().opacity(0.5)
 
