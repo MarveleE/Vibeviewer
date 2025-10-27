@@ -56,10 +56,6 @@ public struct MenuPopoverView: View {
                     MetricsView(metric: .onDemand(onDemandMetrics))
                 }
 
-                Divider().opacity(0.5)
-
-                totalCreditsUsageView
-
                 // Divider().opacity(0.5)
                 
                 // RequestsCompareView(requestToday: self.session.snapshot?.requestToday ?? 0, requestYestoday: self.session.snapshot?.requestYestoday ?? 0)
@@ -73,6 +69,10 @@ public struct MenuPopoverView: View {
                     
                     UserAnalyticsChartView(analytics: analytics)
                 }
+
+                Divider().opacity(0.5)
+
+                totalCreditsUsageView
                 
                 Divider().opacity(0.5)
 

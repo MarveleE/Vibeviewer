@@ -31,6 +31,7 @@ struct CursorDailyMetric: Codable, Sendable, Equatable {
     let agentRequests: Int?
     let cmdkUsages: Int?
     let subscriptionIncludedReqs: Int?
+    let usageBasedReqs: Int?
     let modelUsage: [CursorModelUsageCount]?
     let extensionUsage: [CursorExtensionUsageCount]?
     let tabExtensionUsage: [CursorExtensionUsageCount]?

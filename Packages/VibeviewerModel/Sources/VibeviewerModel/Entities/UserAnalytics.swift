@@ -53,13 +53,20 @@ public struct UsageChartData: Codable, Sendable, Equatable {
         public let date: String
         /// 格式化后的日期标签（MM/dd）
         public let dateLabel: String
-        /// 使用次数
-        public let value: Int
+        /// 订阅包含的请求数
+        public let subscriptionReqs: Int
+        /// 基于使用量的请求数
+        public let usageBasedReqs: Int
+        /// 总使用次数
+        public var totalValue: Int {
+            subscriptionReqs + usageBasedReqs
+        }
         
-        public init(date: String, dateLabel: String, value: Int) {
+        public init(date: String, dateLabel: String, subscriptionReqs: Int, usageBasedReqs: Int) {
             self.date = date
             self.dateLabel = dateLabel
-            self.value = value
+            self.subscriptionReqs = subscriptionReqs
+            self.usageBasedReqs = usageBasedReqs
         }
     }
 }

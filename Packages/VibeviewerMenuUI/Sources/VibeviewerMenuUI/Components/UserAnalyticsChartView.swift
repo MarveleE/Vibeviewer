@@ -53,6 +53,7 @@ public struct UserAnalyticsChartView: View {
             }
             .pickerStyle(.radioGroup)
             .labelsHidden()
+            .menuActionDismissBehavior(.enabled)
             .padding()
         }
         .maxFrame(true, false, alignment: .leading)

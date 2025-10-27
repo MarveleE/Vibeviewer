@@ -255,14 +255,20 @@ public struct DefaultCursorService: CursorService {
     /// 映射 Usage 柱状图数据
     private func mapToUsageChart(_ metrics: [CursorDailyMetric]) -> VibeviewerModel.UsageChartData {
         let dataPoints = metrics.compactMap { metric -> VibeviewerModel.UsageChartData.DataPoint? in
-            guard let value = metric.subscriptionIncludedReqs, value > 0 else {
+            let subscriptionReqs = metric.subscriptionIncludedReqs ?? 0
+            let usageBasedReqs = metric.usageBasedReqs ?? 0
+            
+            // 如果两者都为 0，则跳过该数据点
+            guard subscriptionReqs > 0 || usageBasedReqs > 0 else {
                 return nil
             }
+            
             let dateLabel = formatDateLabel(metric.date)
             return VibeviewerModel.UsageChartData.DataPoint(
                 date: metric.date,
                 dateLabel: dateLabel,
-                value: value
+                subscriptionReqs: subscriptionReqs,
+                usageBasedReqs: usageBasedReqs
             )
         }
         return VibeviewerModel.UsageChartData(dataPoints: dataPoints)

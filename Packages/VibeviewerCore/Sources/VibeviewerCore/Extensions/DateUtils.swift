@@ -28,11 +28,12 @@ public enum DateUtils {
         return (startOfYesterday, now)
     }
     
-    /// 7 天前的 00:00 到当前时刻的区间 [sevenDaysAgoStart, now]
+    /// 7 天前的 00:00 到明天 00:00 的区间 [sevenDaysAgoStart, tomorrowStart]
     public static func sevenDaysAgoToNowRange(from now: Date = Date(), calendar: Calendar = .current) -> (start: Date, end: Date) {
         let startOfToday = calendar.startOfDay(for: now)
         let startOfSevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: startOfToday) ?? now
-        return (startOfSevenDaysAgo, now)
+        let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: startOfToday) ?? now
+        return (startOfSevenDaysAgo, startOfTomorrow)
     }
 
     /// 将 Date 转为毫秒字符串

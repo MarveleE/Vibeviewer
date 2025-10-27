@@ -14,6 +14,7 @@ struct UsageBarChartView: View {
         } else {
             VStack(alignment: .leading, spacing: 12) {
                 chartView
+                legendView
                 summaryView
             }
         }
@@ -31,19 +32,33 @@ struct UsageBarChartView: View {
         ZStack(alignment: .top) {
             Chart {
                 ForEach(data.dataPoints, id: \.date) { item in
-                    BarMark(
-                        x: .value("Date", item.dateLabel),
-                        y: .value("Requests", item.value)
-                    )
-                    .foregroundStyle(barColor(for: item.dateLabel))
-                    .cornerRadius(4)
-                    .opacity(shouldDimBar(for: item.dateLabel) ? 0.4 : 1.0)
+                    // 订阅包含的请求（蓝色，底部）
+                    if item.subscriptionReqs > 0 {
+                        BarMark(
+                            x: .value("Date", item.dateLabel),
+                            y: .value("Subscription", item.subscriptionReqs)
+                        )
+                        .foregroundStyle(subscriptionBarColor(for: item.dateLabel))
+                        .cornerRadius(4)
+                        .opacity(shouldDimBar(for: item.dateLabel) ? 0.4 : 1.0)
+                    }
+                    
+                    // 基于使用量的请求（橙色，堆叠在上面）
+                    if item.usageBasedReqs > 0 {
+                        BarMark(
+                            x: .value("Date", item.dateLabel),
+                            y: .value("Usage Based", item.usageBasedReqs)
+                        )
+                        .foregroundStyle(usageBasedBarColor(for: item.dateLabel))
+                        .cornerRadius(4)
+                        .opacity(shouldDimBar(for: item.dateLabel) ? 0.4 : 1.0)
+                    }
                 }
                 
                 if let selectedDate = selectedDate {
                     RuleMark(x: .value("Selected", selectedDate))
                         .lineStyle(StrokeStyle(lineWidth: 2, dash: [4]))
-                        .foregroundStyle(Color.blue.opacity(0.3))
+                        .foregroundStyle(Color.gray.opacity(0.3))
                 }
             }
             .chartXSelection(value: $selectedDate)
@@ -83,11 +98,19 @@ struct UsageBarChartView: View {
         }
     }
     
-    private func barColor(for dateLabel: String) -> AnyShapeStyle {
+    private func subscriptionBarColor(for dateLabel: String) -> AnyShapeStyle {
         if selectedDate == dateLabel {
             return AnyShapeStyle(Color.blue.opacity(0.9))
         } else {
             return AnyShapeStyle(Color.blue.gradient)
+        }
+    }
+    
+    private func usageBasedBarColor(for dateLabel: String) -> AnyShapeStyle {
+        if selectedDate == dateLabel {
+            return AnyShapeStyle(Color.orange.opacity(0.9))
+        } else {
+            return AnyShapeStyle(Color.orange.gradient)
         }
     }
     
@@ -96,17 +119,76 @@ struct UsageBarChartView: View {
         return selectedDate != dateLabel
     }
     
+    private var legendView: some View {
+        HStack(spacing: 16) {
+            HStack(spacing: 6) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color.blue.gradient)
+                    .frame(width: 12, height: 12)
+                Text("Subscription")
+                    .font(.app(.satoshiRegular, size: 10))
+                    .foregroundStyle(.secondary)
+            }
+            
+            HStack(spacing: 6) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color.orange.gradient)
+                    .frame(width: 12, height: 12)
+                Text("Usage Based")
+                    .font(.app(.satoshiRegular, size: 10))
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+    
     private func tooltipView(for item: UsageChartData.DataPoint) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(item.dateLabel)
                 .font(.app(.satoshiMedium, size: 11))
                 .foregroundStyle(.secondary)
-            Text("\(item.value) requests")
-                .font(.app(.satoshiBold, size: 13))
-                .foregroundStyle(.primary)
+            
+            VStack(alignment: .leading, spacing: 3) {
+                if item.subscriptionReqs > 0 {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(Color.blue)
+                            .frame(width: 6, height: 6)
+                        Text("Subscription: \(item.subscriptionReqs)")
+                            .font(.app(.satoshiRegular, size: 11))
+                            .foregroundStyle(.primary)
+                    }
+                }
+                
+                if item.usageBasedReqs > 0 {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(Color.orange)
+                            .frame(width: 6, height: 6)
+                        Text("Usage Based: \(item.usageBasedReqs)")
+                            .font(.app(.satoshiRegular, size: 11))
+                            .foregroundStyle(.primary)
+                    }
+                }
+                
+                // 只在有多个数据源时显示分隔线和总计
+                if item.subscriptionReqs > 0 && item.usageBasedReqs > 0 {
+                    Divider()
+                        .padding(.vertical, 2)
+                    
+                    Text("Total: \(item.totalValue)")
+                        .font(.app(.satoshiBold, size: 13))
+                        .foregroundStyle(.primary)
+                } else {
+                    // 只有一个数据源时，直接显示该值
+                    Text("\(item.totalValue) requests")
+                        .font(.app(.satoshiBold, size: 13))
+                        .foregroundStyle(.primary)
+                        .padding(.top, 2)
+                }
+            }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .background {
             RoundedRectangle(cornerRadius: 8)
                 .fill(.background)
@@ -155,9 +237,8 @@ struct UsageBarChartView: View {
     }
     
     private var totalValue: Int? {
-        let values = data.dataPoints.map { $0.value }
-        guard !values.isEmpty else { return nil }
-        return values.reduce(0, +)
+        guard !data.dataPoints.isEmpty else { return nil }
+        return data.dataPoints.reduce(0) { $0 + $1.totalValue }
     }
     
     private var averageValue: Double? {
@@ -166,7 +247,7 @@ struct UsageBarChartView: View {
     }
     
     private var maxValue: Int? {
-        data.dataPoints.map { $0.value }.max()
+        data.dataPoints.map { $0.totalValue }.max()
     }
 }
 

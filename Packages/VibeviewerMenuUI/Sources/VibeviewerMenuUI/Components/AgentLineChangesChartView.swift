@@ -30,21 +30,25 @@ struct AgentLineChangesChartView: View {
     private var chartView: some View {
         ZStack(alignment: .top) {
             Chart {
+                // 建议的行数线
                 ForEach(data.dataPoints, id: \.date) { item in
-                    // 建议的行数线
                     LineMark(
                         x: .value("Date", item.dateLabel),
-                        y: .value("Lines", item.suggestedLines)
+                        y: .value("Lines", item.suggestedLines),
+                        series: .value("Type", "Suggested")
                     )
                     .foregroundStyle(.blue)
                     .lineStyle(StrokeStyle(lineWidth: 2))
                     .symbol(.circle)
                     .symbolSize(40)
-                    
-                    // 接受的行数线
+                }
+                
+                // 接受的行数线
+                ForEach(data.dataPoints, id: \.date) { item in
                     LineMark(
                         x: .value("Date", item.dateLabel),
-                        y: .value("Lines", item.acceptedLines)
+                        y: .value("Lines", item.acceptedLines),
+                        series: .value("Type", "Accepted")
                     )
                     .foregroundStyle(.green)
                     .lineStyle(StrokeStyle(lineWidth: 2))
