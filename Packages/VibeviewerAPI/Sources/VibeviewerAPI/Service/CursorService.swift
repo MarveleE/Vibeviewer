@@ -241,69 +241,115 @@ public struct DefaultCursorService: CursorService {
             )
         )
         
-        // 映射每日指标
-        let dailyMetrics: [VibeviewerModel.DailyMetric] = dto.dailyMetrics.map { metric in
-            // 映射模型使用情况
-            let modelUsage = (metric.modelUsage ?? []).map { model in
-                VibeviewerModel.ModelUsageCount(name: model.name, count: model.count)
+        // 转换为四种图表数据
+        return VibeviewerModel.UserAnalytics(
+            usageChart: mapToUsageChart(dto.dailyMetrics),
+            modelUsageChart: mapToModelUsageChart(dto.dailyMetrics),
+            tabAcceptChart: mapToTabAcceptChart(dto.dailyMetrics),
+            agentLineChangesChart: mapToAgentLineChangesChart(dto.dailyMetrics)
+        )
+    }
+    
+    // MARK: - Private Chart Mapping Methods
+    
+    /// 映射 Usage 柱状图数据
+    private func mapToUsageChart(_ metrics: [CursorDailyMetric]) -> VibeviewerModel.UsageChartData {
+        let dataPoints = metrics.compactMap { metric -> VibeviewerModel.UsageChartData.DataPoint? in
+            guard let value = metric.subscriptionIncludedReqs, value > 0 else {
+                return nil
             }
-            
-            // 映射扩展使用情况
-            let extensionUsage = (metric.extensionUsage ?? []).map { ext in
-                VibeviewerModel.ExtensionUsageCount(name: ext.name, count: ext.count)
-            }
-            
-            // 映射 Tab 扩展使用情况
-            let tabExtensionUsage = (metric.tabExtensionUsage ?? []).map { ext in
-                VibeviewerModel.ExtensionUsageCount(name: ext.name, count: ext.count)
-            }
-            
-            // 映射客户端版本使用情况
-            let clientVersionUsage = (metric.clientVersionUsage ?? []).map { version in
-                VibeviewerModel.ClientVersionUsageCount(name: version.name, count: version.count)
-            }
-            
-            return VibeviewerModel.DailyMetric(
+            let dateLabel = formatDateLabel(metric.date)
+            return VibeviewerModel.UsageChartData.DataPoint(
                 date: metric.date,
-                activeUsers: metric.activeUsers,
-                linesAdded: metric.linesAdded,
-                linesDeleted: metric.linesDeleted,
-                acceptedLinesAdded: metric.acceptedLinesAdded,
-                acceptedLinesDeleted: metric.acceptedLinesDeleted,
-                totalApplies: metric.totalApplies,
-                totalAccepts: metric.totalAccepts,
-                totalRejects: metric.totalRejects,
-                totalTabsShown: metric.totalTabsShown,
-                totalTabsAccepted: metric.totalTabsAccepted,
-                chatRequests: metric.chatRequests,
-                agentRequests: metric.agentRequests,
-                cmdkUsages: metric.cmdkUsages,
-                subscriptionIncludedReqs: metric.subscriptionIncludedReqs,
-                modelUsage: modelUsage,
-                extensionUsage: extensionUsage,
-                tabExtensionUsage: tabExtensionUsage,
-                clientVersionUsage: clientVersionUsage
+                dateLabel: dateLabel,
+                value: value
             )
         }
+        return VibeviewerModel.UsageChartData(dataPoints: dataPoints)
+    }
+    
+    /// 映射 Model Usage 饼图数据（聚合所有日期）
+    private func mapToModelUsageChart(_ metrics: [CursorDailyMetric]) -> VibeviewerModel.ModelUsageChartData {
+        // 聚合所有模型使用数据
+        var modelCounts: [String: Int] = [:]
         
-        // 映射分析周期
-        let period = VibeviewerModel.AnalyticsPeriod(
-            startDate: dto.period.startDate,
-            endDate: dto.period.endDate
-        )
+        for metric in metrics {
+            guard let modelUsage = metric.modelUsage else { continue }
+            for model in modelUsage {
+                modelCounts[model.name, default: 0] += model.count
+            }
+        }
         
-        return VibeviewerModel.UserAnalytics(
-            dailyMetrics: dailyMetrics,
-            period: period,
-            applyLinesRank: dto.applyLinesRank,
-            tabsAcceptedRank: dto.tabsAcceptedRank,
-            totalTeamMembers: dto.totalTeamMembers,
-            totalApplyLines: dto.totalApplyLines,
-            teamAverageApplyLines: dto.teamAverageApplyLines,
-            totalTabsAccepted: dto.totalTabsAccepted,
-            teamAverageTabsAccepted: dto.teamAverageTabsAccepted,
-            totalMembersInTeam: dto.totalMembersInTeam
-        )
+        // 计算总数和百分比
+        let totalCount = modelCounts.values.reduce(0, +)
+        
+        let modelDistribution = modelCounts.map { name, count -> VibeviewerModel.ModelUsageChartData.ModelShare in
+            let percentage = totalCount > 0 ? (Double(count) / Double(totalCount)) * 100.0 : 0.0
+            return VibeviewerModel.ModelUsageChartData.ModelShare(
+                id: name,
+                modelName: name,
+                count: count,
+                percentage: percentage
+            )
+        }.sorted { $0.count > $1.count } // 按使用次数降序排序
+        
+        return VibeviewerModel.ModelUsageChartData(modelDistribution: modelDistribution)
+    }
+    
+    /// 映射 Tab Accept 柱状图数据
+    private func mapToTabAcceptChart(_ metrics: [CursorDailyMetric]) -> VibeviewerModel.TabAcceptChartData {
+        let dataPoints = metrics.compactMap { metric -> VibeviewerModel.TabAcceptChartData.DataPoint? in
+            guard let acceptedCount = metric.totalTabsAccepted, acceptedCount > 0 else {
+                return nil
+            }
+            let dateLabel = formatDateLabel(metric.date)
+            return VibeviewerModel.TabAcceptChartData.DataPoint(
+                date: metric.date,
+                dateLabel: dateLabel,
+                acceptedCount: acceptedCount
+            )
+        }
+        return VibeviewerModel.TabAcceptChartData(dataPoints: dataPoints)
+    }
+    
+    /// 映射 Agent Line Changes 折线图数据
+    private func mapToAgentLineChangesChart(_ metrics: [CursorDailyMetric]) -> VibeviewerModel.AgentLineChangesChartData {
+        let dataPoints = metrics.compactMap { metric -> VibeviewerModel.AgentLineChangesChartData.DataPoint? in
+            let linesAdded = metric.linesAdded ?? 0
+            let linesDeleted = metric.linesDeleted ?? 0
+            let acceptedLinesAdded = metric.acceptedLinesAdded ?? 0
+            let acceptedLinesDeleted = metric.acceptedLinesDeleted ?? 0
+            
+            let suggestedLines = linesAdded + linesDeleted
+            let acceptedLines = acceptedLinesAdded + acceptedLinesDeleted
+            
+            // 如果两个值都为 0，跳过此数据点
+            guard suggestedLines > 0 || acceptedLines > 0 else {
+                return nil
+            }
+            
+            let dateLabel = formatDateLabel(metric.date)
+            return VibeviewerModel.AgentLineChangesChartData.DataPoint(
+                date: metric.date,
+                dateLabel: dateLabel,
+                suggestedLines: suggestedLines,
+                acceptedLines: acceptedLines
+            )
+        }
+        return VibeviewerModel.AgentLineChangesChartData(dataPoints: dataPoints)
+    }
+    
+    /// 格式化日期标签为 MM/dd
+    private func formatDateLabel(_ dateString: String) -> String {
+        guard let timestamp = Double(dateString),
+              timestamp > 0 else {
+            return ""
+        }
+        
+        let date = Date(timeIntervalSince1970: timestamp / 1000.0)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/dd"
+        return formatter.string(from: date)
     }
 }
 
