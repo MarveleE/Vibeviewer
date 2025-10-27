@@ -54,12 +54,14 @@ struct VibeviewerApp: App {
 
     private func menuBarLabel() -> some View {
         HStack(spacing: 4) {
-            Image(systemName: "bolt.fill")
+            Image(.menuBarIcon)
+                .renderingMode(.template)
                 .resizable()
                 .frame(width: 16, height: 16)
                 .padding(.trailing, 4)
+                .foregroundStyle(.primary)
             Text({
-                guard let snapshot = self.session.snapshot else { return "Vibeviewer" }
+                guard let snapshot = self.session.snapshot else { return "" }
                 
                 if let usageSummary = snapshot.usageSummary {
                     let planUsed = usageSummary.individualUsage.plan.used
