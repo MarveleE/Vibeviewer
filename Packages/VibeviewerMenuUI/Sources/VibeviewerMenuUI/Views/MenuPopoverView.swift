@@ -56,17 +56,23 @@ public struct MenuPopoverView: View {
                     MetricsView(metric: .onDemand(onDemandMetrics))
                 }
 
-                Divider().opacity(0.5)
-
-                totalCreditsUsageView
-
-                Divider().opacity(0.5)
+                // Divider().opacity(0.5)
                 
-                RequestsCompareView(requestToday: self.session.snapshot?.requestToday ?? 0, requestYestoday: self.session.snapshot?.requestYestoday ?? 0)
+                // RequestsCompareView(requestToday: self.session.snapshot?.requestToday ?? 0, requestYestoday: self.session.snapshot?.requestYestoday ?? 0)
                 
                 Divider().opacity(0.5)
 
                 UsageEventView(events: self.session.snapshot?.usageEvents ?? [])
+                
+                if let analytics = self.session.snapshot?.userAnalytics {
+                    Divider().opacity(0.5)
+                    
+                    UserAnalyticsChartView(analytics: analytics)
+                }
+
+                Divider().opacity(0.5)
+
+                totalCreditsUsageView
                 
                 Divider().opacity(0.5)
 

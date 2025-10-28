@@ -16,6 +16,7 @@ public struct SettingsView: View {
     @State private var launchAtLogin: Bool = false
     @State private var appearanceSelection: VibeviewerModel.AppAppearance = .system
     @State private var showingClearSessionAlert: Bool = false
+    @State private var analyticsDataDays: String = ""
 
     public init() {}
 
@@ -43,6 +44,9 @@ public struct SettingsView: View {
                     TextField("5", text: $refreshFrequency)
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 80)
+                        .onChange(of: refreshFrequency) { oldValue, newValue in
+                            refreshFrequency = filterIntegerInput(newValue)
+                        }
                 }
                 
                 VStack(alignment: .leading, spacing: 8) {
@@ -52,6 +56,21 @@ public struct SettingsView: View {
                     TextField("10", text: $usageHistoryLimit)
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 80)
+                        .onChange(of: usageHistoryLimit) { oldValue, newValue in
+                            usageHistoryLimit = filterIntegerInput(newValue)
+                        }
+                }
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Analytics Data Range (days)")
+                        .font(.app(.satoshiMedium, size: 12))
+                    
+                    TextField("7", text: $analyticsDataDays)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 80)
+                        .onChange(of: analyticsDataDays) { oldValue, newValue in
+                            analyticsDataDays = filterIntegerInput(newValue)
+                        }
                 }
                 
                 Toggle("Pause refresh when screen sleeps", isOn: $pauseOnScreenSleep)
@@ -114,6 +133,7 @@ public struct SettingsView: View {
         pauseOnScreenSleep = appSettings.pauseOnScreenSleep
         launchAtLogin = launchAtLoginService.isEnabled
         appearanceSelection = appSettings.appearance
+        analyticsDataDays = String(appSettings.analyticsDataDays)
     }
     
     private func saveSettings() {
@@ -130,6 +150,7 @@ public struct SettingsView: View {
         _ = launchAtLoginService.setEnabled(launchAtLogin)
         appSettings.launchAtLogin = launchAtLogin
         appSettings.appearance = appearanceSelection
+        appSettings.analyticsDataDays = Int(analyticsDataDays) ?? 7 // Default to 7 if invalid
     }
     
     private func clearAppSession() async {
@@ -142,5 +163,10 @@ public struct SettingsView: View {
         
         // 关闭设置窗口
         NSApplication.shared.keyWindow?.close()
+    }
+    
+    /// 过滤输入，仅允许整数（0-9）
+    private func filterIntegerInput(_ input: String) -> String {
+        input.filter { $0.isNumber }
     }
 }

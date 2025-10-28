@@ -30,14 +30,18 @@ public protocol CursorService {
     /// 仅 Team Plan 使用：返回当前用户的 free usage（以分计）。计算方式：includedSpendCents - hardLimitOverrideDollars*100，若小于0则为0
     func fetchTeamFreeUsageCents(teamId: Int, userId: Int, cookieHeader: String) async throws -> Int
     func fetchFilteredUsageEvents(
-        teamId: Int,
         startDateMs: String,
         endDateMs: String,
         userId: Int,
         page: Int,
-        pageSize: Int,
         cookieHeader: String
     ) async throws -> VibeviewerModel.FilteredUsageHistory
+    func fetchUserAnalytics(
+        userId: Int,
+        startDateMs: String,
+        endDateMs: String,
+        cookieHeader: String
+    ) async throws -> VibeviewerModel.UserAnalytics
 }
 
 public struct DefaultCursorService: CursorService {
@@ -151,26 +155,22 @@ public struct DefaultCursorService: CursorService {
     }
 
     public func fetchFilteredUsageEvents(
-        teamId: Int,
         startDateMs: String,
         endDateMs: String,
         userId: Int,
         page: Int,
-        pageSize: Int,
         cookieHeader: String
     ) async throws -> VibeviewerModel.FilteredUsageHistory {
         let dto: CursorFilteredUsageResponse = try await self.performRequest(
             CursorFilteredUsageAPI(
-                teamId: teamId,
                 startDateMs: startDateMs,
                 endDateMs: endDateMs,
                 userId: userId,
                 page: page,
-                pageSize: pageSize,
                 cookieHeader: cookieHeader
             )
         )
-        let events: [VibeviewerModel.UsageEvent] = dto.usageEventsDisplay.map { e in
+        let events: [VibeviewerModel.UsageEvent] = (dto.usageEventsDisplay ?? []).map { e in
             let tokenUsage = VibeviewerModel.TokenUsage(
                 outputTokens: e.tokenUsage.outputTokens,
                 inputTokens: e.tokenUsage.inputTokens,
@@ -195,7 +195,7 @@ public struct DefaultCursorService: CursorService {
                 tokenUsage: tokenUsage
             )
         }
-        return VibeviewerModel.FilteredUsageHistory(totalCount: dto.totalUsageEventsCount, events: events)
+        return VibeviewerModel.FilteredUsageHistory(totalCount: dto.totalUsageEventsCount ?? 0, events: events)
     }
 
     public func fetchTeamFreeUsageCents(teamId: Int, userId: Int, cookieHeader: String) async throws -> Int {
@@ -203,7 +203,7 @@ public struct DefaultCursorService: CursorService {
             CursorGetTeamSpendAPI(
                 teamId: teamId,
                 page: 1,
-                pageSize: 50,
+                // pageSize is hardcoded to 100
                 sortBy: "name",
                 sortDirection: "asc",
                 cookieHeader: cookieHeader
@@ -218,6 +218,138 @@ public struct DefaultCursorService: CursorService {
         let overrideDollars = me.hardLimitOverrideDollars ?? 0
         let freeCents = max(included - overrideDollars * 100, 0)
         return freeCents
+    }
+
+    public func fetchUserAnalytics(
+        userId: Int,
+        startDateMs: String,
+        endDateMs: String,
+        cookieHeader: String
+    ) async throws -> VibeviewerModel.UserAnalytics {
+        let dto: CursorUserAnalyticsResponse = try await self.performRequest(
+            CursorUserAnalyticsAPI(
+                userId: userId,
+                startDateMs: startDateMs,
+                endDateMs: endDateMs,
+                cookieHeader: cookieHeader
+            )
+        )
+        
+        // 转换为四种图表数据
+        return VibeviewerModel.UserAnalytics(
+            usageChart: mapToUsageChart(dto.dailyMetrics),
+            modelUsageChart: mapToModelUsageChart(dto.dailyMetrics),
+            tabAcceptChart: mapToTabAcceptChart(dto.dailyMetrics),
+            agentLineChangesChart: mapToAgentLineChangesChart(dto.dailyMetrics)
+        )
+    }
+    
+    // MARK: - Private Chart Mapping Methods
+    
+    /// 映射 Usage 柱状图数据
+    private func mapToUsageChart(_ metrics: [CursorDailyMetric]) -> VibeviewerModel.UsageChartData {
+        let dataPoints = metrics.compactMap { metric -> VibeviewerModel.UsageChartData.DataPoint? in
+            let subscriptionReqs = metric.subscriptionIncludedReqs ?? 0
+            let usageBasedReqs = metric.usageBasedReqs ?? 0
+            
+            // 如果两者都为 0，则跳过该数据点
+            guard subscriptionReqs > 0 || usageBasedReqs > 0 else {
+                return nil
+            }
+            
+            let dateLabel = formatDateLabel(metric.date)
+            return VibeviewerModel.UsageChartData.DataPoint(
+                date: metric.date,
+                dateLabel: dateLabel,
+                subscriptionReqs: subscriptionReqs,
+                usageBasedReqs: usageBasedReqs
+            )
+        }
+        return VibeviewerModel.UsageChartData(dataPoints: dataPoints)
+    }
+    
+    /// 映射 Model Usage 饼图数据（聚合所有日期）
+    private func mapToModelUsageChart(_ metrics: [CursorDailyMetric]) -> VibeviewerModel.ModelUsageChartData {
+        // 聚合所有模型使用数据
+        var modelCounts: [String: Int] = [:]
+        
+        for metric in metrics {
+            guard let modelUsage = metric.modelUsage else { continue }
+            for model in modelUsage {
+                modelCounts[model.name, default: 0] += model.count
+            }
+        }
+        
+        // 计算总数和百分比
+        let totalCount = modelCounts.values.reduce(0, +)
+        
+        let modelDistribution = modelCounts.map { name, count -> VibeviewerModel.ModelUsageChartData.ModelShare in
+            let percentage = totalCount > 0 ? (Double(count) / Double(totalCount)) * 100.0 : 0.0
+            return VibeviewerModel.ModelUsageChartData.ModelShare(
+                id: name,
+                modelName: name,
+                count: count,
+                percentage: percentage
+            )
+        }.sorted { $0.count > $1.count } // 按使用次数降序排序
+        
+        return VibeviewerModel.ModelUsageChartData(modelDistribution: modelDistribution)
+    }
+    
+    /// 映射 Tab Accept 柱状图数据
+    private func mapToTabAcceptChart(_ metrics: [CursorDailyMetric]) -> VibeviewerModel.TabAcceptChartData {
+        let dataPoints = metrics.compactMap { metric -> VibeviewerModel.TabAcceptChartData.DataPoint? in
+            guard let acceptedCount = metric.totalTabsAccepted, acceptedCount > 0 else {
+                return nil
+            }
+            let dateLabel = formatDateLabel(metric.date)
+            return VibeviewerModel.TabAcceptChartData.DataPoint(
+                date: metric.date,
+                dateLabel: dateLabel,
+                acceptedCount: acceptedCount
+            )
+        }
+        return VibeviewerModel.TabAcceptChartData(dataPoints: dataPoints)
+    }
+    
+    /// 映射 Agent Line Changes 折线图数据
+    private func mapToAgentLineChangesChart(_ metrics: [CursorDailyMetric]) -> VibeviewerModel.AgentLineChangesChartData {
+        let dataPoints = metrics.compactMap { metric -> VibeviewerModel.AgentLineChangesChartData.DataPoint? in
+            let linesAdded = metric.linesAdded ?? 0
+            let linesDeleted = metric.linesDeleted ?? 0
+            let acceptedLinesAdded = metric.acceptedLinesAdded ?? 0
+            let acceptedLinesDeleted = metric.acceptedLinesDeleted ?? 0
+            
+            let suggestedLines = linesAdded + linesDeleted
+            let acceptedLines = acceptedLinesAdded + acceptedLinesDeleted
+            
+            // 如果两个值都为 0，跳过此数据点
+            guard suggestedLines > 0 || acceptedLines > 0 else {
+                return nil
+            }
+            
+            let dateLabel = formatDateLabel(metric.date)
+            return VibeviewerModel.AgentLineChangesChartData.DataPoint(
+                date: metric.date,
+                dateLabel: dateLabel,
+                suggestedLines: suggestedLines,
+                acceptedLines: acceptedLines
+            )
+        }
+        return VibeviewerModel.AgentLineChangesChartData(dataPoints: dataPoints)
+    }
+    
+    /// 格式化日期标签为 MM/dd
+    private func formatDateLabel(_ dateString: String) -> String {
+        guard let timestamp = Double(dateString),
+              timestamp > 0 else {
+            return ""
+        }
+        
+        let date = Date(timeIntervalSince1970: timestamp / 1000.0)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/dd"
+        return formatter.string(from: date)
     }
 }
 
