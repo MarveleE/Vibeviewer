@@ -107,6 +107,7 @@ struct TabAcceptBarChartView: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
+        .fixedSize(horizontal: true, vertical: false)
         .background {
             RoundedRectangle(cornerRadius: 8)
                 .fill(.background)

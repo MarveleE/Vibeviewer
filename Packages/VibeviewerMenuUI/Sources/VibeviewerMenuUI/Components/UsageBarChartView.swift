@@ -189,6 +189,7 @@ struct UsageBarChartView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+        .fixedSize(horizontal: true, vertical: false)
         .background {
             RoundedRectangle(cornerRadius: 8)
                 .fill(.background)

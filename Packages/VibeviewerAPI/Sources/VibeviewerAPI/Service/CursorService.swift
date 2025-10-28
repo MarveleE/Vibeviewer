@@ -30,12 +30,10 @@ public protocol CursorService {
     /// 仅 Team Plan 使用：返回当前用户的 free usage（以分计）。计算方式：includedSpendCents - hardLimitOverrideDollars*100，若小于0则为0
     func fetchTeamFreeUsageCents(teamId: Int, userId: Int, cookieHeader: String) async throws -> Int
     func fetchFilteredUsageEvents(
-        teamId: Int,
         startDateMs: String,
         endDateMs: String,
         userId: Int,
         page: Int,
-        pageSize: Int,
         cookieHeader: String
     ) async throws -> VibeviewerModel.FilteredUsageHistory
     func fetchUserAnalytics(
@@ -157,22 +155,18 @@ public struct DefaultCursorService: CursorService {
     }
 
     public func fetchFilteredUsageEvents(
-        teamId: Int,
         startDateMs: String,
         endDateMs: String,
         userId: Int,
         page: Int,
-        pageSize: Int,
         cookieHeader: String
     ) async throws -> VibeviewerModel.FilteredUsageHistory {
         let dto: CursorFilteredUsageResponse = try await self.performRequest(
             CursorFilteredUsageAPI(
-                teamId: teamId,
                 startDateMs: startDateMs,
                 endDateMs: endDateMs,
                 userId: userId,
                 page: page,
-                pageSize: pageSize,
                 cookieHeader: cookieHeader
             )
         )
@@ -209,7 +203,7 @@ public struct DefaultCursorService: CursorService {
             CursorGetTeamSpendAPI(
                 teamId: teamId,
                 page: 1,
-                pageSize: 50,
+                // pageSize is hardcoded to 100
                 sortBy: "name",
                 sortDirection: "asc",
                 cookieHeader: cookieHeader

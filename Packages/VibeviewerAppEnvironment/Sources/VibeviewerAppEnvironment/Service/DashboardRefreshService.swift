@@ -95,20 +95,17 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
 
         do {
             // 计算时间范围
-            let (startMs, endMs) = self.yesterdayToNowRangeMs()
-            let (analyticsStartMs, analyticsEndMs) = self.sevenDaysAgoToNowRangeMs()
+            let (analyticsStartMs, analyticsEndMs) = self.analyticsDateRangeMs()
             
             // 使用 async let 并发发起所有三个独立的 API 请求
             async let usageSummary = try await self.api.fetchUsageSummary(
                 cookieHeader: creds.cookieHeader
             )
             async let history = try await self.api.fetchFilteredUsageEvents(
-                teamId: creds.teamId,
-                startDateMs: startMs,
-                endDateMs: endMs,
+                startDateMs: analyticsStartMs,
+                endDateMs: analyticsEndMs,
                 userId: creds.userId,
                 page: 1,
-                pageSize: 100,
                 cookieHeader: creds.cookieHeader
             )
             async let analytics = try await self.api.fetchUserAnalytics(
@@ -196,9 +193,10 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
         let (start, end) = VibeviewerCore.DateUtils.yesterdayToNowRange()
         return (VibeviewerCore.DateUtils.millisecondsString(from: start), VibeviewerCore.DateUtils.millisecondsString(from: end))
     }
-    
-    private func sevenDaysAgoToNowRangeMs() -> (String, String) {
-        let (start, end) = VibeviewerCore.DateUtils.sevenDaysAgoToNowRange()
+
+    private func analyticsDateRangeMs() -> (String, String) {
+        let days = self.settings.analyticsDataDays
+        let (start, end) = VibeviewerCore.DateUtils.daysAgoToNowRange(days: days)
         return (VibeviewerCore.DateUtils.millisecondsString(from: start), VibeviewerCore.DateUtils.millisecondsString(from: end))
     }
 

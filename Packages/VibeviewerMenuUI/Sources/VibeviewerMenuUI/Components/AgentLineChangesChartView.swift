@@ -146,6 +146,7 @@ struct AgentLineChangesChartView: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
+        .fixedSize(horizontal: true, vertical: false)
         .background {
             RoundedRectangle(cornerRadius: 8)
                 .fill(.background)
@@ -181,8 +182,6 @@ struct AgentLineChangesChartView: View {
                     .font(.app(.satoshiBold, size: 14))
                     .foregroundStyle(.primary)
             }
-            
-            Spacer()
         }
         .padding(.top, 8)
     }
