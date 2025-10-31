@@ -43,7 +43,7 @@ struct SettingsView: View {
                     Text("Usage History Limit")
                         .font(.app(.satoshiMedium, size: 12))
                     
-                    TextField("10", text: $usageHistoryLimit)
+                    TextField("5", text: $usageHistoryLimit)
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 80)
                 }

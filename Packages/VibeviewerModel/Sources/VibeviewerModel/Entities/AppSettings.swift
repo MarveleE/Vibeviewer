@@ -12,7 +12,7 @@ public final class AppSettings: Codable, Sendable, Equatable {
 
     public init(
         launchAtLogin: Bool = false,
-        usageHistory: AppSettings.UsageHistory = AppSettings.UsageHistory(limit: 10),
+        usageHistory: AppSettings.UsageHistory = AppSettings.UsageHistory(limit: 5),
         overview: AppSettings.Overview = AppSettings.Overview(refreshInterval: 5),
         pauseOnScreenSleep: Bool = false,
         appearance: AppAppearance = .system,
@@ -49,7 +49,7 @@ public final class AppSettings: Codable, Sendable, Equatable {
     public required convenience init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
-        let usageHistory = try container.decodeIfPresent(AppSettings.UsageHistory.self, forKey: .usageHistory) ?? AppSettings.UsageHistory(limit: 10)
+        let usageHistory = try container.decodeIfPresent(AppSettings.UsageHistory.self, forKey: .usageHistory) ?? AppSettings.UsageHistory(limit: 5)
         let overview = try container.decodeIfPresent(AppSettings.Overview.self, forKey: .overview) ?? AppSettings.Overview(refreshInterval: 5)
         let pauseOnScreenSleep = try container.decodeIfPresent(Bool.self, forKey: .pauseOnScreenSleep) ?? false
         let appearance = try container.decodeIfPresent(AppAppearance.self, forKey: .appearance) ?? .system
@@ -88,7 +88,7 @@ public final class AppSettings: Codable, Sendable, Equatable {
         public var limit: Int
 
         public init(
-            limit: Int = 10
+            limit: Int = 5
         ) {
             self.limit = limit
         }
