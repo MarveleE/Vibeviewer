@@ -31,7 +31,7 @@ struct UsageEventView: View {
         private var totalTokensDisplay: String {
             let totalTokens = event.tokenUsage?.totalTokens ?? 0
             let tokensInWan = Double(totalTokens) / 10000.0
-            return String(format: "%.1f万", tokensInWan)
+            return String(format: "%.1fM", tokensInWan)
         }
 
         private var costDisplay: String {
