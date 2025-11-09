@@ -44,22 +44,45 @@ echo -e "${BLUE}🔐 签名 DMG 文件: $DMG_FILE${NC}"
 # 方法1: 尝试使用 Sparkle 的 sign_update 工具（必需）
 SIGNATURE=""
 SIGN_ERROR=""
+SIGN_UPDATE_TOOL=""
+
+# 查找 sign_update 工具
 if command -v sign_update >/dev/null 2>&1; then
-    echo -e "${BLUE}📦 使用 Sparkle sign_update 工具...${NC}"
-    # sign_update 将错误输出到 stderr，签名输出到 stdout
-    SIGN_ERROR=$(sign_update "$DMG_FILE" "$PRIVATE_KEY" 2>&1 >/dev/null)
-    SIGNATURE=$(sign_update "$DMG_FILE" "$PRIVATE_KEY" 2>/dev/null)
-    
-    if [ $? -ne 0 ] || [ -n "$SIGN_ERROR" ]; then
-        echo -e "${RED}❌ 签名失败: $SIGN_ERROR${NC}"
-        exit 1
-    fi
+    SIGN_UPDATE_TOOL="sign_update"
 elif [ -f "$PROJECT_ROOT/Scripts/sparkle/bin/sign_update" ]; then
-    echo -e "${BLUE}📦 使用本地 Sparkle 工具...${NC}"
-    SIGN_ERROR=$("$PROJECT_ROOT/Scripts/sparkle/bin/sign_update" "$DMG_FILE" "$PRIVATE_KEY" 2>&1 >/dev/null)
-    SIGNATURE=$("$PROJECT_ROOT/Scripts/sparkle/bin/sign_update" "$DMG_FILE" "$PRIVATE_KEY" 2>/dev/null)
+    SIGN_UPDATE_TOOL="$PROJECT_ROOT/Scripts/sparkle/bin/sign_update"
+elif [ -f "/opt/homebrew/Caskroom/sparkle/2.8.0/bin/sign_update" ]; then
+    SIGN_UPDATE_TOOL="/opt/homebrew/Caskroom/sparkle/2.8.0/bin/sign_update"
+elif [ -f "/usr/local/Caskroom/sparkle/2.8.0/bin/sign_update" ]; then
+    SIGN_UPDATE_TOOL="/usr/local/Caskroom/sparkle/2.8.0/bin/sign_update"
+else
+    # 尝试查找最新版本的 Sparkle
+    SPARKLE_DIR=$(find /opt/homebrew/Caskroom/sparkle -name sign_update 2>/dev/null | head -1)
+    if [ -n "$SPARKLE_DIR" ]; then
+        SIGN_UPDATE_TOOL="$SPARKLE_DIR"
+    else
+        SPARKLE_DIR=$(find /usr/local/Caskroom/sparkle -name sign_update 2>/dev/null | head -1)
+        if [ -n "$SPARKLE_DIR" ]; then
+            SIGN_UPDATE_TOOL="$SPARKLE_DIR"
+        fi
+    fi
+fi
+
+if [ -n "$SIGN_UPDATE_TOOL" ]; then
+    echo -e "${BLUE}📦 使用 Sparkle sign_update 工具: $SIGN_UPDATE_TOOL${NC}"
     
-    if [ $? -ne 0 ] || [ -n "$SIGN_ERROR" ]; then
+    # 尝试使用私钥文件签名
+    if [ -f "$PRIVATE_KEY" ]; then
+        SIGN_ERROR=$("$SIGN_UPDATE_TOOL" --ed-key-file "$PRIVATE_KEY" "$DMG_FILE" 2>&1 >/dev/null)
+        SIGNATURE=$("$SIGN_UPDATE_TOOL" --ed-key-file "$PRIVATE_KEY" -p "$DMG_FILE" 2>/dev/null)
+    else
+        # 如果没有私钥文件，尝试从 Keychain 读取（Sparkle 2.8.0+）
+        echo -e "${BLUE}📦 从 Keychain 读取密钥...${NC}"
+        SIGN_ERROR=$("$SIGN_UPDATE_TOOL" "$DMG_FILE" 2>&1 >/dev/null)
+        SIGNATURE=$("$SIGN_UPDATE_TOOL" -p "$DMG_FILE" 2>/dev/null)
+    fi
+    
+    if [ $? -ne 0 ] || [ -z "$SIGNATURE" ]; then
         echo -e "${RED}❌ 签名失败: $SIGN_ERROR${NC}"
         exit 1
     fi
