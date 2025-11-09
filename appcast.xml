@@ -19,46 +19,18 @@
             3. 更新 sparkle:releaseNotesLink 指向 GitHub Release 页面
         -->
         
-        <!-- 版本 1.1.7 -->
+        <!-- 版本 1.1.8 -->
         <item>
-            <title>Version 1.1.7</title>
-            <sparkle:releaseNotesLink>https://github.com/MarveleE/Vibeviewer/releases/tag/v1.1.7</sparkle:releaseNotesLink>
-            <pubDate>Sat, 09 Nov 2024 17:25:00 +0000</pubDate>
-            <enclosure url="https://github.com/MarveleE/Vibeviewer/releases/download/v1.1.7/Vibeviewer-1.1.7.dmg"
-                       sparkle:version="1.1.7"
-                       sparkle:shortVersionString="1.1.7"
-                       length="4128282"
-                       type="application/octet-stream"
-                       sparkle:edSignature="iMQWZNpRPAFDFMbhUpal31LYP355F4mygvnmO68K7m5TBnfpTiQICV1mPl6tfQYdYkxXcTBkH9irXmmrOTuGAQ=="/>
-        </item>
-        
-        <!-- 版本 1.1.6 -->
-        <item>
-            <title>Version 1.1.6</title>
-            <sparkle:releaseNotesLink>https://github.com/MarveleE/Vibeviewer/releases/tag/v1.1.6</sparkle:releaseNotesLink>
-            <pubDate>Sat, 09 Nov 2024 17:15:00 +0000</pubDate>
-            <enclosure url="https://github.com/MarveleE/Vibeviewer/releases/download/v1.1.6/Vibeviewer-1.1.6.dmg"
-                       sparkle:version="1.1.6"
-                       sparkle:shortVersionString="1.1.6"
-                       length="4128265"
-                       type="application/octet-stream"
-                       sparkle:edSignature="LF1ddeDAC5XR6LYLASVym4OXcabYynobjGqPJsp691KC6+TS8mkwNM/vEWWaVlo0Yiq7MMqnjO33XIPum1JKBg=="/>
-        </item>
-        
-        <!-- 示例：版本 1.1.5 -->
-        <item>
-            <title>Version 1.1.5</title>
-            <sparkle:releaseNotesLink>https://github.com/MarveleE/Vibeviewer/releases/tag/v1.1.5</sparkle:releaseNotesLink>
-            <pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate>
-            <enclosure url="https://github.com/MarveleE/Vibeviewer/releases/download/v1.1.5/Vibeviewer-1.1.5.dmg"
-                       sparkle:version="1.1.5"
-                       sparkle:shortVersionString="1.1.5"
+            <title>Version 1.1.8</title>
+            <sparkle:releaseNotesLink>https://github.com/MarveleE/Vibeviewer/releases/tag/v1.1.8</sparkle:releaseNotesLink>
+            <pubDate>Sun, 09 Nov 2025 09:49:26 +0000</pubDate>
+            <enclosure url="https://github.com/MarveleE/Vibeviewer/releases/download/v1.1.8/Vibeviewer-1.1.8.dmg"
+                       sparkle:version="1.1.8"
+                       sparkle:shortVersionString="1.1.8"
                        length="0"
                        type="application/octet-stream"
-                       sparkle:edSignature="YOUR_SIGNATURE_HERE"/>
+                       sparkle:edSignature=""/>
         </item>
-        
-        <!-- 添加更多版本项 -->
     </channel>
 </rss>
 
