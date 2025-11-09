@@ -104,9 +104,19 @@ open Vibeviewer.xcworkspace
 3) Build/package via CLI (optional):
 
 ```bash
-make build     # Release build (macOS)
-make dmg       # Create DMG package
-make release   # Clean → Generate → Build → Package
+make build        # Release build (macOS)
+make dmg          # Create DMG package
+make release      # Clean → Generate → Build → Package
+make release-full # Full automated release (build + tag + GitHub release)
+```
+
+4) Release process:
+
+See [Scripts/RELEASE_GUIDE.md](Scripts/RELEASE_GUIDE.md) for detailed release instructions.
+
+Quick release:
+```bash
+./Scripts/release.sh [VERSION]  # Automated release workflow
 ```
 
 ---

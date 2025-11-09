@@ -104,9 +104,19 @@ open Vibeviewer.xcworkspace
 3) 命令行构建/打包（可选）：
 
 ```bash
-make build     # Release 构建（macOS 平台）
-make dmg       # 生成 DMG 安装包
-make release   # 清理 → 生成 → 构建 → 打包全流程
+make build        # Release 构建（macOS 平台）
+make dmg          # 生成 DMG 安装包
+make release      # 清理 → 生成 → 构建 → 打包全流程
+make release-full # 完整自动化发版流程（构建 + Tag + GitHub Release）
+```
+
+4) 发版流程：
+
+详细说明请参考 [Scripts/RELEASE_GUIDE.md](Scripts/RELEASE_GUIDE.md)。
+
+快速发版：
+```bash
+./Scripts/release.sh [版本号]  # 自动化发版流程
 ```
 
 ---

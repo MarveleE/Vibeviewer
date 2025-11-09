@@ -46,19 +46,52 @@ FILE_SIZE=$(stat -f%z "$DMG_FILE" 2>/dev/null || stat -c%s "$DMG_FILE" 2>/dev/nu
 
 # 获取签名
 echo -e "${BLUE}🔐 获取 DMG 签名...${NC}"
-SIGNATURE_OUTPUT=$("$SCRIPT_DIR/sign_dmg.sh" "$DMG_FILE" "$VERSION" 2>&1)
-SIGNATURE=$(echo "$SIGNATURE_OUTPUT" | grep -A 1 "签名:" | tail -1 | tr -d ' ')
 
-if [ -z "$SIGNATURE" ]; then
-    echo -e "${YELLOW}⚠️  无法自动获取签名，请手动运行签名脚本${NC}"
-    echo -e "${YELLOW}   运行: ./Scripts/sign_dmg.sh $DMG_FILE $VERSION${NC}"
-    read -p "是否继续？(y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
+# 查找 sign_update 工具
+SIGN_UPDATE_TOOL=""
+if command -v sign_update >/dev/null 2>&1; then
+    SIGN_UPDATE_TOOL="sign_update"
+elif [ -f "$PROJECT_ROOT/Scripts/sparkle/bin/sign_update" ]; then
+    SIGN_UPDATE_TOOL="$PROJECT_ROOT/Scripts/sparkle/bin/sign_update"
+elif [ -f "/opt/homebrew/Caskroom/sparkle/2.8.0/bin/sign_update" ]; then
+    SIGN_UPDATE_TOOL="/opt/homebrew/Caskroom/sparkle/2.8.0/bin/sign_update"
+elif [ -f "/usr/local/Caskroom/sparkle/2.8.0/bin/sign_update" ]; then
+    SIGN_UPDATE_TOOL="/usr/local/Caskroom/sparkle/2.8.0/bin/sign_update"
+else
+    SPARKLE_DIR=$(find /opt/homebrew/Caskroom/sparkle -name sign_update 2>/dev/null | head -1)
+    if [ -n "$SPARKLE_DIR" ]; then
+        SIGN_UPDATE_TOOL="$SPARKLE_DIR"
+    else
+        SPARKLE_DIR=$(find /usr/local/Caskroom/sparkle -name sign_update 2>/dev/null | head -1)
+        if [ -n "$SPARKLE_DIR" ]; then
+            SIGN_UPDATE_TOOL="$SPARKLE_DIR"
+        fi
     fi
-    SIGNATURE="YOUR_SIGNATURE_HERE"
 fi
+
+if [ -n "$SIGN_UPDATE_TOOL" ]; then
+    # 直接使用 sign_update 工具获取签名（从 Keychain 读取）
+    SIGNATURE=$("$SIGN_UPDATE_TOOL" -p "$DMG_FILE" 2>/dev/null | tr -d '\n\r ')
+    
+    if [ -z "$SIGNATURE" ] || [ ${#SIGNATURE} -lt 20 ]; then
+        echo -e "${YELLOW}⚠️  无法自动获取签名，尝试使用签名脚本...${NC}"
+        SIGNATURE_OUTPUT=$("$SCRIPT_DIR/sign_dmg.sh" "$DMG_FILE" "$VERSION" 2>&1)
+        SIGNATURE=$(echo "$SIGNATURE_OUTPUT" | grep -E "^[A-Za-z0-9+/=]{80,}" | head -1 | tr -d '\n\r ')
+    fi
+else
+    echo -e "${YELLOW}⚠️  找不到 sign_update 工具，使用签名脚本...${NC}"
+    SIGNATURE_OUTPUT=$("$SCRIPT_DIR/sign_dmg.sh" "$DMG_FILE" "$VERSION" 2>&1)
+    SIGNATURE=$(echo "$SIGNATURE_OUTPUT" | grep -E "^[A-Za-z0-9+/=]{80,}" | head -1 | tr -d '\n\r ')
+fi
+
+if [ -z "$SIGNATURE" ] || [ ${#SIGNATURE} -lt 20 ]; then
+    echo -e "${RED}❌ 无法获取有效的签名${NC}"
+    echo -e "${YELLOW}   请手动运行: ./Scripts/sign_dmg.sh $DMG_FILE $VERSION${NC}"
+    echo -e "${YELLOW}   或确保 Sparkle 密钥已添加到 Keychain${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ 签名获取成功${NC}"
 
 # 获取当前日期（RFC 822 格式）
 PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")

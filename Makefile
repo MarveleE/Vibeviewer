@@ -24,5 +24,10 @@ release: clear generate build dmg-release
 	@echo "  1. Create GitHub Release (tag: v<VERSION>)"
 	@echo "  2. Upload DMG file"
 	@echo "  3. Commit and push appcast.xml changes"
+	@echo ""
+	@echo "💡 提示: 使用 ./Scripts/release.sh 可以自动化整个流程"
+
+release-full:
+	@Scripts/release.sh
 
 

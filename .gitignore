@@ -110,6 +110,7 @@ buildServer.json
 
 # Sparkle 更新相关文件
 Scripts/sparkle_keys/eddsa_private_key.pem
+Scripts/sparkle_keys/eddsa_private_key_base64.txt
 Scripts/sparkle_keys/signature_*.txt
 Scripts/sparkle/
 *.tar.xz
