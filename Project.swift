@@ -3,7 +3,7 @@ import ProjectDescription
 let workspaceName = "Vibeviewer"
 
 // 版本号统一配置 - 只在这里修改版本号
-let appVersion = "1.1.6"
+let appVersion = "1.1.8"
 
 let project = Project(
     name: workspaceName,
