@@ -91,6 +91,32 @@ fi
 
 echo -e "${GREEN}✅ Found app at: ${APP_PATH}${NC}"
 
+# 验证 app 的版本信息和代码签名
+echo -e "${BLUE}🔍 验证 app 信息...${NC}"
+INFO_PLIST="${APP_PATH}/Contents/Info.plist"
+if [ -f "$INFO_PLIST" ]; then
+    APP_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$INFO_PLIST" 2>/dev/null || echo "")
+    APP_BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$INFO_PLIST" 2>/dev/null || echo "")
+    echo -e "   版本: ${APP_VERSION}"
+    echo -e "   Build: ${APP_BUILD}"
+    
+    # 检查代码签名
+    if codesign -dv "${APP_PATH}" 2>&1 | grep -q "code object is not signed"; then
+        echo -e "${YELLOW}⚠️  警告: App 未签名或签名无效${NC}"
+        echo -e "${YELLOW}   这可能导致 Sparkle 更新验证失败${NC}"
+    else
+        SIGNING_IDENTITY=$(codesign -dv "${APP_PATH}" 2>&1 | grep "Authority=" | head -1 | sed 's/.*Authority=\(.*\)/\1/' || echo "未知")
+        echo -e "   签名: ${SIGNING_IDENTITY}"
+        
+        # 检查签名是否有效
+        if ! codesign --verify --verbose "${APP_PATH}" 2>&1 | grep -q "valid on disk"; then
+            echo -e "${YELLOW}⚠️  警告: 代码签名验证失败${NC}"
+        fi
+    fi
+else
+    echo -e "${YELLOW}⚠️  警告: 找不到 Info.plist${NC}"
+fi
+
 # Get version from app's Info.plist if not specified
 if [ -z "$VERSION" ]; then
     INFO_PLIST="${APP_PATH}/Contents/Info.plist"
@@ -168,14 +194,20 @@ echo -e "${GREEN}📍 Location: $(pwd)/${DMG_NAME}${NC}"
 # Sign DMG for Sparkle updates
 if [ "$SKIP_SIGN" = false ]; then
     echo ""
-    echo -e "${BLUE}🔐 签名 DMG 文件...${NC}"
+    echo -e "${BLUE}🔐 签名 DMG 文件（Sparkle 更新必需）...${NC}"
     if [ -f "${SCRIPT_DIR}/sign_dmg.sh" ]; then
-        "${SCRIPT_DIR}/sign_dmg.sh" "${DMG_NAME}" "${VERSION}" || {
-            echo -e "${YELLOW}⚠️  签名失败，但 DMG 已创建${NC}"
-            echo -e "${YELLOW}   提示: 可以稍后手动运行: ./Scripts/sign_dmg.sh ${DMG_NAME} ${VERSION}${NC}"
-        }
+        if ! "${SCRIPT_DIR}/sign_dmg.sh" "${DMG_NAME}" "${VERSION}"; then
+            echo -e "${RED}❌ DMG 签名失败！${NC}"
+            echo -e "${YELLOW}⚠️  未签名的 DMG 无法通过 Sparkle 更新验证${NC}"
+            echo -e "${YELLOW}   请检查:${NC}"
+            echo -e "${YELLOW}   1. Sparkle sign_update 工具是否已安装${NC}"
+            echo -e "${YELLOW}   2. 私钥文件是否存在: Scripts/sparkle_keys/eddsa_private_key.pem${NC}"
+            echo -e "${YELLOW}   3. 可以稍后手动运行: ./Scripts/sign_dmg.sh ${DMG_NAME} ${VERSION}${NC}"
+            exit 1
+        fi
     else
-        echo -e "${YELLOW}⚠️  签名脚本不存在，跳过签名步骤${NC}"
+        echo -e "${RED}❌ 签名脚本不存在: ${SCRIPT_DIR}/sign_dmg.sh${NC}"
+        exit 1
     fi
 fi
 

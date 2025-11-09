@@ -15,7 +15,7 @@
                - pubDate（发布日期）
                - url（GitHub Releases 下载链接）
                - length（DMG 文件大小，字节）
-               - sparkle:dsaSignature（从签名脚本获取）
+               - sparkle:edSignature（从签名脚本获取，Ed25519 签名）
             3. 更新 sparkle:releaseNotesLink 指向 GitHub Release 页面
         -->
         
@@ -29,7 +29,7 @@
                        sparkle:shortVersionString="1.1.5"
                        length="0"
                        type="application/octet-stream"
-                       sparkle:dsaSignature="YOUR_SIGNATURE_HERE"/>
+                       sparkle:edSignature="YOUR_SIGNATURE_HERE"/>
         </item>
         
         <!-- 添加更多版本项 -->

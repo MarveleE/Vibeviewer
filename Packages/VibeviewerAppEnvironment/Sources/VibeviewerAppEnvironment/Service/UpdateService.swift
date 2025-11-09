@@ -16,6 +16,15 @@ public protocol UpdateService: Sendable {
     
     /// 当前版本信息
     var currentVersion: String { get }
+    
+    /// 最新可用版本号（如果有更新）
+    @MainActor var latestVersion: String? { get }
+    
+    /// 上次检查更新的时间
+    @MainActor var lastUpdateCheckDate: Date? { get }
+    
+    /// 更新状态描述
+    @MainActor var updateStatusDescription: String { get }
 }
 
 /// 无操作默认实现，便于提供 Environment 默认值
@@ -27,5 +36,8 @@ public struct NoopUpdateService: UpdateService {
     @MainActor public var isCheckingForUpdates: Bool { false }
     @MainActor public var updateAvailable: Bool { false }
     public var currentVersion: String { "1.0.0" }
+    @MainActor public var latestVersion: String? { nil }
+    @MainActor public var lastUpdateCheckDate: Date? { nil }
+    @MainActor public var updateStatusDescription: String { "更新服务不可用" }
 }
 

@@ -45,6 +45,7 @@ struct VibeviewerApp: App {
                     SettingsWindowManager.shared.appSettings = self.settings
                     SettingsWindowManager.shared.appSession = self.session
                     SettingsWindowManager.shared.dashboardRefreshService = self.refresher
+                    SettingsWindowManager.shared.updateService = self.updateService
                     // 应用启动时自动检查更新（后台）
                     self.updateService.checkForUpdatesInBackground()
                 }

@@ -74,7 +74,7 @@ NEW_ITEM=$(cat <<EOF
                        sparkle:shortVersionString="${VERSION}"
                        length="${FILE_SIZE}"
                        type="application/octet-stream"
-                       sparkle:dsaSignature="${SIGNATURE}"/>
+                       sparkle:edSignature="${SIGNATURE}"/>
         </item>
 EOF
 )
