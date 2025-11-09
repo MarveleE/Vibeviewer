@@ -117,26 +117,26 @@ else
     echo -e "${YELLOW}⚠️  警告: 找不到 Info.plist${NC}"
 fi
 
-# Get version from app's Info.plist if not specified
+# Get version from Project.swift first (single source of truth), then from built app
 if [ -z "$VERSION" ]; then
-    INFO_PLIST="${APP_PATH}/Contents/Info.plist"
-    if [ -f "$INFO_PLIST" ]; then
-        VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$INFO_PLIST" 2>/dev/null || echo "")
+    # 优先从 Project.swift 读取版本号（统一版本号配置）
+    if [ -f "${PROJECT_ROOT}/Project.swift" ]; then
+        VERSION=$(grep -E '^let appVersion\s*=' "${PROJECT_ROOT}/Project.swift" | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+)".*/\1/' | head -1)
     fi
     
-    # Fallback: try to read from Derived/InfoPlists
+    # Fallback: 从构建后的应用读取版本号
     if [ -z "$VERSION" ]; then
-        DERIVED_PLIST="${PROJECT_ROOT}/Derived/InfoPlists/${APP_NAME}-Info.plist"
-        if [ -f "$DERIVED_PLIST" ]; then
-            VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$DERIVED_PLIST" 2>/dev/null || echo "")
+        INFO_PLIST="${APP_PATH}/Contents/Info.plist"
+        if [ -f "$INFO_PLIST" ]; then
+            VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$INFO_PLIST" 2>/dev/null || echo "")
         fi
     fi
     
     # Final fallback
     if [ -z "$VERSION" ]; then
-        echo -e "${YELLOW}⚠️  无法自动获取版本号，使用默认值 1.1.5${NC}"
+        echo -e "${YELLOW}⚠️  无法自动获取版本号，使用默认值 1.1.8${NC}"
         echo -e "${YELLOW}   提示: 使用 --version 参数指定版本号${NC}"
-        VERSION="1.1.5"
+        VERSION="1.1.8"
     fi
 fi
 

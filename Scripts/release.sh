@@ -71,10 +71,16 @@ done
 echo -e "${BLUE}🚀 开始 Release 流程...${NC}"
 echo ""
 
-# 1. 获取版本号
+# 1. 获取版本号（从 Project.swift 的统一版本号配置读取）
 if [ -z "$VERSION" ]; then
     echo -e "${BLUE}📋 检测版本号...${NC}"
-    VERSION=$(grep -E 'MARKETING_VERSION|CFBundleShortVersionString' "$PROJECT_ROOT/Project.swift" | head -1 | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+)".*/\1/')
+    # 优先从 appVersion 常量读取（统一版本号配置）
+    VERSION=$(grep -E '^let appVersion\s*=' "$PROJECT_ROOT/Project.swift" | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+)".*/\1/' | head -1)
+    
+    # Fallback: 从 MARKETING_VERSION 读取
+    if [ -z "$VERSION" ]; then
+        VERSION=$(grep -E 'MARKETING_VERSION' "$PROJECT_ROOT/Project.swift" | head -1 | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+)".*/\1/')
+    fi
     
     if [ -z "$VERSION" ]; then
         echo -e "${RED}❌ 无法自动检测版本号${NC}"

@@ -2,6 +2,9 @@ import ProjectDescription
 
 let workspaceName = "Vibeviewer"
 
+// 版本号统一配置 - 只在这里修改版本号
+let appVersion = "1.1.8"
+
 let project = Project(
     name: workspaceName,
     organizationName: "Vibeviewer",
@@ -23,15 +26,15 @@ let project = Project(
         .remote(url: "https://github.com/sparkle-project/Sparkle", requirement: .upToNextMajor(from: "2.6.0")),
     ],
     settings: .settings(base: [
-        "SWIFT_VERSION": "5.10",
-        "MACOSX_DEPLOYMENT_TARGET": "14.0",
+        "SWIFT_VERSION": .string("5.10"),
+        "MACOSX_DEPLOYMENT_TARGET": .string("14.0"),
         // 代码签名配置 - 确保 Release 构建使用相同的签名
-        "CODE_SIGN_IDENTITY": "$(CODE_SIGN_IDENTITY)",
-        "CODE_SIGN_STYLE": "Automatic",
-        "DEVELOPMENT_TEAM": "$(DEVELOPMENT_TEAM)",
-        // 版本信息 - 确保版本号正确传递
-        "MARKETING_VERSION": "1.1.8",
-        "CURRENT_PROJECT_VERSION": "1.1.8",
+        "CODE_SIGN_IDENTITY": .string("$(CODE_SIGN_IDENTITY)"),
+        "CODE_SIGN_STYLE": .string("Automatic"),
+        "DEVELOPMENT_TEAM": .string("$(DEVELOPMENT_TEAM)"),
+        // 版本信息 - 使用统一的版本号常量
+        "MARKETING_VERSION": .string(appVersion),
+        "CURRENT_PROJECT_VERSION": .string(appVersion),
     ]),
     targets: [
         .target(
@@ -45,9 +48,9 @@ let project = Project(
                 "LSMinimumSystemVersion": .string("14.0"),
                 "LSApplicationCategoryType": .string("public.app-category.productivity"),
                 "UIAppFonts": .array([.string("Satoshi-Regular.ttf"), .string("Satoshi-Medium.ttf"), .string("Satoshi-Bold.ttf"), .string("Satoshi-Italic.ttf")]),
-                // 版本信息
-                "CFBundleShortVersionString": .string("1.1.8"),
-                "CFBundleVersion": .string("1.1.8"),
+                // 版本信息 - 使用统一的版本号常量
+                "CFBundleShortVersionString": .string(appVersion),
+                "CFBundleVersion": .string(appVersion),
                 // Sparkle 更新配置
                 "SUFeedURL": .string("https://raw.githubusercontent.com/MarveleE/Vibeviewer/main/appcast.xml"),
                 "SUPublicEDSAKey": .string("HkePEJXQXvz+idowO2tZ9g/J01nY+seiKUonETPG5+A="),
