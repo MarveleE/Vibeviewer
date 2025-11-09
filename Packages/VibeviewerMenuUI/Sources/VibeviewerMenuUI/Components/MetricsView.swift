@@ -242,7 +242,7 @@ extension DashboardSnapshot {
             description: description,
             currentValue: freeUsageCents.dollarStringFromCents,
             targetValue: nil,
-            progress: 0,
+            progress: 1.0,
             tint: Color(hex: "4DA3FF")
         )
     }

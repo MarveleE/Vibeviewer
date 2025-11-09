@@ -36,12 +36,12 @@ public protocol CursorService {
         page: Int,
         cookieHeader: String
     ) async throws -> VibeviewerModel.FilteredUsageHistory
-    func fetchUserAnalytics(
-        userId: Int,
-        startDateMs: String,
-        endDateMs: String,
+    func fetchModelsAnalytics(
+        startDate: String,
+        endDate: String,
+        c: String,
         cookieHeader: String
-    ) async throws -> VibeviewerModel.UserAnalytics
+    ) async throws -> VibeviewerModel.ModelsUsageChartData
 }
 
 public struct DefaultCursorService: CursorService {
@@ -219,138 +219,67 @@ public struct DefaultCursorService: CursorService {
         let freeCents = max(included - overrideDollars * 100, 0)
         return freeCents
     }
-
-    public func fetchUserAnalytics(
-        userId: Int,
-        startDateMs: String,
-        endDateMs: String,
+    
+    public func fetchModelsAnalytics(
+        startDate: String,
+        endDate: String,
+        c: String,
         cookieHeader: String
-    ) async throws -> VibeviewerModel.UserAnalytics {
-        let dto: CursorUserAnalyticsResponse = try await self.performRequest(
-            CursorUserAnalyticsAPI(
-                userId: userId,
-                startDateMs: startDateMs,
-                endDateMs: endDateMs,
+    ) async throws -> VibeviewerModel.ModelsUsageChartData {
+        let dto: CursorTeamModelsAnalyticsResponse = try await self.performRequest(
+            CursorTeamModelsAnalyticsAPI(
+                startDate: startDate,
+                endDate: endDate,
+                c: c,
                 cookieHeader: cookieHeader
             )
         )
-        
-        // 转换为四种图表数据
-        return VibeviewerModel.UserAnalytics(
-            usageChart: mapToUsageChart(dto.dailyMetrics),
-            modelUsageChart: mapToModelUsageChart(dto.dailyMetrics),
-            tabAcceptChart: mapToTabAcceptChart(dto.dailyMetrics),
-            agentLineChangesChart: mapToAgentLineChangesChart(dto.dailyMetrics)
-        )
+        return mapToModelsUsageChartData(dto)
     }
     
-    // MARK: - Private Chart Mapping Methods
-    
-    /// 映射 Usage 柱状图数据
-    private func mapToUsageChart(_ metrics: [CursorDailyMetric]) -> VibeviewerModel.UsageChartData {
-        let dataPoints = metrics.compactMap { metric -> VibeviewerModel.UsageChartData.DataPoint? in
-            let subscriptionReqs = metric.subscriptionIncludedReqs ?? 0
-            let usageBasedReqs = metric.usageBasedReqs ?? 0
+    /// 映射模型分析 DTO 到业务层柱状图数据
+    private func mapToModelsUsageChartData(_ dto: CursorTeamModelsAnalyticsResponse) -> VibeviewerModel.ModelsUsageChartData {
+        let dataPoints = dto.data.map { item -> VibeviewerModel.ModelsUsageChartData.DataPoint in
+            // 将日期从 YYYY-MM-DD 格式转换为 MM/dd 格式的标签
+            let dateLabel = formatDateLabelForChart(from: item.date)
             
-            // 如果两者都为 0，则跳过该数据点
-            guard subscriptionReqs > 0 || usageBasedReqs > 0 else {
-                return nil
-            }
+            // 将模型使用量字典转换为数组，按请求数降序排序
+            let modelUsages = item.modelBreakdown
+                .map { (modelName, stats) in
+                    VibeviewerModel.ModelsUsageChartData.ModelUsage(
+                        modelName: modelName,
+                        requests: Int(stats.requests)
+                    )
+                }
+                .sorted { $0.requests > $1.requests } // 按请求数降序排序
             
-            let dateLabel = formatDateLabel(metric.date)
-            return VibeviewerModel.UsageChartData.DataPoint(
-                date: metric.date,
+            return VibeviewerModel.ModelsUsageChartData.DataPoint(
+                date: item.date,
                 dateLabel: dateLabel,
-                subscriptionReqs: subscriptionReqs,
-                usageBasedReqs: usageBasedReqs
+                modelUsages: modelUsages
             )
         }
-        return VibeviewerModel.UsageChartData(dataPoints: dataPoints)
+        return VibeviewerModel.ModelsUsageChartData(dataPoints: dataPoints)
     }
     
-    /// 映射 Model Usage 饼图数据（聚合所有日期）
-    private func mapToModelUsageChart(_ metrics: [CursorDailyMetric]) -> VibeviewerModel.ModelUsageChartData {
-        // 聚合所有模型使用数据
-        var modelCounts: [String: Int] = [:]
-        
-        for metric in metrics {
-            guard let modelUsage = metric.modelUsage else { continue }
-            for model in modelUsage {
-                modelCounts[model.name, default: 0] += model.count
-            }
-        }
-        
-        // 计算总数和百分比
-        let totalCount = modelCounts.values.reduce(0, +)
-        
-        let modelDistribution = modelCounts.map { name, count -> VibeviewerModel.ModelUsageChartData.ModelShare in
-            let percentage = totalCount > 0 ? (Double(count) / Double(totalCount)) * 100.0 : 0.0
-            return VibeviewerModel.ModelUsageChartData.ModelShare(
-                id: name,
-                modelName: name,
-                count: count,
-                percentage: percentage
-            )
-        }.sorted { $0.count > $1.count } // 按使用次数降序排序
-        
-        return VibeviewerModel.ModelUsageChartData(modelDistribution: modelDistribution)
-    }
-    
-    /// 映射 Tab Accept 柱状图数据
-    private func mapToTabAcceptChart(_ metrics: [CursorDailyMetric]) -> VibeviewerModel.TabAcceptChartData {
-        let dataPoints = metrics.compactMap { metric -> VibeviewerModel.TabAcceptChartData.DataPoint? in
-            guard let acceptedCount = metric.totalTabsAccepted, acceptedCount > 0 else {
-                return nil
-            }
-            let dateLabel = formatDateLabel(metric.date)
-            return VibeviewerModel.TabAcceptChartData.DataPoint(
-                date: metric.date,
-                dateLabel: dateLabel,
-                acceptedCount: acceptedCount
-            )
-        }
-        return VibeviewerModel.TabAcceptChartData(dataPoints: dataPoints)
-    }
-    
-    /// 映射 Agent Line Changes 折线图数据
-    private func mapToAgentLineChangesChart(_ metrics: [CursorDailyMetric]) -> VibeviewerModel.AgentLineChangesChartData {
-        let dataPoints = metrics.compactMap { metric -> VibeviewerModel.AgentLineChangesChartData.DataPoint? in
-            let linesAdded = metric.linesAdded ?? 0
-            let linesDeleted = metric.linesDeleted ?? 0
-            let acceptedLinesAdded = metric.acceptedLinesAdded ?? 0
-            let acceptedLinesDeleted = metric.acceptedLinesDeleted ?? 0
-            
-            let suggestedLines = linesAdded + linesDeleted
-            let acceptedLines = acceptedLinesAdded + acceptedLinesDeleted
-            
-            // 如果两个值都为 0，跳过此数据点
-            guard suggestedLines > 0 || acceptedLines > 0 else {
-                return nil
-            }
-            
-            let dateLabel = formatDateLabel(metric.date)
-            return VibeviewerModel.AgentLineChangesChartData.DataPoint(
-                date: metric.date,
-                dateLabel: dateLabel,
-                suggestedLines: suggestedLines,
-                acceptedLines: acceptedLines
-            )
-        }
-        return VibeviewerModel.AgentLineChangesChartData(dataPoints: dataPoints)
-    }
-    
-    /// 格式化日期标签为 MM/dd
-    private func formatDateLabel(_ dateString: String) -> String {
-        guard let timestamp = Double(dateString),
-              timestamp > 0 else {
-            return ""
-        }
-        
-        let date = Date(timeIntervalSince1970: timestamp / 1000.0)
+    /// 将 YYYY-MM-DD 格式的日期字符串转换为 MM/dd 格式的图表标签
+    private func formatDateLabelForChart(from dateString: String) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MM/dd"
-        return formatter.string(from: date)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        guard let date = formatter.date(from: dateString) else {
+            return dateString
+        }
+        
+        let labelFormatter = DateFormatter()
+        labelFormatter.locale = Locale(identifier: "en_US_POSIX")
+        labelFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        labelFormatter.dateFormat = "MM/dd"
+        return labelFormatter.string(from: date)
     }
+
 }
 
 private extension DefaultCursorService {

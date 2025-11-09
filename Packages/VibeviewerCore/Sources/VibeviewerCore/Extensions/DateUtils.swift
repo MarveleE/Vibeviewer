@@ -93,6 +93,27 @@ public enum DateUtils {
         guard let ms = Int64(msString) else { return "" }
         return timeString(fromMilliseconds: ms, format: format, timeZone: timeZone, locale: locale)
     }
+    
+    /// 将 Date 转为 YYYY-MM-DD 格式的日期字符串
+    public static func dateString(from date: Date, calendar: Calendar = .current) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
+    }
+    
+    /// 计算从指定天数前到今天的时间范围（用于 API 日期参数）
+    /// 使用 UTC 时区确保日期一致性
+    public static func daysAgoToTodayRange(days: Int, from now: Date = Date(), calendar: Calendar = .current) -> (start: String, end: String) {
+        // 使用 UTC 时区来计算日期，确保与 dateString 方法一致
+        var utcCalendar = Calendar(identifier: .gregorian)
+        utcCalendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        
+        let startOfToday = utcCalendar.startOfDay(for: now)
+        let startOfNDaysAgo = utcCalendar.date(byAdding: .day, value: -days, to: startOfToday) ?? now
+        return (dateString(from: startOfNDaysAgo, calendar: utcCalendar), dateString(from: startOfToday, calendar: utcCalendar))
+    }
 }
 
 

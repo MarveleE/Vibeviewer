@@ -1,4 +1,4 @@
-.PHONY: generate clear build dmg release
+.PHONY: generate clear build dmg dmg-release release
 
 generate:
 	@Scripts/generate.sh
@@ -14,7 +14,15 @@ dmg:
 	@echo "💽 Creating DMG package..."
 	@Scripts/create_dmg.sh
 
-release: clear generate build dmg
+dmg-release:
+	@echo "💽 Creating DMG package with Sparkle update preparation..."
+	@Scripts/create_dmg.sh --update-appcast
+
+release: clear generate build dmg-release
 	@echo "🚀 Release build completed! DMG is ready for distribution."
+	@echo "📋 Next steps:"
+	@echo "  1. Create GitHub Release (tag: v<VERSION>)"
+	@echo "  2. Upload DMG file"
+	@echo "  3. Commit and push appcast.xml changes"
 
 

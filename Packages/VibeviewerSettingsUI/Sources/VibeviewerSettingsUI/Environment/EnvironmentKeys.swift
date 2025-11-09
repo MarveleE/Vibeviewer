@@ -1,7 +1,10 @@
 import SwiftUI
 
 private struct SettingsWindowManagerKey: EnvironmentKey {
-    static let defaultValue: SettingsWindowManager = .shared
+    @MainActor
+    static var defaultValue: SettingsWindowManager {
+        SettingsWindowManager.shared
+    }
 }
 
 public extension EnvironmentValues {

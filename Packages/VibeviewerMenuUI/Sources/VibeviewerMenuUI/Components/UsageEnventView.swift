@@ -25,6 +25,7 @@ struct UsageEventView: View {
                     expandedDetailsView
                 }
             }
+            .animation(.easeInOut(duration: 0.2), value: isExpanded)
         }
         // MARK: - Computed Properties
 
@@ -93,9 +94,7 @@ struct UsageEventView: View {
             }
             .contentShape(Rectangle())
             .onTapGesture {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isExpanded.toggle()
-                }
+                isExpanded.toggle()
             }
         }
 
@@ -124,7 +123,8 @@ struct UsageEventView: View {
                 }
             }
             .padding(.vertical, 4)
-            .transition(.opacity.combined(with: .move(edge: .top)))
+            .transition(.opacity)
+            .fixedSize(horizontal: false, vertical: true)
         }
 
     }

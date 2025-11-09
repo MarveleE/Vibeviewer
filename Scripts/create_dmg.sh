@@ -3,14 +3,58 @@ set -e
 
 # Configuration
 APP_NAME="Vibeviewer"
-VERSION="1.1.5"
 CONFIGURATION="Release"
 SCHEME="Vibeviewer"
 WORKSPACE="Vibeviewer.xcworkspace"
 BUILD_DIR="build"
 TEMP_DIR="temp_dmg"
-DMG_NAME="${APP_NAME}-${VERSION}.dmg"
 BACKGROUND_IMAGE_NAME="dmg_background.png"
+
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Parse command line arguments
+UPDATE_APPCAST=false
+SKIP_SIGN=false
+VERSION=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --update-appcast|-u)
+            UPDATE_APPCAST=true
+            shift
+            ;;
+        --skip-sign|-s)
+            SKIP_SIGN=true
+            shift
+            ;;
+        --version|-v)
+            VERSION="$2"
+            shift 2
+            ;;
+        --help|-h)
+            echo "用法: $0 [选项]"
+            echo ""
+            echo "选项:"
+            echo "  --update-appcast, -u    创建 DMG 后自动更新 appcast.xml"
+            echo "  --skip-sign, -s          跳过签名步骤"
+            echo "  --version, -v <版本>     指定版本号（默认从应用 Info.plist 读取）"
+            echo "  --help, -h               显示此帮助信息"
+            echo ""
+            echo "示例:"
+            echo "  $0                       # 仅创建 DMG"
+            echo "  $0 -u                    # 创建 DMG 并更新 appcast.xml"
+            echo "  $0 -v 1.1.6 -u           # 指定版本并更新 appcast.xml"
+            exit 0
+            ;;
+        *)
+            echo "未知选项: $1"
+            echo "使用 --help 查看帮助信息"
+            exit 1
+            ;;
+    esac
+done
 
 # Colors
 RED='\033[0;31m'
@@ -25,7 +69,8 @@ echo -e "${BLUE}🚀 Starting DMG creation process for ${APP_NAME}...${NC}"
 echo -e "${YELLOW}📦 Cleaning up previous builds...${NC}"
 rm -rf "${BUILD_DIR}"
 rm -rf "${TEMP_DIR}"
-rm -f "${DMG_NAME}"
+# Note: DMG_NAME will be set after version detection, so we clean up old DMGs separately
+rm -f "${APP_NAME}"-*.dmg
 
 # Build the app
 echo -e "${BLUE}🔨 Building ${APP_NAME} in ${CONFIGURATION} configuration...${NC}"
@@ -45,6 +90,33 @@ if [ -z "$APP_PATH" ]; then
 fi
 
 echo -e "${GREEN}✅ Found app at: ${APP_PATH}${NC}"
+
+# Get version from app's Info.plist if not specified
+if [ -z "$VERSION" ]; then
+    INFO_PLIST="${APP_PATH}/Contents/Info.plist"
+    if [ -f "$INFO_PLIST" ]; then
+        VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$INFO_PLIST" 2>/dev/null || echo "")
+    fi
+    
+    # Fallback: try to read from Derived/InfoPlists
+    if [ -z "$VERSION" ]; then
+        DERIVED_PLIST="${PROJECT_ROOT}/Derived/InfoPlists/${APP_NAME}-Info.plist"
+        if [ -f "$DERIVED_PLIST" ]; then
+            VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$DERIVED_PLIST" 2>/dev/null || echo "")
+        fi
+    fi
+    
+    # Final fallback
+    if [ -z "$VERSION" ]; then
+        echo -e "${YELLOW}⚠️  无法自动获取版本号，使用默认值 1.1.5${NC}"
+        echo -e "${YELLOW}   提示: 使用 --version 参数指定版本号${NC}"
+        VERSION="1.1.5"
+    fi
+fi
+
+DMG_NAME="${APP_NAME}-${VERSION}.dmg"
+echo -e "${BLUE}📦 版本: ${VERSION}${NC}"
+echo -e "${BLUE}📦 DMG 文件名: ${DMG_NAME}${NC}"
 
 # Create temporary directory for DMG contents
 echo -e "${YELLOW}📁 Creating DMG contents...${NC}"
@@ -93,8 +165,53 @@ echo -e "${GREEN}🎉 DMG creation completed successfully!${NC}"
 echo -e "${GREEN}📦 Output: ${DMG_NAME} (${DMG_SIZE})${NC}"
 echo -e "${GREEN}📍 Location: $(pwd)/${DMG_NAME}${NC}"
 
+# Sign DMG for Sparkle updates
+if [ "$SKIP_SIGN" = false ]; then
+    echo ""
+    echo -e "${BLUE}🔐 签名 DMG 文件...${NC}"
+    if [ -f "${SCRIPT_DIR}/sign_dmg.sh" ]; then
+        "${SCRIPT_DIR}/sign_dmg.sh" "${DMG_NAME}" "${VERSION}" || {
+            echo -e "${YELLOW}⚠️  签名失败，但 DMG 已创建${NC}"
+            echo -e "${YELLOW}   提示: 可以稍后手动运行: ./Scripts/sign_dmg.sh ${DMG_NAME} ${VERSION}${NC}"
+        }
+    else
+        echo -e "${YELLOW}⚠️  签名脚本不存在，跳过签名步骤${NC}"
+    fi
+fi
+
+# Update appcast.xml if requested
+if [ "$UPDATE_APPCAST" = true ]; then
+    echo ""
+    echo -e "${BLUE}📝 更新 appcast.xml...${NC}"
+    if [ -f "${SCRIPT_DIR}/update_appcast.sh" ]; then
+        "${SCRIPT_DIR}/update_appcast.sh" "${VERSION}" "${DMG_NAME}" || {
+            echo -e "${YELLOW}⚠️  appcast.xml 更新失败${NC}"
+            echo -e "${YELLOW}   提示: 可以稍后手动运行: ./Scripts/update_appcast.sh ${VERSION} ${DMG_NAME}${NC}"
+        }
+    else
+        echo -e "${YELLOW}⚠️  更新脚本不存在，跳过 appcast.xml 更新${NC}"
+    fi
+    
+    echo ""
+    echo -e "${GREEN}✅ 发布准备完成！${NC}"
+    echo -e "${BLUE}📋 下一步:${NC}"
+    echo -e "1. 在 GitHub 上创建 Release (tag: v${VERSION})"
+    echo -e "2. 上传 DMG 文件: ${DMG_NAME}"
+    echo -e "3. 填写 Release Notes"
+    echo -e "4. 提交 appcast.xml 更改:"
+    echo -e "   git add appcast.xml"
+    echo -e "   git commit -m \"chore: 更新 appcast.xml 添加版本 ${VERSION}\""
+    echo -e "   git push"
+else
+    echo ""
+    echo -e "${BLUE}💡 提示:${NC}"
+    echo -e "   使用 --update-appcast 参数可以自动更新 appcast.xml"
+    echo -e "   示例: $0 --update-appcast"
+fi
+
 # Optional: Open the directory containing the DMG
 if command -v open >/dev/null 2>&1; then
+    echo ""
     echo -e "${BLUE}📂 Opening directory...${NC}"
     open .
 fi
