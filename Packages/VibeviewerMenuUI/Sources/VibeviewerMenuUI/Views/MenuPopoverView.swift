@@ -38,10 +38,6 @@ public struct MenuPopoverView: View {
                 switch action {
                 case .dashboard:
                     self.openDashboard()
-                case .logout:
-                    Task {
-                        await self.setLoggedOut()
-                    }
                 }
             }
 
@@ -127,13 +123,6 @@ public struct MenuPopoverView: View {
                 
         }
         .maxFrame(true, false, alignment: .leading)
-    }
-    
-    private func setLoggedOut() async {
-        await self.storage.clearCredentials()
-        await self.storage.clearDashboardSnapshot()
-        self.session.credentials = nil
-        self.session.snapshot = nil
     }
 
     private func openDashboard() {

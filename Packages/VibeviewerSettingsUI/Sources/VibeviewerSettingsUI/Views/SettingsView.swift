@@ -8,114 +8,151 @@ public struct SettingsView: View {
     @Environment(AppSettings.self) private var appSettings
     @Environment(\.cursorStorage) private var storage
     @Environment(\.launchAtLoginService) private var launchAtLoginService
+    @Environment(\.dashboardRefreshService) private var refresher
     @Environment(AppSession.self) private var session
     
-    @State private var refreshFrequency: String = ""
-    @State private var usageHistoryLimit: String = ""
+    @State private var refreshFrequency: Int = 5
+    @State private var usageHistoryLimit: Int = 5
     @State private var pauseOnScreenSleep: Bool = false
     @State private var launchAtLogin: Bool = false
     @State private var appearanceSelection: VibeviewerModel.AppAppearance = .system
     @State private var showingClearSessionAlert: Bool = false
-    @State private var analyticsDataDays: String = ""
+    @State private var showingLogoutAlert: Bool = false
+    @State private var analyticsDataDays: Int = 7
+    
+    // 预定义选项
+    private let refreshFrequencyOptions: [Int] = [1, 2, 3, 5, 10, 15, 30]
+    private let usageHistoryLimitOptions: [Int] = [5, 10, 20, 50, 100]
+    private let analyticsDataDaysOptions: [Int] = [3, 7, 14, 30, 60, 90]
 
     public init() {}
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack {
-                Text("Settings")
-                    .font(.app(.satoshiBold, size: 18))
-                
-                Spacer()
-            }
-            
-            VStack(alignment: .leading, spacing: 16) {
+        Form {
+            Section {
                 Picker("Appearance", selection: $appearanceSelection) {
                     Text("System").tag(VibeviewerModel.AppAppearance.system)
                     Text("Light").tag(VibeviewerModel.AppAppearance.light)
                     Text("Dark").tag(VibeviewerModel.AppAppearance.dark)
                 }
-                .pickerStyle(.segmented)
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Refresh Frequency (minutes)")
-                        .font(.app(.satoshiMedium, size: 12))
-                    
-                    TextField("5", text: $refreshFrequency)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 80)
-                        .onChange(of: refreshFrequency) { oldValue, newValue in
-                            refreshFrequency = filterIntegerInput(newValue)
-                        }
-                }
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Usage History Limit")
-                        .font(.app(.satoshiMedium, size: 12))
-                    
-                    TextField("5", text: $usageHistoryLimit)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 80)
-                        .onChange(of: usageHistoryLimit) { oldValue, newValue in
-                            usageHistoryLimit = filterIntegerInput(newValue)
-                        }
-                }
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Analytics Data Range (days)")
-                        .font(.app(.satoshiMedium, size: 12))
-                    
-                    TextField("7", text: $analyticsDataDays)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 80)
-                        .onChange(of: analyticsDataDays) { oldValue, newValue in
-                            analyticsDataDays = filterIntegerInput(newValue)
-                        }
-                }
-                
-                Toggle("Pause refresh when screen sleeps", isOn: $pauseOnScreenSleep)
-                    .font(.app(.satoshiMedium, size: 12))
-                
-                Toggle("Launch at login", isOn: $launchAtLogin)
-                    .font(.app(.satoshiMedium, size: 12))
-            }
-            
-            HStack {
-                Spacer()
-                
-                Button("Close") {
-                    NSApplication.shared.keyWindow?.close()
-                }
-                .buttonStyle(.vibe(Color(hex: "F58283").opacity(0.8)))
-                
-                // 清空 AppSession 按钮
-                Button("Clear App Cache") {
-                    showingClearSessionAlert = true
-                }
-                .buttonStyle(.vibe(.secondary.opacity(0.8)))
-                .font(.app(.satoshiMedium, size: 12))
-                
-                
-                Button("Save") {
+                .onChange(of: appearanceSelection) { oldValue, newValue in
+                    appSettings.appearance = newValue
                     Task { @MainActor in
-                        saveSettings()
-                        // Persist settings then close window
-                        try? await self.appSettings.save(using: self.storage)
-                        NSApplication.shared.keyWindow?.close()
+                        try? await appSettings.save(using: storage)
                     }
                 }
-                .buttonStyle(.vibe(Color(hex: "5B67E2").opacity(0.8)))
+            } header: {
+                Text("General")
+            }
+            
+            Section {
+                Picker("Refresh Frequency", selection: $refreshFrequency) {
+                    ForEach(refreshFrequencyOptions, id: \.self) { value in
+                        Text("\(value) minutes").tag(value)
+                    }
+                }
+                .pickerStyle(.menu)
+                .onChange(of: refreshFrequency) { oldValue, newValue in
+                    appSettings.overview.refreshInterval = newValue
+                    Task { @MainActor in
+                        try? await appSettings.save(using: storage)
+                    }
+                }
+                
+                Picker("Usage History Limit", selection: $usageHistoryLimit) {
+                    ForEach(usageHistoryLimitOptions, id: \.self) { value in
+                        Text("\(value) items").tag(value)
+                    }
+                }
+                .pickerStyle(.menu)
+                .onChange(of: usageHistoryLimit) { oldValue, newValue in
+                    appSettings.usageHistory.limit = newValue
+                    Task { @MainActor in
+                        try? await appSettings.save(using: storage)
+                    }
+                }
+                
+                Picker("Analytics Data Range", selection: $analyticsDataDays) {
+                    ForEach(analyticsDataDaysOptions, id: \.self) { value in
+                        Text("\(value) days").tag(value)
+                    }
+                }
+                .pickerStyle(.menu)
+                .onChange(of: analyticsDataDays) { oldValue, newValue in
+                    appSettings.analyticsDataDays = newValue
+                    Task { @MainActor in
+                        try? await appSettings.save(using: storage)
+                    }
+                }
+            } header: {
+                Text("Data")
+            } footer: {
+                Text("Refresh Frequency: Controls the automatic refresh interval for dashboard data.\nUsage History Limit: Limits the number of usage history items displayed.\nAnalytics Data Range: Controls the number of days of data shown in analytics charts.")
+            }
+            
+            Section {
+                Toggle("Pause refresh when screen sleeps", isOn: $pauseOnScreenSleep)
+                    .onChange(of: pauseOnScreenSleep) { oldValue, newValue in
+                        appSettings.pauseOnScreenSleep = newValue
+                        Task { @MainActor in
+                            try? await appSettings.save(using: storage)
+                        }
+                    }
+                
+                Toggle("Launch at login", isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { oldValue, newValue in
+                        _ = launchAtLoginService.setEnabled(newValue)
+                        appSettings.launchAtLogin = newValue
+                        Task { @MainActor in
+                            try? await appSettings.save(using: storage)
+                        }
+                    }
+            } header: {
+                Text("Behavior")
+            }
+            
+            if session.credentials != nil {
+                Section {
+                    Button(role: .destructive) {
+                        showingLogoutAlert = true
+                    } label: {
+                        Text("Log Out")
+                    }
+                } header: {
+                    Text("Account")
+                } footer: {
+                    Text("Clear login credentials and stop data refresh. You will need to log in again to continue using the app.")
+                }
+            }
+            
+            Section {
+                Button(role: .destructive) {
+                    showingClearSessionAlert = true
+                } label: {
+                    Text("Clear App Cache")
+                }
+            } header: {
+                Text("Advanced")
+            } footer: {
+                Text("Clear all stored credentials and dashboard data. You will need to log in again.")
             }
         }
-        .padding(20)
-        .frame(width: 500, height: 400)
+        .formStyle(.grouped)
+        .frame(width: 560, height: 500)
         .onAppear {
             loadSettings()
         }
-        .task { 
-            try? await self.appSettings.save(using: self.storage) 
+        .alert("Log Out", isPresented: $showingLogoutAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Log Out", role: .destructive) {
+                Task { @MainActor in
+                    await logout()
+                }
+            }
+        } message: {
+            Text("This will clear your login credentials and stop data refresh. You will need to log in again to continue using the app.")
         }
-        .alert("Clear App Session", isPresented: $showingClearSessionAlert) {
+        .alert("Clear App Cache", isPresented: $showingClearSessionAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Clear", role: .destructive) {
                 Task { @MainActor in
@@ -128,32 +165,68 @@ public struct SettingsView: View {
     }
     
     private func loadSettings() {
-        refreshFrequency = String(appSettings.overview.refreshInterval)
-        usageHistoryLimit = String(appSettings.usageHistory.limit)
+        // 加载设置值
+        let currentRefreshFrequency = appSettings.overview.refreshInterval
+        let currentUsageHistoryLimit = appSettings.usageHistory.limit
+        let currentAnalyticsDataDays = appSettings.analyticsDataDays
+        
+        // 如果当前值不在选项中，使用最接近的值并更新设置
+        if refreshFrequencyOptions.contains(currentRefreshFrequency) {
+            refreshFrequency = currentRefreshFrequency
+        } else {
+            let closest = refreshFrequencyOptions.min(by: { abs($0 - currentRefreshFrequency) < abs($1 - currentRefreshFrequency) }) ?? 5
+            refreshFrequency = closest
+            appSettings.overview.refreshInterval = closest
+        }
+        
+        if usageHistoryLimitOptions.contains(currentUsageHistoryLimit) {
+            usageHistoryLimit = currentUsageHistoryLimit
+        } else {
+            let closest = usageHistoryLimitOptions.min(by: { abs($0 - currentUsageHistoryLimit) < abs($1 - currentUsageHistoryLimit) }) ?? 5
+            usageHistoryLimit = closest
+            appSettings.usageHistory.limit = closest
+        }
+        
+        if analyticsDataDaysOptions.contains(currentAnalyticsDataDays) {
+            analyticsDataDays = currentAnalyticsDataDays
+        } else {
+            let closest = analyticsDataDaysOptions.min(by: { abs($0 - currentAnalyticsDataDays) < abs($1 - currentAnalyticsDataDays) }) ?? 7
+            analyticsDataDays = closest
+            appSettings.analyticsDataDays = closest
+        }
+        
         pauseOnScreenSleep = appSettings.pauseOnScreenSleep
         launchAtLogin = launchAtLoginService.isEnabled
         appearanceSelection = appSettings.appearance
-        analyticsDataDays = String(appSettings.analyticsDataDays)
+        
+        // 如果值被调整了，保存设置
+        if !refreshFrequencyOptions.contains(currentRefreshFrequency) ||
+           !usageHistoryLimitOptions.contains(currentUsageHistoryLimit) ||
+           !analyticsDataDaysOptions.contains(currentAnalyticsDataDays) {
+            Task { @MainActor in
+                try? await appSettings.save(using: storage)
+            }
+        }
     }
     
-    private func saveSettings() {
-        if let refreshValue = Int(refreshFrequency) {
-            appSettings.overview.refreshInterval = refreshValue
-        }
+    private func logout() async {
+        // 停止刷新服务
+        refresher.stop()
         
-        if let limitValue = Int(usageHistoryLimit) {
-            appSettings.usageHistory.limit = limitValue
-        }
+        // 清空存储的凭据
+        await storage.clearCredentials()
         
-        appSettings.pauseOnScreenSleep = pauseOnScreenSleep
+        // 重置内存中的凭据
+        session.credentials = nil
         
-        _ = launchAtLoginService.setEnabled(launchAtLogin)
-        appSettings.launchAtLogin = launchAtLogin
-        appSettings.appearance = appearanceSelection
-        appSettings.analyticsDataDays = Int(analyticsDataDays) ?? 7 // Default to 7 if invalid
+        // 关闭设置窗口
+        NSApplication.shared.keyWindow?.close()
     }
     
     private func clearAppSession() async {
+        // 停止刷新服务
+        refresher.stop()
+        
         // 清空存储的 AppSession 数据
         await storage.clearAppSession()
         
@@ -163,10 +236,5 @@ public struct SettingsView: View {
         
         // 关闭设置窗口
         NSApplication.shared.keyWindow?.close()
-    }
-    
-    /// 过滤输入，仅允许整数（0-9）
-    private func filterIntegerInput(_ input: String) -> String {
-        input.filter { $0.isNumber }
     }
 }

@@ -210,9 +210,10 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
         return (today, yesterday)
     }
     
-    /// 计算模型分析的时间范围：当前天向后推28天
+    /// 计算模型分析的时间范围：使用设置中的分析数据范围天数
     private func modelsAnalyticsDateRange() -> (start: String, end: String) {
-        return VibeviewerCore.DateUtils.daysAgoToTodayRange(days: 28)
+        let days = self.settings.analyticsDataDays
+        return VibeviewerCore.DateUtils.daysAgoToTodayRange(days: days)
     }
 }
 

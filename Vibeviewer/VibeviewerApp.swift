@@ -42,6 +42,7 @@ struct VibeviewerApp: App {
                 .onAppear {
                     SettingsWindowManager.shared.appSettings = self.settings
                     SettingsWindowManager.shared.appSession = self.session
+                    SettingsWindowManager.shared.dashboardRefreshService = self.refresher
                 }
                 .id(self.settings.appearance)
                 .applyPreferredColorScheme(self.settings.appearance)
