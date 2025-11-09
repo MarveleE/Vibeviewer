@@ -30,8 +30,8 @@ let project = Project(
         "CODE_SIGN_STYLE": "Automatic",
         "DEVELOPMENT_TEAM": "$(DEVELOPMENT_TEAM)",
         // 版本信息 - 确保版本号正确传递
-        "MARKETING_VERSION": "1.1.7",
-        "CURRENT_PROJECT_VERSION": "1.1.7",
+        "MARKETING_VERSION": "1.1.5",
+        "CURRENT_PROJECT_VERSION": "1.1.5",
     ]),
     targets: [
         .target(
@@ -46,8 +46,8 @@ let project = Project(
                 "LSApplicationCategoryType": .string("public.app-category.productivity"),
                 "UIAppFonts": .array([.string("Satoshi-Regular.ttf"), .string("Satoshi-Medium.ttf"), .string("Satoshi-Bold.ttf"), .string("Satoshi-Italic.ttf")]),
                 // 版本信息
-                "CFBundleShortVersionString": .string("1.1.7"),
-                "CFBundleVersion": .string("1.1.7"),
+                "CFBundleShortVersionString": .string("1.1.5"),
+                "CFBundleVersion": .string("1.1.5"),
                 // Sparkle 更新配置
                 "SUFeedURL": .string("https://raw.githubusercontent.com/MarveleE/Vibeviewer/main/appcast.xml"),
                 "SUPublicEDSAKey": .string("HkePEJXQXvz+idowO2tZ9g/J01nY+seiKUonETPG5+A="),
