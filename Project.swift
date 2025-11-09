@@ -3,7 +3,7 @@ import ProjectDescription
 let workspaceName = "Vibeviewer"
 
 // 版本号统一配置 - 只在这里修改版本号
-let appVersion = "1.1.8"
+let appVersion = "1.1.9"
 
 let project = Project(
     name: workspaceName,
@@ -23,7 +23,6 @@ let project = Project(
         .local(path: "Packages/VibeviewerAppEnvironment"),
         .local(path: "Packages/VibeviewerStorage"),
         .local(path: "Packages/VibeviewerShareUI"),
-        .remote(url: "https://github.com/sparkle-project/Sparkle", requirement: .upToNextMajor(from: "2.6.0")),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": .string("5.10"),
@@ -51,10 +50,6 @@ let project = Project(
                 // 版本信息 - 使用统一的版本号常量
                 "CFBundleShortVersionString": .string(appVersion),
                 "CFBundleVersion": .string(appVersion),
-                // Sparkle 更新配置
-                "SUFeedURL": .string("https://raw.githubusercontent.com/MarveleE/Vibeviewer/main/appcast.xml"),
-                "SUPublicEDSAKey": .string("HkePEJXQXvz+idowO2tZ9g/J01nY+seiKUonETPG5+A="),
-                "SUScheduledCheckInterval": .integer(86400), // 24小时
             ]),
             sources: ["Vibeviewer/**"],
             resources: [
@@ -71,7 +66,6 @@ let project = Project(
                 .package(product: "VibeviewerAppEnvironment"),
                 .package(product: "VibeviewerStorage"),
                 .package(product: "VibeviewerShareUI"),
-                .package(product: "Sparkle"),
             ]
         )
     ]

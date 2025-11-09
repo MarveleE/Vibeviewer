@@ -50,76 +50,8 @@ public struct SettingsView: View {
                     Text(updateService.currentVersion)
                         .foregroundColor(.secondary)
                 }
-                
-                // 最新版本（如果有更新）
-                if let latestVersion = updateService.latestVersion {
-                    HStack {
-                        Text("Latest Version")
-                        Spacer()
-                        HStack(spacing: 4) {
-                            Text(latestVersion)
-                                .foregroundColor(.blue)
-                            Image(systemName: "arrow.down.circle.fill")
-                                .foregroundColor(.blue)
-                                .font(.system(size: 12))
-                        }
-                    }
-                }
-                
-                // 更新状态
-                HStack {
-                    Text("Update Status")
-                    Spacer()
-                    Text(updateService.updateStatusDescription)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.trailing)
-                }
-                
-                // 上次检查时间
-                if let lastCheck = updateService.lastUpdateCheckDate {
-                    HStack {
-                        Text("Last Checked")
-                        Spacer()
-                        Text(lastCheck, style: .relative)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                // 检查更新按钮
-                Button {
-                    // 确保在主线程上调用更新检查
-                    Task { @MainActor in
-                        updateService.checkForUpdates()
-                    }
-                } label: {
-                    HStack {
-                        if updateService.isCheckingForUpdates {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                                .frame(width: 16, height: 16)
-                        }
-                        Text(updateService.isCheckingForUpdates ? "Checking for Updates..." : "Check for Updates")
-                    }
-                }
-                .disabled(updateService.isCheckingForUpdates)
             } header: {
                 Text("General")
-            } footer: {
-                VStack(alignment: .leading, spacing: 4) {
-                    if updateService.updateAvailable {
-                        Text("A new version is available. Click 'Check for Updates' to download and install.")
-                            .foregroundColor(.blue)
-                    } else if updateService.isCheckingForUpdates {
-                        Text("Checking for updates...")
-                            .foregroundColor(.secondary)
-                    } else if let lastCheck = updateService.lastUpdateCheckDate {
-                        Text("You're up to date. Last checked \(lastCheck, style: .relative).")
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text("Click 'Check for Updates' to see if a new version is available.")
-                            .foregroundColor(.secondary)
-                    }
-                }
             }
             
             Section {

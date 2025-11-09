@@ -35,7 +35,18 @@ public struct NoopUpdateService: UpdateService {
     @MainActor public func checkForUpdatesInBackground() {}
     @MainActor public var isCheckingForUpdates: Bool { false }
     @MainActor public var updateAvailable: Bool { false }
-    public var currentVersion: String { "1.0.0" }
+    public var currentVersion: String {
+        // 使用 Bundle.main 读取版本号
+        if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String, !version.isEmpty {
+            return version
+        }
+        // Fallback: 尝试从 CFBundleVersion 读取
+        if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String, !version.isEmpty {
+            return version
+        }
+        // 默认版本号
+        return "1.1.9"
+    }
     @MainActor public var latestVersion: String? { nil }
     @MainActor public var lastUpdateCheckDate: Date? { nil }
     @MainActor public var updateStatusDescription: String { "更新服务不可用" }

@@ -15,20 +15,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Parse command line arguments
-UPDATE_APPCAST=false
-SKIP_SIGN=false
 VERSION=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --update-appcast|-u)
-            UPDATE_APPCAST=true
-            shift
-            ;;
-        --skip-sign|-s)
-            SKIP_SIGN=true
-            shift
-            ;;
         --version|-v)
             VERSION="$2"
             shift 2
@@ -37,15 +27,12 @@ while [[ $# -gt 0 ]]; do
             echo "用法: $0 [选项]"
             echo ""
             echo "选项:"
-            echo "  --update-appcast, -u    创建 DMG 后自动更新 appcast.xml"
-            echo "  --skip-sign, -s          跳过签名步骤"
             echo "  --version, -v <版本>     指定版本号（默认从应用 Info.plist 读取）"
             echo "  --help, -h               显示此帮助信息"
             echo ""
             echo "示例:"
             echo "  $0                       # 仅创建 DMG"
-            echo "  $0 -u                    # 创建 DMG 并更新 appcast.xml"
-            echo "  $0 -v 1.1.6 -u           # 指定版本并更新 appcast.xml"
+            echo "  $0 -v 1.1.9              # 指定版本创建 DMG"
             exit 0
             ;;
         *)
@@ -103,7 +90,6 @@ if [ -f "$INFO_PLIST" ]; then
     # 检查代码签名
     if codesign -dv "${APP_PATH}" 2>&1 | grep -q "code object is not signed"; then
         echo -e "${YELLOW}⚠️  警告: App 未签名或签名无效${NC}"
-        echo -e "${YELLOW}   这可能导致 Sparkle 更新验证失败${NC}"
     else
         SIGNING_IDENTITY=$(codesign -dv "${APP_PATH}" 2>&1 | grep "Authority=" | head -1 | sed 's/.*Authority=\(.*\)/\1/' || echo "未知")
         echo -e "   签名: ${SIGNING_IDENTITY}"
@@ -190,56 +176,11 @@ DMG_SIZE=$(du -h "${DMG_NAME}" | cut -f1)
 echo -e "${GREEN}🎉 DMG creation completed successfully!${NC}"
 echo -e "${GREEN}📦 Output: ${DMG_NAME} (${DMG_SIZE})${NC}"
 echo -e "${GREEN}📍 Location: $(pwd)/${DMG_NAME}${NC}"
-
-# Sign DMG for Sparkle updates
-if [ "$SKIP_SIGN" = false ]; then
-    echo ""
-    echo -e "${BLUE}🔐 签名 DMG 文件（Sparkle 更新必需）...${NC}"
-    if [ -f "${SCRIPT_DIR}/sign_dmg.sh" ]; then
-        if ! "${SCRIPT_DIR}/sign_dmg.sh" "${DMG_NAME}" "${VERSION}"; then
-            echo -e "${RED}❌ DMG 签名失败！${NC}"
-            echo -e "${YELLOW}⚠️  未签名的 DMG 无法通过 Sparkle 更新验证${NC}"
-            echo -e "${YELLOW}   请检查:${NC}"
-            echo -e "${YELLOW}   1. Sparkle sign_update 工具是否已安装${NC}"
-            echo -e "${YELLOW}   2. 私钥文件是否存在: Scripts/sparkle_keys/eddsa_private_key.pem${NC}"
-            echo -e "${YELLOW}   3. 可以稍后手动运行: ./Scripts/sign_dmg.sh ${DMG_NAME} ${VERSION}${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}❌ 签名脚本不存在: ${SCRIPT_DIR}/sign_dmg.sh${NC}"
-        exit 1
-    fi
-fi
-
-# Update appcast.xml if requested
-if [ "$UPDATE_APPCAST" = true ]; then
-    echo ""
-    echo -e "${BLUE}📝 更新 appcast.xml...${NC}"
-    if [ -f "${SCRIPT_DIR}/update_appcast.sh" ]; then
-        "${SCRIPT_DIR}/update_appcast.sh" "${VERSION}" "${DMG_NAME}" || {
-            echo -e "${YELLOW}⚠️  appcast.xml 更新失败${NC}"
-            echo -e "${YELLOW}   提示: 可以稍后手动运行: ./Scripts/update_appcast.sh ${VERSION} ${DMG_NAME}${NC}"
-        }
-    else
-        echo -e "${YELLOW}⚠️  更新脚本不存在，跳过 appcast.xml 更新${NC}"
-    fi
-    
-    echo ""
-    echo -e "${GREEN}✅ 发布准备完成！${NC}"
-    echo -e "${BLUE}📋 下一步:${NC}"
-    echo -e "1. 在 GitHub 上创建 Release (tag: v${VERSION})"
-    echo -e "2. 上传 DMG 文件: ${DMG_NAME}"
-    echo -e "3. 填写 Release Notes"
-    echo -e "4. 提交 appcast.xml 更改:"
-    echo -e "   git add appcast.xml"
-    echo -e "   git commit -m \"chore: 更新 appcast.xml 添加版本 ${VERSION}\""
-    echo -e "   git push"
-else
-    echo ""
-    echo -e "${BLUE}💡 提示:${NC}"
-    echo -e "   使用 --update-appcast 参数可以自动更新 appcast.xml"
-    echo -e "   示例: $0 --update-appcast"
-fi
+echo ""
+echo -e "${BLUE}📋 下一步:${NC}"
+echo -e "1. 在 GitHub 上创建 Release (tag: v${VERSION})"
+echo -e "2. 上传 DMG 文件: ${DMG_NAME}"
+echo -e "3. 填写 Release Notes"
 
 # Optional: Open the directory containing the DMG
 if command -v open >/dev/null 2>&1; then
