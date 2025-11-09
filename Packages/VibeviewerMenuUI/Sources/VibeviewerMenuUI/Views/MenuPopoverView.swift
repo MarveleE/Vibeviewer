@@ -64,10 +64,10 @@ public struct MenuPopoverView: View {
 
                 UsageEventView(events: self.session.snapshot?.usageEvents ?? [])
                 
-                if let analytics = self.session.snapshot?.userAnalytics {
+                if let modelsUsageChart = self.session.snapshot?.modelsUsageChart {
                     Divider().opacity(0.5)
                     
-                    UserAnalyticsChartView(analytics: analytics)
+                    ModelsUsageBarChartView(data: modelsUsageChart)
                 }
 
                 Divider().opacity(0.5)

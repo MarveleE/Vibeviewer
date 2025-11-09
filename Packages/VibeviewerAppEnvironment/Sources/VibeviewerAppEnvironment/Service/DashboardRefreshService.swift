@@ -108,10 +108,10 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
                 page: 1,
                 cookieHeader: creds.cookieHeader
             )
-            async let analytics = try await self.api.fetchUserAnalytics(
-                userId: creds.userId,
-                startDateMs: analyticsStartMs,
-                endDateMs: analyticsEndMs,
+            async let modelsUsageChart = try? await self.api.fetchModelsAnalytics(
+                startDate: self.modelsAnalyticsDateRange().start,
+                endDate: self.modelsAnalyticsDateRange().end,
+                c: creds.workosId,
                 cookieHeader: creds.cookieHeader
             )
 
@@ -147,19 +147,14 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
                 requestYestoday: current?.requestYestoday ?? 0,
                 usageSummary: usageSummaryValue,
                 freeUsageCents: freeCents,
-                userAnalytics: current?.userAnalytics
+                modelsUsageChart: current?.modelsUsageChart
             )
             self.session.snapshot = overview
             try? await self.storage.saveDashboardSnapshot(overview)
 
-            // 等待并合并历史事件和分析数据（这两个已经在并发执行）
+            // 等待并合并历史事件和模型使用量图表数据
             let historyValue = try await history
-            let analyticsValue: UserAnalytics?
-            do {
-                analyticsValue = try await analytics
-            } catch {
-                analyticsValue = nil
-            }
+            let modelsUsageChartValue = await modelsUsageChart
             let (reqToday, reqYesterday) = self.splitTodayAndYesterdayCounts(from: historyValue.events)
             let merged = DashboardSnapshot(
                 email: overview.email,
@@ -171,7 +166,7 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
                 requestYestoday: reqYesterday,
                 usageSummary: usageSummaryValue,
                 freeUsageCents: overview.freeUsageCents,
-                userAnalytics: analyticsValue
+                modelsUsageChart: modelsUsageChartValue
             )
             self.session.snapshot = merged
             try? await self.storage.saveDashboardSnapshot(merged)
@@ -213,6 +208,11 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
             }
         }
         return (today, yesterday)
+    }
+    
+    /// 计算模型分析的时间范围：当前天向后推28天
+    private func modelsAnalyticsDateRange() -> (start: String, end: String) {
+        return VibeviewerCore.DateUtils.daysAgoToTodayRange(days: 28)
     }
 }
 

@@ -20,8 +20,8 @@ public class DashboardSnapshot: Codable, Equatable {
     public let usageSummary: UsageSummary?
     /// 团队计划下个人可用的免费额度（分）。仅 Team Plan 生效
     public let freeUsageCents: Int
-    /// 用户分析数据
-    public let userAnalytics: UserAnalytics?
+    /// 模型使用量柱状图数据
+    public let modelsUsageChart: ModelsUsageChartData?
 
     public init(
         email: String,
@@ -33,7 +33,7 @@ public class DashboardSnapshot: Codable, Equatable {
         requestYestoday: Int = 0,
         usageSummary: UsageSummary? = nil,
         freeUsageCents: Int = 0,
-        userAnalytics: UserAnalytics? = nil
+        modelsUsageChart: ModelsUsageChartData? = nil
     ) {
         self.email = email
         self.totalRequestsAllModels = totalRequestsAllModels
@@ -44,7 +44,7 @@ public class DashboardSnapshot: Codable, Equatable {
         self.requestYestoday = requestYestoday
         self.usageSummary = usageSummary
         self.freeUsageCents = freeUsageCents
-        self.userAnalytics = userAnalytics
+        self.modelsUsageChart = modelsUsageChart
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -57,7 +57,7 @@ public class DashboardSnapshot: Codable, Equatable {
         case requestYestoday
         case usageSummary
         case freeUsageCents
-        case userAnalytics
+        case modelsUsageChart
     }
 
     public required init(from decoder: Decoder) throws {
@@ -71,7 +71,7 @@ public class DashboardSnapshot: Codable, Equatable {
         self.usageEvents = try container.decode([UsageEvent].self, forKey: .usageEvents)
         self.usageSummary = try? container.decode(UsageSummary.self, forKey: .usageSummary)
         self.freeUsageCents = (try? container.decode(Int.self, forKey: .freeUsageCents)) ?? 0
-        self.userAnalytics = try? container.decode(UserAnalytics.self, forKey: .userAnalytics)
+        self.modelsUsageChart = try? container.decode(ModelsUsageChartData.self, forKey: .modelsUsageChart)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -89,8 +89,8 @@ public class DashboardSnapshot: Codable, Equatable {
         if self.freeUsageCents > 0 {
             try container.encode(self.freeUsageCents, forKey: .freeUsageCents)
         }
-        if let userAnalytics = self.userAnalytics {
-            try container.encode(userAnalytics, forKey: .userAnalytics)
+        if let modelsUsageChart = self.modelsUsageChart {
+            try container.encode(modelsUsageChart, forKey: .modelsUsageChart)
         }
     }
 
@@ -114,6 +114,6 @@ public class DashboardSnapshot: Codable, Equatable {
             lhs.hardLimitDollars == rhs.hardLimitDollars &&
             lhs.usageSummary == rhs.usageSummary &&
             lhs.freeUsageCents == rhs.freeUsageCents &&
-            lhs.userAnalytics == rhs.userAnalytics
+            lhs.modelsUsageChart == rhs.modelsUsageChart
     }
 }
