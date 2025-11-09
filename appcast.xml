@@ -19,6 +19,19 @@
             3. 更新 sparkle:releaseNotesLink 指向 GitHub Release 页面
         -->
         
+        <!-- 版本 1.1.6 -->
+        <item>
+            <title>Version 1.1.6</title>
+            <sparkle:releaseNotesLink>https://github.com/MarveleE/Vibeviewer/releases/tag/v1.1.6</sparkle:releaseNotesLink>
+            <pubDate>Sun, 09 Nov 2025 18:08:00 +0000</pubDate>
+            <enclosure url="https://github.com/MarveleE/Vibeviewer/releases/download/v1.1.6/Vibeviewer-1.1.6.dmg"
+                       sparkle:version="1.1.6"
+                       sparkle:shortVersionString="1.1.6"
+                       length="4129563"
+                       type="application/octet-stream"
+                       sparkle:edSignature="GtG53/dwVX1blIidHTKsnm6cZtwHXt/6ahwuVFjdQ24xq816eYrp1jNv4yb0ezUyuRShyZg8hTrTRbhqiezFCA=="/>
+        </item>
+        
         <!-- 版本 1.1.8 -->
         <item>
             <title>Version 1.1.8</title>
