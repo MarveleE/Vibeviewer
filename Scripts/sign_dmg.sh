@@ -41,32 +41,49 @@ fi
 
 echo -e "${BLUE}🔐 签名 DMG 文件: $DMG_FILE${NC}"
 
-# 方法1: 尝试使用 Sparkle 的 sign_update 工具
+# 方法1: 尝试使用 Sparkle 的 sign_update 工具（必需）
 SIGNATURE=""
+SIGN_ERROR=""
 if command -v sign_update >/dev/null 2>&1; then
     echo -e "${BLUE}📦 使用 Sparkle sign_update 工具...${NC}"
-    SIGNATURE=$(sign_update "$DMG_FILE" "$PRIVATE_KEY" 2>/dev/null || echo "")
-elif [ -f "$PROJECT_ROOT/Scripts/sparkle/bin/sign_update" ]; then
-    echo -e "${BLUE}📦 使用本地 Sparkle 工具...${NC}"
-    SIGNATURE=$("$PROJECT_ROOT/Scripts/sparkle/bin/sign_update" "$DMG_FILE" "$PRIVATE_KEY" 2>/dev/null || echo "")
-fi
-
-# 如果签名失败，尝试使用 openssl
-if [ -z "$SIGNATURE" ]; then
-    echo -e "${YELLOW}⚠️  Sparkle 工具不可用，尝试使用 openssl...${NC}"
+    # sign_update 将错误输出到 stderr，签名输出到 stdout
+    SIGN_ERROR=$(sign_update "$DMG_FILE" "$PRIVATE_KEY" 2>&1 >/dev/null)
+    SIGNATURE=$(sign_update "$DMG_FILE" "$PRIVATE_KEY" 2>/dev/null)
     
-    # 计算 DMG 文件的 SHA256
-    DMG_HASH=$(shasum -a 256 "$DMG_FILE" | cut -d' ' -f1)
-    
-    # 使用私钥签名哈希
-    SIGNATURE=$(echo -n "$DMG_HASH" | openssl dgst -sha256 -sign "$PRIVATE_KEY" -binary | base64 | tr -d '\n' 2>/dev/null || echo "")
-    
-    if [ -z "$SIGNATURE" ]; then
-        echo -e "${RED}❌ 签名失败${NC}"
-        echo -e "${YELLOW}💡 请安装 Sparkle 工具:${NC}"
-        echo -e "${YELLOW}   https://github.com/sparkle-project/Sparkle/releases${NC}"
+    if [ $? -ne 0 ] || [ -n "$SIGN_ERROR" ]; then
+        echo -e "${RED}❌ 签名失败: $SIGN_ERROR${NC}"
         exit 1
     fi
+elif [ -f "$PROJECT_ROOT/Scripts/sparkle/bin/sign_update" ]; then
+    echo -e "${BLUE}📦 使用本地 Sparkle 工具...${NC}"
+    SIGN_ERROR=$("$PROJECT_ROOT/Scripts/sparkle/bin/sign_update" "$DMG_FILE" "$PRIVATE_KEY" 2>&1 >/dev/null)
+    SIGNATURE=$("$PROJECT_ROOT/Scripts/sparkle/bin/sign_update" "$DMG_FILE" "$PRIVATE_KEY" 2>/dev/null)
+    
+    if [ $? -ne 0 ] || [ -n "$SIGN_ERROR" ]; then
+        echo -e "${RED}❌ 签名失败: $SIGN_ERROR${NC}"
+        exit 1
+    fi
+else
+    echo -e "${RED}❌ 错误: 找不到 Sparkle sign_update 工具${NC}"
+    echo -e "${YELLOW}💡 请下载并安装 Sparkle 工具:${NC}"
+    echo -e "${YELLOW}   1. 下载: https://github.com/sparkle-project/Sparkle/releases${NC}"
+    echo -e "${YELLOW}   2. 解压到: $PROJECT_ROOT/Scripts/sparkle/${NC}"
+    echo -e "${YELLOW}   3. 或者安装到系统 PATH: brew install sparkle${NC}"
+    echo ""
+    echo -e "${YELLOW}⚠️  注意: Sparkle 更新必须使用 sign_update 工具生成 EdDSA 签名${NC}"
+    echo -e "${YELLOW}   不能使用 openssl 替代，因为格式不兼容${NC}"
+    exit 1
+fi
+
+# 清理签名字符串（移除换行符和空格）
+SIGNATURE=$(echo "$SIGNATURE" | tr -d '\n\r ')
+
+# 验证签名格式（应该是 base64 编码的字符串，长度通常在 80-100 字符左右）
+if [ -z "$SIGNATURE" ] || [ ${#SIGNATURE} -lt 20 ]; then
+    echo -e "${RED}❌ 签名格式无效或为空${NC}"
+    echo -e "${YELLOW}   签名长度: ${#SIGNATURE}${NC}"
+    echo -e "${YELLOW}   签名内容: $SIGNATURE${NC}"
+    exit 1
 fi
 
 # 获取文件大小
@@ -85,7 +102,7 @@ echo -e "1. 将以下信息添加到 appcast.xml:"
 echo -e "   - sparkle:version=\"$VERSION\""
 echo -e "   - sparkle:shortVersionString=\"$VERSION\""
 echo -e "   - length=\"$FILE_SIZE\""
-echo -e "   - sparkle:dsaSignature=\"$SIGNATURE\""
+echo -e "   - sparkle:edSignature=\"$SIGNATURE\" (Ed25519 签名)"
 
 # 保存签名到文件
 SIGNATURE_FILE="$PROJECT_ROOT/Scripts/sparkle_keys/signature_${VERSION}.txt"

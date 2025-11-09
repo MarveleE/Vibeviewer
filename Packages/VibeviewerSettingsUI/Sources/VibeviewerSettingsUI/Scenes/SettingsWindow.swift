@@ -15,6 +15,7 @@ public final class SettingsWindowManager {
         snapshot: DefaultCursorStorageService.loadDashboardSnapshotSync()
     )
     public var dashboardRefreshService: any DashboardRefreshService = NoopDashboardRefreshService()
+    public var updateService: any UpdateService = NoopUpdateService()
 
     public func show() {
         // Close MenuBarExtra popover window if it's open
@@ -28,6 +29,7 @@ public final class SettingsWindowManager {
             .environment(self.appSettings)
             .environment(self.appSession)
             .environment(\.dashboardRefreshService, self.dashboardRefreshService)
+            .environment(\.updateService, self.updateService)
             .environment(\.cursorStorage, DefaultCursorStorageService())
             .environment(\.launchAtLoginService, DefaultLaunchAtLoginService()))
         let window = NSWindow(contentViewController: vc)

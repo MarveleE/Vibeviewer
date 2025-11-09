@@ -31,78 +31,46 @@ public final class SparkleUpdateService: UpdateService, @unchecked Sendable {
         updaterDelegate.updateAvailable
     }
     
+    public var latestVersion: String? {
+        updaterDelegate.latestVersion
+    }
+    
+    public var lastUpdateCheckDate: Date? {
+        updaterDelegate.lastUpdateCheckDate
+    }
+    
+    public var updateStatusDescription: String {
+        if isCheckingForUpdates {
+            return "Checking for updates..."
+        }
+        
+        if updateAvailable, let latest = latestVersion {
+            return "Update available: \(latest)"
+        }
+        
+        if let lastCheck = lastUpdateCheckDate {
+            let formatter = RelativeDateTimeFormatter()
+            formatter.unitsStyle = .full
+            let relativeTime = formatter.localizedString(for: lastCheck, relativeTo: Date())
+            return "Up to date (checked \(relativeTime))"
+        }
+        
+        return "Not checked yet"
+    }
+    
     public nonisolated var currentVersion: String {
-        // 获取主应用 bundle（通常是 Bundle.main，但为了确保正确性，我们查找主应用 bundle）
-        let mainAppBundle: Bundle = {
-            // 方法1: 使用 Bundle.main（在应用运行时应该指向主应用）
-            let mainBundle = Bundle.main
-            
-            // 验证是否是主应用 bundle（通过检查是否有可执行文件路径）
-            if mainBundle.bundlePath.hasSuffix(".app") || mainBundle.bundleIdentifier == "com.magicgroot.vibeviewer" {
-                return mainBundle
-            }
-            
-            // 方法2: 通过 bundle identifier 查找主应用 bundle
-            if let appBundle = Bundle.allBundles.first(where: { bundle in
-                bundle.bundleIdentifier == "com.magicgroot.vibeviewer" && bundle.bundlePath.hasSuffix(".app")
-            }) {
-                return appBundle
-            }
-            
-            // 方法3: 查找所有 bundles，找到 .app bundle
-            if let appBundle = Bundle.allBundles.first(where: { bundle in
-                bundle.bundlePath.hasSuffix(".app") && !bundle.bundlePath.contains(".framework")
-            }) {
-                return appBundle
-            }
-            
-            // 如果都找不到，返回 Bundle.main
-            return mainBundle
-        }()
-        
-        // 从主应用 bundle 读取版本号
-        // 方法1: 使用 object(forInfoDictionaryKey:) - 这个方法会合并所有 Info.plist
-        if let version = mainAppBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String, !version.isEmpty {
+        // 使用 Bundle.main 读取版本号（macOS 应用运行时总是正确的）
+        if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String, !version.isEmpty {
             return version
         }
         
-        // 方法2: 直接从 infoDictionary 读取
-        if let version = mainAppBundle.infoDictionary?["CFBundleShortVersionString"] as? String, !version.isEmpty {
+        // Fallback: 尝试从 CFBundleVersion 读取
+        if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String, !version.isEmpty {
             return version
         }
         
-        // 方法3: 尝试从 CFBundleVersion 读取（构建号）
-        if let version = mainAppBundle.infoDictionary?["CFBundleVersion"] as? String, !version.isEmpty {
-            return version
-        }
-        
-        // 方法4: 从 bundle 路径直接读取 Info.plist（最可靠的方法）
-        let infoPlistPath = (mainAppBundle.bundlePath as NSString).appendingPathComponent("Contents/Info.plist")
-        if FileManager.default.fileExists(atPath: infoPlistPath),
-           let plistData = NSDictionary(contentsOfFile: infoPlistPath),
-           let version = plistData["CFBundleShortVersionString"] as? String, !version.isEmpty {
-            return version
-        }
-        
-        // 方法5: 尝试使用 path(forResource:ofType:) 读取
-        if let infoPlistPath = mainAppBundle.path(forResource: "Info", ofType: "plist"),
-           let plistData = NSDictionary(contentsOfFile: infoPlistPath),
-           let version = plistData["CFBundleShortVersionString"] as? String, !version.isEmpty {
-            return version
-        }
-        
-        // 如果所有方法都失败，打印调试信息并返回默认值
-        print("⚠️ Warning: Failed to read version from main app bundle")
-        print("   Bundle identifier: \(mainAppBundle.bundleIdentifier ?? "unknown")")
-        print("   Bundle path: \(mainAppBundle.bundlePath)")
-        print("   Info.plist path: \(infoPlistPath)")
-        print("   File exists: \(FileManager.default.fileExists(atPath: infoPlistPath))")
-        if let infoDict = mainAppBundle.infoDictionary {
-            print("   infoDictionary keys: \(infoDict.keys.joined(separator: ", "))")
-        }
-        
-        // 返回默认值（应该与 Project.swift 中的版本号保持一致）
-        return "1.1.6"
+        // 如果都失败，返回默认值（应该与 Project.swift 中的版本号保持一致）
+        return "1.1.4"
     }
     
     public init() {
@@ -123,6 +91,12 @@ public final class SparkleUpdateService: UpdateService, @unchecked Sendable {
         // 配置更新检查间隔（24小时）
         controller.updater.updateCheckInterval = 86400 // 24小时
         
+        // 验证 Feed URL 配置
+        let feedURL = controller.updater.feedURL
+        print("📦 Sparkle: 初始化更新服务")
+        print("   Feed URL: \(feedURL?.absoluteString ?? "未配置")")
+        print("   检查间隔: \(controller.updater.updateCheckInterval) 秒")
+        
         // 设置代理以跟踪更新检查状态
         delegate.onCheckingStateChanged = { [weak self] isChecking in
             Task { @MainActor in
@@ -132,11 +106,22 @@ public final class SparkleUpdateService: UpdateService, @unchecked Sendable {
     }
     
     public func checkForUpdates() {
+        // 确保在主线程上执行
+        assert(Thread.isMainThread, "checkForUpdates must be called on main thread")
+        
+        print("🔍 Sparkle: 开始检查更新...")
+        print("   Feed URL: \(updater.feedURL?.absoluteString ?? "未配置")")
+        print("   Current version: \(currentVersion)")
+        
         _isCheckingForUpdates = true
         updater.checkForUpdates()
     }
     
     public func checkForUpdatesInBackground() {
+        // 确保在主线程上执行
+        assert(Thread.isMainThread, "checkForUpdatesInBackground must be called on main thread")
+        
+        print("🔍 Sparkle: 后台检查更新...")
         updater.checkForUpdatesInBackground()
     }
 }
@@ -145,40 +130,71 @@ public final class SparkleUpdateService: UpdateService, @unchecked Sendable {
 @MainActor
 private final class UpdaterDelegate: NSObject, SPUUpdaterDelegate {
     var updateAvailable: Bool = false
+    var latestVersion: String?
+    var lastUpdateCheckDate: Date?
     var onCheckingStateChanged: ((Bool) -> Void)?
 }
 
 extension UpdaterDelegate {
     nonisolated func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) -> Bool {
+        print("✅ Sparkle: 找到可用更新")
+        print("   版本: \(item.versionString)")
+        print("   显示版本: \(item.displayVersionString)")
+        print("   发布日期: \(item.dateString ?? "未知")")
+        
         Task { @MainActor in
             self.updateAvailable = true
+            self.latestVersion = item.displayVersionString.isEmpty ? item.versionString : item.displayVersionString
+            self.lastUpdateCheckDate = Date()
             self.onCheckingStateChanged?(false)
         }
         return true // 允许更新
     }
     
     nonisolated func updaterDidNotFindUpdate(_ updater: SPUUpdater, error: Error) {
+        print("ℹ️ Sparkle: 未找到更新")
+        if let nsError = error as NSError? {
+            print("   错误域: \(nsError.domain)")
+            print("   错误代码: \(nsError.code)")
+            print("   错误描述: \(nsError.localizedDescription)")
+            if !nsError.userInfo.isEmpty {
+                print("   详细信息: \(nsError.userInfo)")
+            }
+        } else {
+            print("   错误: \(error.localizedDescription)")
+        }
+        
         Task { @MainActor in
             self.updateAvailable = false
+            self.latestVersion = nil
+            self.lastUpdateCheckDate = Date()
             self.onCheckingStateChanged?(false)
         }
     }
     
     nonisolated func updater(_ updater: SPUUpdater, failedToDownloadUpdate item: SUAppcastItem, error: Error) {
-        // 下载失败，可以在这里记录日志
-        print("Sparkle: Failed to download update: \(error.localizedDescription)")
+        print("❌ Sparkle: 下载更新失败")
+        print("   版本: \(item.versionString)")
+        print("   错误: \(error.localizedDescription)")
+        if let nsError = error as NSError? {
+            print("   错误域: \(nsError.domain)")
+            print("   错误代码: \(nsError.code)")
+        }
+        
         Task { @MainActor in
             self.onCheckingStateChanged?(false)
         }
     }
     
     nonisolated func updaterDidStartUpdateCheck(_ updater: SPUUpdater) {
+        print("🔄 Sparkle: 更新检查已开始")
         Task { @MainActor in
             self.onCheckingStateChanged?(true)
         }
     }
     
     nonisolated func updaterDidFinishUpdateCheck(_ updater: SPUUpdater) {
+        print("✨ Sparkle: 更新检查已完成")
         Task { @MainActor in
             self.onCheckingStateChanged?(false)
         }

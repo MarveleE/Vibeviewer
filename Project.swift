@@ -25,6 +25,13 @@ let project = Project(
     settings: .settings(base: [
         "SWIFT_VERSION": "5.10",
         "MACOSX_DEPLOYMENT_TARGET": "14.0",
+        // 代码签名配置 - 确保 Release 构建使用相同的签名
+        "CODE_SIGN_IDENTITY": "$(CODE_SIGN_IDENTITY)",
+        "CODE_SIGN_STYLE": "Automatic",
+        "DEVELOPMENT_TEAM": "$(DEVELOPMENT_TEAM)",
+        // 版本信息 - 确保版本号正确传递
+        "MARKETING_VERSION": "1.1.6",
+        "CURRENT_PROJECT_VERSION": "1.1.6",
     ]),
     targets: [
         .target(
