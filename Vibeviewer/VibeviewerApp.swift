@@ -26,6 +26,7 @@ struct VibeviewerApp: App {
         snapshot: DefaultCursorStorageService.loadDashboardSnapshotSync()
     )
     @State private var refresher: any DashboardRefreshService = NoopDashboardRefreshService()
+    @State private var updateService: any UpdateService = SparkleUpdateService()
 
     var body: some Scene {
         MenuBarExtra {
@@ -36,6 +37,7 @@ struct VibeviewerApp: App {
                 .environment(\.settingsWindowManager, SettingsWindowManager.shared)
                 .environment(\.dashboardRefreshService, self.refresher)
                 .environment(\.launchAtLoginService, DefaultLaunchAtLoginService())
+                .environment(\.updateService, self.updateService)
                 .environment(self.settings)
                 .environment(self.session)
                 .menuBarExtraWindowCorner()
@@ -43,6 +45,8 @@ struct VibeviewerApp: App {
                     SettingsWindowManager.shared.appSettings = self.settings
                     SettingsWindowManager.shared.appSession = self.session
                     SettingsWindowManager.shared.dashboardRefreshService = self.refresher
+                    // 应用启动时自动检查更新（后台）
+                    self.updateService.checkForUpdatesInBackground()
                 }
                 .id(self.settings.appearance)
                 .applyPreferredColorScheme(self.settings.appearance)

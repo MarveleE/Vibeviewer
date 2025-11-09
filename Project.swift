@@ -20,6 +20,7 @@ let project = Project(
         .local(path: "Packages/VibeviewerAppEnvironment"),
         .local(path: "Packages/VibeviewerStorage"),
         .local(path: "Packages/VibeviewerShareUI"),
+        .remote(url: "https://github.com/sparkle-project/Sparkle", requirement: .upToNextMajor(from: "2.6.0")),
     ],
     settings: .settings(base: [
         "SWIFT_VERSION": "5.10",
@@ -37,6 +38,13 @@ let project = Project(
                 "LSMinimumSystemVersion": .string("14.0"),
                 "LSApplicationCategoryType": .string("public.app-category.productivity"),
                 "UIAppFonts": .array([.string("Satoshi-Regular.ttf"), .string("Satoshi-Medium.ttf"), .string("Satoshi-Bold.ttf"), .string("Satoshi-Italic.ttf")]),
+                // 版本信息
+                "CFBundleShortVersionString": .string("1.1.6"),
+                "CFBundleVersion": .string("1.1.6"),
+                // Sparkle 更新配置
+                "SUFeedURL": .string("https://raw.githubusercontent.com/MarveleE/Vibeviewer/main/appcast.xml"),
+                "SUPublicEDSAKey": .string("HkePEJXQXvz+idowO2tZ9g/J01nY+seiKUonETPG5+A="),
+                "SUScheduledCheckInterval": .integer(86400), // 24小时
             ]),
             sources: ["Vibeviewer/**"],
             resources: [
@@ -53,6 +61,7 @@ let project = Project(
                 .package(product: "VibeviewerAppEnvironment"),
                 .package(product: "VibeviewerStorage"),
                 .package(product: "VibeviewerShareUI"),
+                .package(product: "Sparkle"),
             ]
         )
     ]

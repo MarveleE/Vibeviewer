@@ -9,6 +9,7 @@ public struct SettingsView: View {
     @Environment(\.cursorStorage) private var storage
     @Environment(\.launchAtLoginService) private var launchAtLoginService
     @Environment(\.dashboardRefreshService) private var refresher
+    @Environment(\.updateService) private var updateService
     @Environment(AppSession.self) private var session
     
     @State private var refreshFrequency: Int = 5
@@ -41,8 +42,34 @@ public struct SettingsView: View {
                         try? await appSettings.save(using: storage)
                     }
                 }
+                
+                HStack {
+                    Text("Version")
+                    Spacer()
+                    Text(updateService.currentVersion)
+                        .foregroundColor(.secondary)
+                }
+                
+                Button {
+                    updateService.checkForUpdates()
+                } label: {
+                    HStack {
+                        if updateService.isCheckingForUpdates {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                                .frame(width: 16, height: 16)
+                        }
+                        Text(updateService.isCheckingForUpdates ? "Checking for Updates..." : "Check for Updates")
+                    }
+                }
+                .disabled(updateService.isCheckingForUpdates)
             } header: {
                 Text("General")
+            } footer: {
+                if updateService.updateAvailable {
+                    Text("A new version is available. Click 'Check for Updates' to download and install.")
+                        .foregroundColor(.blue)
+                }
             }
             
             Section {

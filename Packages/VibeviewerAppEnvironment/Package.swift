@@ -20,7 +20,7 @@ let package = Package(
     .package(path: "../VibeviewerModel"),
     .package(path: "../VibeviewerStorage"),
     .package(path: "../VibeviewerCore"),
-    
+    .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.6.0"),
   ],
   targets: [
     // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -32,6 +32,7 @@ let package = Package(
         "VibeviewerModel",
         "VibeviewerStorage",
         "VibeviewerCore",
+        .product(name: "Sparkle", package: "Sparkle"),
       ]
     ),
     .testTarget(
