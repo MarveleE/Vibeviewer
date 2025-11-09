@@ -23,13 +23,13 @@
         <item>
             <title>Version 1.1.8</title>
             <sparkle:releaseNotesLink>https://github.com/MarveleE/Vibeviewer/releases/tag/v1.1.8</sparkle:releaseNotesLink>
-            <pubDate>Sun, 09 Nov 2025 09:49:26 +0000</pubDate>
+            <pubDate>Sun, 09 Nov 2025 17:56:00 +0000</pubDate>
             <enclosure url="https://github.com/MarveleE/Vibeviewer/releases/download/v1.1.8/Vibeviewer-1.1.8.dmg"
                        sparkle:version="1.1.8"
                        sparkle:shortVersionString="1.1.8"
-                       length="0"
+                       length="4129569"
                        type="application/octet-stream"
-                       sparkle:edSignature=""/>
+                       sparkle:edSignature="qOCn+K/6UOBPmjZJkMiQV97+45LMP0HTA3pwZGM9ECxFA/FDEytIBJ5mwmVf/u+GU6pv83TpAL8iB3r+AV30Cw=="/>
         </item>
     </channel>
 </rss>
