@@ -7,7 +7,8 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 KEYS_DIR="$PROJECT_ROOT/Scripts/sparkle_keys"
-PRIVATE_KEY="$KEYS_DIR/eddsa_private_key.pem"
+# 唯一来源：Sparkle 私钥 seed（32字节，base64，单行）
+SEED_KEY_FILE="$KEYS_DIR/seed_base64.txt"
 
 # Colors
 RED='\033[0;31m'
@@ -32,10 +33,10 @@ if [ ! -f "$DMG_FILE" ]; then
     exit 1
 fi
 
-# 检查私钥是否存在
-if [ ! -f "$PRIVATE_KEY" ]; then
-    echo -e "${RED}❌ 错误: 私钥文件不存在: $PRIVATE_KEY${NC}"
-    echo -e "${YELLOW}💡 请先运行: ./Scripts/generate_sparkle_keys.sh${NC}"
+# 检查 seed 私钥存在
+if [ ! -f "$SEED_KEY_FILE" ]; then
+    echo -e "${RED}❌ 错误: 未找到 Sparkle 私钥 seed 文件: $SEED_KEY_FILE${NC}"
+    echo -e "${YELLOW}💡 该文件应为单行 base64，解码后恰好 32 字节${NC}"
     exit 1
 fi
 
@@ -70,18 +71,10 @@ fi
 
 if [ -n "$SIGN_UPDATE_TOOL" ]; then
     echo -e "${BLUE}📦 使用 Sparkle sign_update 工具: $SIGN_UPDATE_TOOL${NC}"
-    
-    # 尝试使用私钥文件签名
-    if [ -f "$PRIVATE_KEY" ]; then
-        SIGN_ERROR=$("$SIGN_UPDATE_TOOL" --ed-key-file "$PRIVATE_KEY" "$DMG_FILE" 2>&1 >/dev/null)
-        SIGNATURE=$("$SIGN_UPDATE_TOOL" --ed-key-file "$PRIVATE_KEY" -p "$DMG_FILE" 2>/dev/null)
-    else
-        # 如果没有私钥文件，尝试从 Keychain 读取（Sparkle 2.8.0+）
-        echo -e "${BLUE}📦 从 Keychain 读取密钥...${NC}"
-        SIGN_ERROR=$("$SIGN_UPDATE_TOOL" "$DMG_FILE" 2>&1 >/dev/null)
-        SIGNATURE=$("$SIGN_UPDATE_TOOL" -p "$DMG_FILE" 2>/dev/null)
-    fi
-    
+    # 使用唯一来源 seed 进行签名与打印
+    SIGN_ERROR=$("$SIGN_UPDATE_TOOL" --ed-key-file "$SEED_KEY_FILE" "$DMG_FILE" 2>&1 >/dev/null) || true
+    SIGNATURE=$("$SIGN_UPDATE_TOOL" --ed-key-file "$SEED_KEY_FILE" -p "$DMG_FILE" 2>/dev/null || true)
+ 
     if [ $? -ne 0 ] || [ -z "$SIGNATURE" ]; then
         echo -e "${RED}❌ 签名失败: $SIGN_ERROR${NC}"
         exit 1
