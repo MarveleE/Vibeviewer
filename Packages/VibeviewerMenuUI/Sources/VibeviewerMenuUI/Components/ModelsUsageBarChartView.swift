@@ -8,22 +8,23 @@ struct ModelsUsageBarChartView: View {
     
     @State private var selectedDate: String?
     
-    // 模型名称到颜色的映射（基于 Cursor Dashboard 的颜色方案）
-    private let modelColorMap: [String: Color] = [
-        "gpt-5": Color(red: 0/255, green: 92/255, blue: 66/255),
-        "claude-4.5-sonnet": Color(red: 31/255, green: 138/255, blue: 101/255),
-        "composer-1": Color(red: 150/255, green: 194/255, blue: 172/255),
-        "gpt-5-high": Color(red: 60/255, green: 124/255, blue: 171/255),
-        "claude-4.5-haiku": Color(red: 5/255, green: 81/255, blue: 128/255),
-        "grok-code-fast-1": Color(red: 219/255, green: 112/255, blue: 75/255),
-        "claude-4.5-sonnet-thinking": Color(red: 163/255, green: 57/255, blue: 0/255),
-        "claude-4-sonnet": Color(red: 252/255, green: 212/255, blue: 199/255),
-        "Other": Color(red: 208/255, green: 107/255, blue: 166/255)
+    // 基于“模型前缀 → 基础色”的分组映射，整体采用墨绿色系的相近色
+    // 这里的颜色是几种不同明度/偏色的墨绿色，方便同一前缀下做细微区分
+    private let mossGreenPalette: [Color] = [
+        Color(red: 0/255, green: 92/255, blue: 66/255),   // 深墨绿
+        Color(red: 24/255, green: 120/255, blue: 88/255), // 偏亮墨绿
+        Color(red: 16/255, green: 104/255, blue: 80/255), // 略偏蓝的墨绿
+        Color(red: 40/255, green: 132/255, blue: 96/255), // 柔和一点的墨绿
+        Color(red: 6/255, green: 76/255, blue: 60/255)    // 更深一点的墨绿
     ]
     
-    // 默认颜色数组，用于未映射的模型
-    private let defaultColors: [Color] = [
-        .blue, .orange, .green, .purple, .pink, .cyan, .indigo, .mint
+    /// 不同模型前缀对应的基础 palette 偏移量（同一前缀颜色更接近）
+    private let modelPrefixOffsets: [String: Int] = [
+        "gpt-": 0,
+        "claude-": 1,
+        "composer-": 2,
+        "grok-": 3,
+        "Other": 4
     ]
     
     var body: some View {
@@ -78,6 +79,8 @@ struct ModelsUsageBarChartView: View {
                     }
             }
         }
+        // 确保 X 轴始终展示所有日期标签（即使某些日期没有数据）
+        .chartXScale(domain: data.dataPoints.map { $0.dateLabel })
         .chartXSelection(value: $selectedDate)
         .chartYAxis {
             AxisMarks(position: .leading) { value in
@@ -117,15 +120,22 @@ struct ModelsUsageBarChartView: View {
     }
     
     private func colorForModel(_ modelName: String) -> Color {
-        // 优先使用预定义的模型颜色映射
-        if let color = modelColorMap[modelName] {
-            return color
-        }
+        // 1. 根据模型名前缀找到对应的基础偏移量
+        let prefixOffset: Int = {
+            for (prefix, offset) in modelPrefixOffsets {
+                if modelName.hasPrefix(prefix) {
+                    return offset
+                }
+            }
+            // 没有匹配到已知前缀时，统一归为 "Other" 分组
+            return modelPrefixOffsets["Other"] ?? 0
+        }()
         
-        // 如果没有映射，使用哈希值从默认颜色数组中选择，确保相同模型总是使用相同颜色
+        // 2. 使用模型名的哈希生成一个稳定的索引，叠加前缀偏移，让同一前缀的颜色彼此相近
         let hash = abs(modelName.hashValue)
-        let colorIndex = hash % defaultColors.count
-        return defaultColors[colorIndex]
+        let index = (prefixOffset + hash) % mossGreenPalette.count
+        
+        return mossGreenPalette[index]
     }
     
     private func shouldDimBar(for dateLabel: String) -> Bool {

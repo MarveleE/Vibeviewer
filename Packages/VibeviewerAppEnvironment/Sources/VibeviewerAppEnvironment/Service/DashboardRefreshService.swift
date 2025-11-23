@@ -108,18 +108,21 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
                 page: 1,
                 cookieHeader: creds.cookieHeader
             )
-            async let modelsUsageChart = try? await self.api.fetchModelsAnalytics(
-                startDate: self.modelsAnalyticsDateRange().start,
-                endDate: self.modelsAnalyticsDateRange().end,
-                c: creds.workosId,
-                cookieHeader: creds.cookieHeader
-            )
             async let billingCycleMs = try? await self.api.fetchCurrentBillingCycleMs(
                 cookieHeader: creds.cookieHeader
             )
 
             // 等待 usageSummary，用于判断账号类型
             let usageSummaryValue = try await usageSummary
+            
+            // Pro 用户使用 filtered usage events 获取图表数据（700 条）
+            // Team/Enterprise 用户使用 models analytics API
+            let modelsUsageChart = try? await self.fetchModelsUsageChartForUser(
+                usageSummary: usageSummaryValue,
+                creds: creds,
+                analyticsStartMs: analyticsStartMs,
+                analyticsEndMs: analyticsEndMs
+            )
             
             // 获取计费周期（毫秒时间戳格式）
             let billingCycleValue = await billingCycleMs
@@ -183,9 +186,8 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
             self.session.snapshot = overview
             try? await self.storage.saveDashboardSnapshot(overview)
 
-            // 等待并合并历史事件和模型使用量图表数据
+            // 等待并合并历史事件数据
             let historyValue = try await history
-            let modelsUsageChartValue = await modelsUsageChart
             let (reqToday, reqYesterday) = self.splitTodayAndYesterdayCounts(from: historyValue.events)
             let merged = DashboardSnapshot(
                 email: overview.email,
@@ -197,7 +199,7 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
                 requestYestoday: reqYesterday,
                 usageSummary: usageSummaryValue,
                 freeUsageCents: overview.freeUsageCents,
-                modelsUsageChart: modelsUsageChartValue,
+                modelsUsageChart: modelsUsageChart,
                 modelsUsageSummary: modelsUsageSummary,
                 billingCycleStartMs: billingCycleValue?.startDateMs,
                 billingCycleEndMs: billingCycleValue?.endDateMs
@@ -248,6 +250,35 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
     private func modelsAnalyticsDateRange() -> (start: String, end: String) {
         let days = self.settings.analyticsDataDays
         return VibeviewerCore.DateUtils.daysAgoToTodayRange(days: days)
+    }
+    
+    /// 根据账号类型获取模型使用量图表数据
+    /// - Pro 用户：使用 filtered usage events（700 条）
+    /// - Team/Enterprise 用户：使用 models analytics API
+    private func fetchModelsUsageChartForUser(
+        usageSummary: VibeviewerModel.UsageSummary,
+        creds: Credentials,
+        analyticsStartMs: String,
+        analyticsEndMs: String
+    ) async throws -> VibeviewerModel.ModelsUsageChartData {
+        // Pro 系列账号使用 filtered usage events
+        if usageSummary.membershipType.isProSeries {
+            return try await self.api.fetchModelsUsageChartFromEvents(
+                startDateMs: analyticsStartMs,
+                endDateMs: analyticsEndMs,
+                userId: creds.userId,
+                cookieHeader: creds.cookieHeader
+            )
+        } else {
+            // Team/Enterprise 用户使用 models analytics API
+            let dateRange = self.modelsAnalyticsDateRange()
+            return try await self.api.fetchModelsAnalytics(
+                startDate: dateRange.start,
+                endDate: dateRange.end,
+                c: creds.workosId,
+                cookieHeader: creds.cookieHeader
+            )
+        }
     }
 }
 

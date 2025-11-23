@@ -53,35 +53,35 @@ public struct MenuPopoverView: View {
                         onRetry: { manualRefresh() }
                     )
                 } else {
-                let isProSeriesUser = snapshot.usageSummary?.membershipType.isProSeries == true
+                    let isProSeriesUser = snapshot.usageSummary?.membershipType.isProSeries == true
 
-                if !isProSeriesUser {
-                    MetricsView(metric: .billing(snapshot.billingMetrics))
+                    if !isProSeriesUser {
+                        MetricsView(metric: .billing(snapshot.billingMetrics))
 
-                    if let free = snapshot.freeUsageMetrics {
-                        MetricsView(metric: .free(free))
+                        if let free = snapshot.freeUsageMetrics {
+                            MetricsView(metric: .free(free))
+                        }
+
+                        if let onDemandMetrics = snapshot.onDemandMetrics {
+                            MetricsView(metric: .onDemand(onDemandMetrics))
+                        }
+                        
+                        Divider().opacity(0.5)
                     }
 
-                    if let onDemandMetrics = snapshot.onDemandMetrics {
-                        MetricsView(metric: .onDemand(onDemandMetrics))
+                    UsageEventView(events: self.session.snapshot?.usageEvents ?? [])
+                    
+                    if let modelsUsageChart = self.session.snapshot?.modelsUsageChart {
+                        Divider().opacity(0.5)
+                        
+                        ModelsUsageBarChartView(data: modelsUsageChart)
                     }
+
+                    Divider().opacity(0.5)
+
+                    TotalCreditsUsageView(snapshot: snapshot)
                     
                     Divider().opacity(0.5)
-                }
-
-                UsageEventView(events: self.session.snapshot?.usageEvents ?? [])
-                
-                if let modelsUsageChart = self.session.snapshot?.modelsUsageChart {
-                    Divider().opacity(0.5)
-                    
-                    ModelsUsageBarChartView(data: modelsUsageChart)
-                }
-
-                Divider().opacity(0.5)
-
-                TotalCreditsUsageView(snapshot: snapshot)
-                
-                Divider().opacity(0.5)
 
                     MenuFooterView(onRefresh: {
                         manualRefresh()

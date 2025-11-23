@@ -105,13 +105,15 @@ public enum DateUtils {
     
     /// 计算从指定天数前到今天的时间范围（用于 API 日期参数）
     /// 使用 UTC 时区确保日期一致性
+    /// 返回从 n 天前到今天（包括今天）的日期范围
     public static func daysAgoToTodayRange(days: Int, from now: Date = Date(), calendar: Calendar = .current) -> (start: String, end: String) {
         // 使用 UTC 时区来计算日期，确保与 dateString 方法一致
         var utcCalendar = Calendar(identifier: .gregorian)
         utcCalendar.timeZone = TimeZone(secondsFromGMT: 0)!
         
         let startOfToday = utcCalendar.startOfDay(for: now)
-        let startOfNDaysAgo = utcCalendar.date(byAdding: .day, value: -days, to: startOfToday) ?? now
+        // 从 (days-1) 天前开始，这样包括今天一共是 days 天
+        let startOfNDaysAgo = utcCalendar.date(byAdding: .day, value: -(days - 1), to: startOfToday) ?? now
         return (dateString(from: startOfNDaysAgo, calendar: utcCalendar), dateString(from: startOfToday, calendar: utcCalendar))
     }
 }

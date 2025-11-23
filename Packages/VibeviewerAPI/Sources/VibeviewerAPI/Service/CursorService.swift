@@ -60,6 +60,19 @@ public protocol CursorService {
     /// - Parameter cookieHeader: Cookie 头
     /// - Returns: (startDateMs: String, endDateMs: String) 毫秒时间戳字符串
     func fetchCurrentBillingCycleMs(cookieHeader: String) async throws -> (startDateMs: String, endDateMs: String)
+    /// 通过 Filtered Usage Events 获取模型使用量图表数据（Pro 用户替代方案）
+    /// - Parameters:
+    ///   - startDateMs: 开始日期（毫秒时间戳）
+    ///   - endDateMs: 结束日期（毫秒时间戳）
+    ///   - userId: 用户 ID
+    ///   - cookieHeader: Cookie 头
+    /// - Returns: 模型使用量图表数据
+    func fetchModelsUsageChartFromEvents(
+        startDateMs: String,
+        endDateMs: String,
+        userId: Int,
+        cookieHeader: String
+    ) async throws -> VibeviewerModel.ModelsUsageChartData
 }
 
 public struct DefaultCursorService: CursorService {
@@ -286,6 +299,48 @@ public struct DefaultCursorService: CursorService {
         return (startDateMs: dto.startDateEpochMillis, endDateMs: dto.endDateEpochMillis)
     }
     
+    public func fetchModelsUsageChartFromEvents(
+        startDateMs: String,
+        endDateMs: String,
+        userId: Int,
+        cookieHeader: String
+    ) async throws -> VibeviewerModel.ModelsUsageChartData {
+        // 一次性获取 700 条数据（7 页，每页 100 条）
+        var allEvents: [VibeviewerModel.UsageEvent] = []
+        let maxPages = 7
+        
+        // 并发获取所有页面的数据
+        try await withThrowingTaskGroup(of: (page: Int, history: VibeviewerModel.FilteredUsageHistory).self) { group in
+            for page in 1...maxPages {
+                group.addTask {
+                    let history = try await self.fetchFilteredUsageEvents(
+                        startDateMs: startDateMs,
+                        endDateMs: endDateMs,
+                        userId: userId,
+                        page: page,
+                        cookieHeader: cookieHeader
+                    )
+                    return (page: page, history: history)
+                }
+            }
+            
+            // 收集所有结果并按页码排序
+            var results: [(page: Int, history: VibeviewerModel.FilteredUsageHistory)] = []
+            for try await result in group {
+                results.append(result)
+            }
+            results.sort { $0.page < $1.page }
+            
+            // 合并所有事件
+            for result in results {
+                allEvents.append(contentsOf: result.history.events)
+            }
+        }
+        
+        // 转换为 ModelsUsageChartData
+        return convertEventsToModelsUsageChart(events: allEvents, startDateMs: startDateMs, endDateMs: endDateMs)
+    }
+    
     /// 映射当前计费周期 DTO 到领域模型
     private func mapToBillingCycle(_ dto: CursorCurrentBillingCycleResponse) -> VibeviewerModel.BillingCycle {
         let startDate = Date.fromMillisecondsString(dto.startDateEpochMillis) ?? Date()
@@ -321,11 +376,15 @@ public struct DefaultCursorService: CursorService {
     
     /// 映射模型分析 DTO 到业务层柱状图数据
     private func mapToModelsUsageChartData(_ dto: CursorTeamModelsAnalyticsResponse) -> VibeviewerModel.ModelsUsageChartData {
-        let dataPoints = dto.data.map { item -> VibeviewerModel.ModelsUsageChartData.DataPoint in
-            // 将日期从 YYYY-MM-DD 格式转换为 MM/dd 格式的标签
+        let formatter = DateFormatter()
+        formatter.locale = .current
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        // 将 DTO 数据转换为字典，方便查找
+        var dataDict: [String: VibeviewerModel.ModelsUsageChartData.DataPoint] = [:]
+        for item in dto.data {
             let dateLabel = formatDateLabelForChart(from: item.date)
-            
-            // 将模型使用量字典转换为数组，按请求数降序排序
             let modelUsages = item.modelBreakdown
                 .map { (modelName, stats) in
                     VibeviewerModel.ModelsUsageChartData.ModelUsage(
@@ -333,21 +392,50 @@ public struct DefaultCursorService: CursorService {
                         requests: Int(stats.requests)
                     )
                 }
-                .sorted { $0.requests > $1.requests } // 按请求数降序排序
+                .sorted { $0.requests > $1.requests }
             
-            return VibeviewerModel.ModelsUsageChartData.DataPoint(
+            dataDict[item.date] = VibeviewerModel.ModelsUsageChartData.DataPoint(
                 date: item.date,
                 dateLabel: dateLabel,
                 modelUsages: modelUsages
             )
         }
+        
+        // 生成最近7天的日期范围
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        var allDates: [Date] = []
+        
+        for i in (0..<7).reversed() {
+            if let date = calendar.date(byAdding: .day, value: -i, to: today) {
+                allDates.append(date)
+            }
+        }
+        
+        // 补足缺失的日期
+        let dataPoints = allDates.map { date -> VibeviewerModel.ModelsUsageChartData.DataPoint in
+            let dateString = formatter.string(from: date)
+            
+            // 如果该日期有数据，使用现有数据；否则创建空数据点
+            if let existingData = dataDict[dateString] {
+                return existingData
+            } else {
+                let dateLabel = formatDateLabelForChart(from: dateString)
+                return VibeviewerModel.ModelsUsageChartData.DataPoint(
+                    date: dateString,
+                    dateLabel: dateLabel,
+                    modelUsages: []
+                )
+            }
+        }
+        
         return VibeviewerModel.ModelsUsageChartData(dataPoints: dataPoints)
     }
     
     /// 将 YYYY-MM-DD 格式的日期字符串转换为 MM/dd 格式的图表标签
     private func formatDateLabelForChart(from dateString: String) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.locale = .current
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.dateFormat = "yyyy-MM-dd"
         
@@ -356,10 +444,107 @@ public struct DefaultCursorService: CursorService {
         }
         
         let labelFormatter = DateFormatter()
-        labelFormatter.locale = Locale(identifier: "en_US_POSIX")
+        labelFormatter.locale = .current
         labelFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         labelFormatter.dateFormat = "MM/dd"
         return labelFormatter.string(from: date)
+    }
+    
+    /// 将使用事件列表转换为模型使用量图表数据
+    /// - Parameters:
+    ///   - events: 使用事件列表
+    ///   - startDateMs: 开始日期（毫秒时间戳）
+    ///   - endDateMs: 结束日期（毫秒时间戳）
+    /// - Returns: 模型使用量图表数据（确保至少7天）
+    private func convertEventsToModelsUsageChart(
+        events: [VibeviewerModel.UsageEvent],
+        startDateMs: String,
+        endDateMs: String
+    ) -> VibeviewerModel.ModelsUsageChartData {
+        let formatter = DateFormatter()
+        formatter.locale = .current
+        // 使用本地时区按“自然日”分组，避免凌晨时段被算到前一天（UTC）里
+        formatter.timeZone = .current
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        // 解析开始和结束日期
+        guard let startMs = Int64(startDateMs),
+              let endMs = Int64(endDateMs) else {
+            return VibeviewerModel.ModelsUsageChartData(dataPoints: [])
+        }
+        
+        let startDate = Date(timeIntervalSince1970: TimeInterval(startMs) / 1000.0)
+        let endDate = Date(timeIntervalSince1970: TimeInterval(endMs) / 1000.0)
+        let calendar = Calendar.current
+        
+        // 生成日期范围内的所有日期
+        var allDates: [Date] = []
+        var currentDate = startDate
+        
+        while currentDate <= endDate {
+            allDates.append(currentDate)
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else { break }
+            currentDate = nextDate
+        }
+        
+        // 如果数据不足7天，从今天往前补足7天
+        if allDates.count < 7 {
+            let today = calendar.startOfDay(for: Date())
+            allDates = []
+            for i in (0..<7).reversed() {
+                if let date = calendar.date(byAdding: .day, value: -i, to: today) {
+                    allDates.append(date)
+                }
+            }
+        }
+        
+        // 按日期分组统计每个模型的请求次数
+        // dateString -> modelName -> requestCount
+        var dateModelStats: [String: [String: Int]] = [:]
+        
+        // 初始化所有日期
+        for date in allDates {
+            let dateString = formatter.string(from: date)
+            dateModelStats[dateString] = [:]
+        }
+        
+        // 统计事件
+        for event in events {
+            guard let eventMs = Int64(event.occurredAtMs) else { continue }
+            let eventDate = Date(timeIntervalSince1970: TimeInterval(eventMs) / 1000.0)
+            let dateString = formatter.string(from: eventDate)
+            
+            // 如果日期在范围内，统计
+            if dateModelStats[dateString] != nil {
+                let modelName = event.modelName
+                let currentCount = dateModelStats[dateString]?[modelName] ?? 0
+                dateModelStats[dateString]?[modelName] = currentCount + event.requestCostCount
+            }
+        }
+        
+        // 转换为 DataPoint 数组
+        let dataPoints = allDates.map { date -> VibeviewerModel.ModelsUsageChartData.DataPoint in
+            let dateString = formatter.string(from: date)
+            let dateLabel = formatDateLabelForChart(from: dateString)
+            
+            let modelStats = dateModelStats[dateString] ?? [:]
+            let modelUsages = modelStats
+                .map { (modelName, requests) in
+                    VibeviewerModel.ModelsUsageChartData.ModelUsage(
+                        modelName: modelName,
+                        requests: requests
+                    )
+                }
+                .sorted { $0.requests > $1.requests } // 按请求数降序排序
+            
+            return VibeviewerModel.ModelsUsageChartData.DataPoint(
+                date: dateString,
+                dateLabel: dateLabel,
+                modelUsages: modelUsages
+            )
+        }
+        
+        return VibeviewerModel.ModelsUsageChartData(dataPoints: dataPoints)
     }
 
 }
