@@ -253,32 +253,36 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
     }
     
     /// 根据账号类型获取模型使用量图表数据
-    /// - Pro 用户：使用 filtered usage events（700 条）
-    /// - Team/Enterprise 用户：使用 models analytics API
+    /// - 非 Team 账号（Pro / Pro+ / Ultra / Free 等）：使用 filtered usage events（700 条）
+    /// - Team Plan 账号：使用 models analytics API（/api/v2/analytics/team/models）
     private func fetchModelsUsageChartForUser(
         usageSummary: VibeviewerModel.UsageSummary,
         creds: Credentials,
         analyticsStartMs: String,
         analyticsEndMs: String
     ) async throws -> VibeviewerModel.ModelsUsageChartData {
-        // Pro 系列账号使用 filtered usage events
-        if usageSummary.membershipType.isProSeries {
+        // 仅 Team Plan 账号调用 team analytics 接口：
+        // - 后端使用 membershipType = .enterprise + isEnterpriseUser = false 表示 Team Plan
+        let isTeamPlanAccount = (usageSummary.membershipType == .enterprise && creds.isEnterpriseUser == false)
+        
+        // 非 Team 账号一律使用 filtered usage events，避免误调 /api/v2/analytics/team/ 系列接口
+        guard isTeamPlanAccount else {
             return try await self.api.fetchModelsUsageChartFromEvents(
                 startDateMs: analyticsStartMs,
                 endDateMs: analyticsEndMs,
                 userId: creds.userId,
                 cookieHeader: creds.cookieHeader
             )
-        } else {
-            // Team/Enterprise 用户使用 models analytics API
-            let dateRange = self.modelsAnalyticsDateRange()
-            return try await self.api.fetchModelsAnalytics(
-                startDate: dateRange.start,
-                endDate: dateRange.end,
-                c: creds.workosId,
-                cookieHeader: creds.cookieHeader
-            )
         }
+        
+        // Team Plan 用户使用 models analytics API
+        let dateRange = self.modelsAnalyticsDateRange()
+        return try await self.api.fetchModelsAnalytics(
+            startDate: dateRange.start,
+            endDate: dateRange.end,
+            c: creds.workosId,
+            cookieHeader: creds.cookieHeader
+        )
     }
 }
 
