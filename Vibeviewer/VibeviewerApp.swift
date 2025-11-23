@@ -26,6 +26,7 @@ struct VibeviewerApp: App {
         snapshot: DefaultCursorStorageService.loadDashboardSnapshotSync()
     )
     @State private var refresher: any DashboardRefreshService = NoopDashboardRefreshService()
+    @State private var loginService: any LoginService = NoopLoginService()
     @State private var updateService: any UpdateService = NoopUpdateService()
 
     var body: some Scene {
@@ -36,6 +37,7 @@ struct VibeviewerApp: App {
                 .environment(\.loginWindowManager, LoginWindowManager.shared)
                 .environment(\.settingsWindowManager, SettingsWindowManager.shared)
                 .environment(\.dashboardRefreshService, self.refresher)
+                .environment(\.loginService, self.loginService)
                 .environment(\.launchAtLoginService, DefaultLaunchAtLoginService())
                 .environment(\.updateService, self.updateService)
                 .environment(self.settings)
@@ -77,9 +79,12 @@ struct VibeviewerApp: App {
     }
 
     private func setupDashboardRefreshService() async {
+        let api = DefaultCursorService()
+        let storage = DefaultCursorStorageService()
+        
         let dashboardRefreshSvc = DefaultDashboardRefreshService(
-            api: DefaultCursorService(),
-            storage: DefaultCursorStorageService(),
+            api: api,
+            storage: storage,
             settings: self.settings,
             session: self.session
         )
@@ -89,6 +94,15 @@ struct VibeviewerApp: App {
             screenPowerService: screenPowerSvc
         )
         self.refresher = powerAwareSvc
+        
+        // 创建登录服务，依赖刷新服务
+        self.loginService = DefaultLoginService(
+            api: api,
+            storage: storage,
+            refresher: self.refresher,
+            session: self.session
+        )
+        
         await self.refresher.start()
     }
 }

@@ -222,11 +222,13 @@ public struct SettingsView: View {
         // 停止刷新服务
         refresher.stop()
         
-        // 清空存储的凭据
+        // 清空存储的凭据与当前仪表盘快照，使应用回到需要登录的状态
         await storage.clearCredentials()
+        await storage.clearDashboardSnapshot()
         
-        // 重置内存中的凭据
+        // 重置内存中的会话数据
         session.credentials = nil
+        session.snapshot = nil
         
         // 关闭设置窗口
         NSApplication.shared.keyWindow?.close()

@@ -9,6 +9,8 @@ struct MenuFooterView: View {
     @Environment(\.settingsWindowManager) private var settingsWindow
     @Environment(AppSession.self) private var session
     
+    let onRefresh: () -> Void
+    
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             Button {
@@ -31,9 +33,7 @@ struct MenuFooterView: View {
             Spacer()
 
             Button {
-                Task {  
-                    await refresher.refreshNow()
-                }
+                onRefresh()
             } label: {
                 HStack(spacing: 4) {
                     if refresher.isRefreshing {
