@@ -97,7 +97,7 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
             // 计算时间范围
             let (analyticsStartMs, analyticsEndMs) = self.analyticsDateRangeMs()
             
-            // 使用 async let 并发发起所有三个独立的 API 请求
+            // 使用 async let 并发发起所有独立的 API 请求
             async let usageSummary = try await self.api.fetchUsageSummary(
                 cookieHeader: creds.cookieHeader
             )
@@ -114,9 +114,15 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
                 c: creds.workosId,
                 cookieHeader: creds.cookieHeader
             )
+            async let billingCycleMs = try? await self.api.fetchCurrentBillingCycleMs(
+                cookieHeader: creds.cookieHeader
+            )
 
-            // 等待 usageSummary，用于判断 Team Plan
+            // 等待 usageSummary，用于判断账号类型
             let usageSummaryValue = try await usageSummary
+            
+            // 获取计费周期（毫秒时间戳格式）
+            let billingCycleValue = await billingCycleMs
             
             // totalRequestsAllModels 将基于使用事件计算，而非API返回的请求数据
             let totalAll = 0 // 暂时设为0，后续通过使用事件更新
@@ -135,6 +141,28 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
                 return 0
             }
             let freeCents = await computeFreeCents()
+            
+            // 获取聚合使用事件（仅限 Pro 系列账号，非 Team）
+            func fetchModelsUsageSummaryIfNeeded(billingCycleStartMs: String) async -> VibeviewerModel.ModelsUsageSummary? {
+                // 仅 Pro 系列账号才获取（Pro / Pro+ / Ultra，非 Team / Enterprise）
+                let isProAccount = usageSummaryValue.membershipType.isProSeries
+                guard isProAccount else { return nil }
+                
+                // 使用账单周期的开始时间（毫秒时间戳）
+                let startDateMs = Int64(billingCycleStartMs) ?? 0
+                
+                let aggregated = try? await self.api.fetchAggregatedUsageEvents(
+                    teamId: -1,
+                    startDate: startDateMs,
+                    cookieHeader: creds.cookieHeader
+                )
+                
+                return aggregated.map { VibeviewerModel.ModelsUsageSummary(from: $0) }
+            }
+            var modelsUsageSummary: VibeviewerModel.ModelsUsageSummary? = nil
+            if let billingCycleStartMs = billingCycleValue?.startDateMs {
+                modelsUsageSummary = await fetchModelsUsageSummaryIfNeeded(billingCycleStartMs: billingCycleStartMs)
+            }
 
             // 先更新一次概览（使用旧历史事件），提升 UI 及时性
             let overview = DashboardSnapshot(
@@ -147,7 +175,10 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
                 requestYestoday: current?.requestYestoday ?? 0,
                 usageSummary: usageSummaryValue,
                 freeUsageCents: freeCents,
-                modelsUsageChart: current?.modelsUsageChart
+                modelsUsageChart: current?.modelsUsageChart,
+                modelsUsageSummary: modelsUsageSummary,
+                billingCycleStartMs: billingCycleValue?.startDateMs,
+                billingCycleEndMs: billingCycleValue?.endDateMs
             )
             self.session.snapshot = overview
             try? await self.storage.saveDashboardSnapshot(overview)
@@ -166,7 +197,10 @@ public final class DefaultDashboardRefreshService: DashboardRefreshService {
                 requestYestoday: reqYesterday,
                 usageSummary: usageSummaryValue,
                 freeUsageCents: overview.freeUsageCents,
-                modelsUsageChart: modelsUsageChartValue
+                modelsUsageChart: modelsUsageChartValue,
+                modelsUsageSummary: modelsUsageSummary,
+                billingCycleStartMs: billingCycleValue?.startDateMs,
+                billingCycleEndMs: billingCycleValue?.endDateMs
             )
             self.session.snapshot = merged
             try? await self.storage.saveDashboardSnapshot(merged)

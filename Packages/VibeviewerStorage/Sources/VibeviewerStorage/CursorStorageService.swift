@@ -17,6 +17,11 @@ public protocol CursorStorageService: Sendable {
     func saveSettings(_ settings: AppSettings) async throws
     func loadSettings() async -> AppSettings
     
+    // Billing Cycle
+    func saveBillingCycle(startDateMs: String, endDateMs: String) async throws
+    func loadBillingCycle() async -> (startDateMs: String, endDateMs: String)?
+    func clearBillingCycle() async
+    
     // AppSession Management
     func clearAppSession() async
 }

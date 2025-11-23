@@ -42,21 +42,21 @@ public struct MenuPopoverView: View {
             }
 
             if let snapshot = self.session.snapshot {
-                MetricsView(metric: .billing(snapshot.billingMetrics))
+                let isProSeriesUser = snapshot.usageSummary?.membershipType.isProSeries == true
 
-                if let free = snapshot.freeUsageMetrics {
-                    MetricsView(metric: .free(free))
+                if !isProSeriesUser {
+                    MetricsView(metric: .billing(snapshot.billingMetrics))
+
+                    if let free = snapshot.freeUsageMetrics {
+                        MetricsView(metric: .free(free))
+                    }
+
+                    if let onDemandMetrics = snapshot.onDemandMetrics {
+                        MetricsView(metric: .onDemand(onDemandMetrics))
+                    }
+                    
+                    Divider().opacity(0.5)
                 }
-
-                if let onDemandMetrics = snapshot.onDemandMetrics {
-                    MetricsView(metric: .onDemand(onDemandMetrics))
-                }
-
-                // Divider().opacity(0.5)
-                
-                // RequestsCompareView(requestToday: self.session.snapshot?.requestToday ?? 0, requestYestoday: self.session.snapshot?.requestYestoday ?? 0)
-                
-                Divider().opacity(0.5)
 
                 UsageEventView(events: self.session.snapshot?.usageEvents ?? [])
                 
@@ -68,7 +68,7 @@ public struct MenuPopoverView: View {
 
                 Divider().opacity(0.5)
 
-                totalCreditsUsageView
+                TotalCreditsUsageView(snapshot: snapshot)
                 
                 Divider().opacity(0.5)
 
@@ -108,21 +108,6 @@ public struct MenuPopoverView: View {
         }
         .buttonStyle(.vibe(.primary))
         .maxFrame(true, false)
-    }
-
-    private var totalCreditsUsageView: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Total Credits Usage")
-                .font(.app(.satoshiRegular, size: 12))
-                .foregroundStyle(.secondary)
-
-            Text(session.snapshot?.totalUsageCents.dollarStringFromCents ?? "0")
-                .font(.app(.satoshiBold, size: 16))
-                .foregroundStyle(.primary)
-                .contentTransition(.numericText())
-                
-        }
-        .maxFrame(true, false, alignment: .leading)
     }
 
     private func openDashboard() {

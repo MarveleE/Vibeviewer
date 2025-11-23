@@ -9,6 +9,16 @@ public enum MembershipType: String, Sendable, Equatable, Codable {
     case ultra = "ultra"
     case free = "free"
     
+    /// 是否为 Pro 系列账号（Pro / Pro+ / Ultra）
+    public var isProSeries: Bool {
+        switch self {
+        case .pro, .proPlus, .ultra:
+            return true
+        default:
+            return false
+        }
+    }
+    
     /// 获取会员类型的显示名称
     /// - Parameters:
     ///   - subscriptionStatus: 订阅状态

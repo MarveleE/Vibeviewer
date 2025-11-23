@@ -1,6 +1,7 @@
 import Foundation
 import Moya
 import VibeviewerModel
+import VibeviewerCore
 
 public enum CursorServiceError: Error {
     case sessionExpired
@@ -42,6 +43,23 @@ public protocol CursorService {
         c: String,
         cookieHeader: String
     ) async throws -> VibeviewerModel.ModelsUsageChartData
+    /// 获取聚合使用事件（仅限 Pro 账号，非 Team 账号）
+    /// - Parameters:
+    ///   - teamId: 团队 ID，Pro 账号传 nil
+    ///   - startDate: 开始日期（毫秒时间戳）
+    ///   - cookieHeader: Cookie 头
+    func fetchAggregatedUsageEvents(
+        teamId: Int?,
+        startDate: Int64,
+        cookieHeader: String
+    ) async throws -> VibeviewerModel.AggregatedUsageEvents
+    /// 获取当前计费周期
+    /// - Parameter cookieHeader: Cookie 头
+    func fetchCurrentBillingCycle(cookieHeader: String) async throws -> VibeviewerModel.BillingCycle
+    /// 获取当前计费周期（返回原始毫秒时间戳字符串）
+    /// - Parameter cookieHeader: Cookie 头
+    /// - Returns: (startDateMs: String, endDateMs: String) 毫秒时间戳字符串
+    func fetchCurrentBillingCycleMs(cookieHeader: String) async throws -> (startDateMs: String, endDateMs: String)
 }
 
 public struct DefaultCursorService: CursorService {
@@ -237,6 +255,68 @@ public struct DefaultCursorService: CursorService {
             )
         )
         return mapToModelsUsageChartData(dto)
+    }
+    
+    public func fetchAggregatedUsageEvents(
+        teamId: Int?,
+        startDate: Int64,
+        cookieHeader: String
+    ) async throws -> VibeviewerModel.AggregatedUsageEvents {
+        let dto: CursorAggregatedUsageEventsResponse = try await self.performRequest(
+            CursorAggregatedUsageEventsAPI(
+                teamId: teamId,
+                startDate: startDate,
+                cookieHeader: cookieHeader
+            )
+        )
+        return mapToAggregatedUsageEvents(dto)
+    }
+    
+    public func fetchCurrentBillingCycle(cookieHeader: String) async throws -> VibeviewerModel.BillingCycle {
+        let dto: CursorCurrentBillingCycleResponse = try await self.performRequest(
+            CursorCurrentBillingCycleAPI(cookieHeader: cookieHeader)
+        )
+        return mapToBillingCycle(dto)
+    }
+    
+    public func fetchCurrentBillingCycleMs(cookieHeader: String) async throws -> (startDateMs: String, endDateMs: String) {
+        let dto: CursorCurrentBillingCycleResponse = try await self.performRequest(
+            CursorCurrentBillingCycleAPI(cookieHeader: cookieHeader)
+        )
+        return (startDateMs: dto.startDateEpochMillis, endDateMs: dto.endDateEpochMillis)
+    }
+    
+    /// 映射当前计费周期 DTO 到领域模型
+    private func mapToBillingCycle(_ dto: CursorCurrentBillingCycleResponse) -> VibeviewerModel.BillingCycle {
+        let startDate = Date.fromMillisecondsString(dto.startDateEpochMillis) ?? Date()
+        let endDate = Date.fromMillisecondsString(dto.endDateEpochMillis) ?? Date()
+        return VibeviewerModel.BillingCycle(
+            startDate: startDate,
+            endDate: endDate
+        )
+    }
+    
+    /// 映射聚合使用事件 DTO 到领域模型
+    private func mapToAggregatedUsageEvents(_ dto: CursorAggregatedUsageEventsResponse) -> VibeviewerModel.AggregatedUsageEvents {
+        let aggregations = dto.aggregations.map { agg in
+            VibeviewerModel.ModelAggregation(
+                modelIntent: agg.modelIntent,
+                inputTokens: Int(agg.inputTokens ?? "0") ?? 0,
+                outputTokens: Int(agg.outputTokens ?? "0") ?? 0,
+                cacheWriteTokens: Int(agg.cacheWriteTokens ?? "0") ?? 0,
+                cacheReadTokens: Int(agg.cacheReadTokens ?? "0") ?? 0,
+                totalCents: agg.totalCents
+            )
+        }
+        
+        return VibeviewerModel.AggregatedUsageEvents(
+            aggregations: aggregations,
+            totalInputTokens: Int(dto.totalInputTokens) ?? 0,
+            totalOutputTokens: Int(dto.totalOutputTokens) ?? 0,
+            totalCacheWriteTokens: Int(dto.totalCacheWriteTokens) ?? 0,
+            totalCacheReadTokens: Int(dto.totalCacheReadTokens) ?? 0,
+            totalCostCents: dto.totalCostCents
+        )
     }
     
     /// 映射模型分析 DTO 到业务层柱状图数据

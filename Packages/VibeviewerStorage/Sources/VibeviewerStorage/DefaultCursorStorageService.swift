@@ -5,6 +5,7 @@ public enum CursorStorageKeys {
     public static let credentials = "cursor.credentials.v1"
     public static let settings = "app.settings.v1"
     public static let dashboardSnapshot = "cursor.dashboard.snapshot.v1"
+    public static let billingCycle = "cursor.billing.cycle.v1"
 }
 
 public struct DefaultCursorStorageService: CursorStorageService, CursorStorageSyncHelpers {
@@ -60,6 +61,31 @@ public struct DefaultCursorStorageService: CursorStorageService, CursorStorageSy
             return decoded
         }
         return AppSettings()
+    }
+    
+    // MARK: - Billing Cycle
+    
+    public func saveBillingCycle(startDateMs: String, endDateMs: String) async throws {
+        let data: [String: String] = [
+            "startDateMs": startDateMs,
+            "endDateMs": endDateMs
+        ]
+        let jsonData = try JSONEncoder().encode(data)
+        self.defaults.set(jsonData, forKey: CursorStorageKeys.billingCycle)
+    }
+    
+    public func loadBillingCycle() async -> (startDateMs: String, endDateMs: String)? {
+        guard let data = self.defaults.data(forKey: CursorStorageKeys.billingCycle),
+              let dict = try? JSONDecoder().decode([String: String].self, from: data),
+              let startDateMs = dict["startDateMs"],
+              let endDateMs = dict["endDateMs"] else {
+            return nil
+        }
+        return (startDateMs: startDateMs, endDateMs: endDateMs)
+    }
+    
+    public func clearBillingCycle() async {
+        self.defaults.removeObject(forKey: CursorStorageKeys.billingCycle)
     }
     
     // MARK: - AppSession Management

@@ -22,6 +22,12 @@ public class DashboardSnapshot: Codable, Equatable {
     public let freeUsageCents: Int
     /// 模型使用量柱状图数据
     public let modelsUsageChart: ModelsUsageChartData?
+    /// 模型用量汇总信息（仅 Pro 账号，非 Team 账号）
+    public let modelsUsageSummary: ModelsUsageSummary?
+    /// 当前计费周期开始时间（毫秒时间戳字符串）
+    public let billingCycleStartMs: String?
+    /// 当前计费周期结束时间（毫秒时间戳字符串）
+    public let billingCycleEndMs: String?
 
     public init(
         email: String,
@@ -33,7 +39,10 @@ public class DashboardSnapshot: Codable, Equatable {
         requestYestoday: Int = 0,
         usageSummary: UsageSummary? = nil,
         freeUsageCents: Int = 0,
-        modelsUsageChart: ModelsUsageChartData? = nil
+        modelsUsageChart: ModelsUsageChartData? = nil,
+        modelsUsageSummary: ModelsUsageSummary? = nil,
+        billingCycleStartMs: String? = nil,
+        billingCycleEndMs: String? = nil
     ) {
         self.email = email
         self.totalRequestsAllModels = totalRequestsAllModels
@@ -45,6 +54,9 @@ public class DashboardSnapshot: Codable, Equatable {
         self.usageSummary = usageSummary
         self.freeUsageCents = freeUsageCents
         self.modelsUsageChart = modelsUsageChart
+        self.modelsUsageSummary = modelsUsageSummary
+        self.billingCycleStartMs = billingCycleStartMs
+        self.billingCycleEndMs = billingCycleEndMs
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -58,6 +70,9 @@ public class DashboardSnapshot: Codable, Equatable {
         case usageSummary
         case freeUsageCents
         case modelsUsageChart
+        case modelsUsageSummary
+        case billingCycleStartMs
+        case billingCycleEndMs
     }
 
     public required init(from decoder: Decoder) throws {
@@ -72,6 +87,9 @@ public class DashboardSnapshot: Codable, Equatable {
         self.usageSummary = try? container.decode(UsageSummary.self, forKey: .usageSummary)
         self.freeUsageCents = (try? container.decode(Int.self, forKey: .freeUsageCents)) ?? 0
         self.modelsUsageChart = try? container.decode(ModelsUsageChartData.self, forKey: .modelsUsageChart)
+        self.modelsUsageSummary = try? container.decode(ModelsUsageSummary.self, forKey: .modelsUsageSummary)
+        self.billingCycleStartMs = try? container.decode(String.self, forKey: .billingCycleStartMs)
+        self.billingCycleEndMs = try? container.decode(String.self, forKey: .billingCycleEndMs)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -92,6 +110,15 @@ public class DashboardSnapshot: Codable, Equatable {
         if let modelsUsageChart = self.modelsUsageChart {
             try container.encode(modelsUsageChart, forKey: .modelsUsageChart)
         }
+        if let modelsUsageSummary = self.modelsUsageSummary {
+            try container.encode(modelsUsageSummary, forKey: .modelsUsageSummary)
+        }
+        if let billingCycleStartMs = self.billingCycleStartMs {
+            try container.encode(billingCycleStartMs, forKey: .billingCycleStartMs)
+        }
+        if let billingCycleEndMs = self.billingCycleEndMs {
+            try container.encode(billingCycleEndMs, forKey: .billingCycleEndMs)
+        }
     }
 
     /// 计算 plan + onDemand 的总消耗金额（以分为单位）
@@ -106,6 +133,22 @@ public class DashboardSnapshot: Codable, Equatable {
         
         return planUsed + onDemandUsed + freeUsage
     }
+    
+    /// UI 展示用的总消耗金额（以分为单位）
+    /// - 对于 Pro 系列账号（pro / proPlus / ultra），如果存在 `modelsUsageSummary`，
+    ///   优先使用模型聚合总成本（基于 `ModelUsageInfo` 汇总）
+    /// - 其它情况则回退到 `totalUsageCents`
+    public var displayTotalUsageCents: Int {
+        if
+            let usageSummary,
+            let modelsUsageSummary,
+            usageSummary.membershipType.isProSeries
+        {
+            return Int(modelsUsageSummary.totalCostCents.rounded())
+        }
+        
+        return totalUsageCents
+    }
 
     public static func == (lhs: DashboardSnapshot, rhs: DashboardSnapshot) -> Bool {
         lhs.email == rhs.email &&
@@ -114,6 +157,9 @@ public class DashboardSnapshot: Codable, Equatable {
             lhs.hardLimitDollars == rhs.hardLimitDollars &&
             lhs.usageSummary == rhs.usageSummary &&
             lhs.freeUsageCents == rhs.freeUsageCents &&
-            lhs.modelsUsageChart == rhs.modelsUsageChart
+            lhs.modelsUsageChart == rhs.modelsUsageChart &&
+            lhs.modelsUsageSummary == rhs.modelsUsageSummary &&
+            lhs.billingCycleStartMs == rhs.billingCycleStartMs &&
+            lhs.billingCycleEndMs == rhs.billingCycleEndMs
     }
 }

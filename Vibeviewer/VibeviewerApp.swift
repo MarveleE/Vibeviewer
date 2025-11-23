@@ -66,15 +66,7 @@ struct VibeviewerApp: App {
                 .foregroundStyle(.primary)
             Text({
                 guard let snapshot = self.session.snapshot else { return "" }
-                
-                if let usageSummary = snapshot.usageSummary {
-                    let planUsed = usageSummary.individualUsage.plan.used
-                    let onDemandUsed = usageSummary.individualUsage.onDemand?.used ?? 0
-                    let totalUsageCents = planUsed + onDemandUsed
-                    return totalUsageCents.dollarStringFromCents
-                } else {
-                    return snapshot.spendingCents.dollarStringFromCents
-                }
+                return snapshot.displayTotalUsageCents.dollarStringFromCents
             }())
                 .font(.app(.satoshiBold, size: 15))
                 .foregroundColor(.primary)
