@@ -17,8 +17,9 @@ struct DashboardSummaryView: View {
                     
                     if let usageSummary = snapshot.usageSummary {
                         Text("Plan Usage: \(usageSummary.individualUsage.plan.used)/\(usageSummary.individualUsage.plan.limit)")
-                        if let onDemand = usageSummary.individualUsage.onDemand {
-                            Text("On-Demand Usage: \(onDemand.used)/\(onDemand.limit)")
+                        if let onDemand = usageSummary.individualUsage.onDemand,
+                           let limit = onDemand.limit {
+                            Text("On-Demand Usage: \(onDemand.used)/\(limit)")
                         }
                     }
                 }

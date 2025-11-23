@@ -63,13 +63,15 @@ struct CursorPlanBreakdown: Decodable, Sendable, Equatable {
 
 struct CursorOnDemandUsage: Decodable, Sendable, Equatable {
     let used: Int
-    let limit: Int
-    let remaining: Int
+    let limit: Int?
+    let remaining: Int?
+    let enabled: Bool
     
-    init(used: Int, limit: Int, remaining: Int) {
+    init(used: Int, limit: Int?, remaining: Int?, enabled: Bool) {
         self.used = used
         self.limit = limit
         self.remaining = remaining
+        self.enabled = enabled
     }
 }
 

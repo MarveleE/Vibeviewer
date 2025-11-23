@@ -63,13 +63,15 @@ public struct PlanBreakdown: Sendable, Equatable, Codable {
 
 public struct OnDemandUsage: Sendable, Equatable, Codable {
     public let used: Int
-    public let limit: Int
-    public let remaining: Int
+    public let limit: Int?
+    public let remaining: Int?
+    public let enabled: Bool
     
-    public init(used: Int, limit: Int, remaining: Int) {
+    public init(used: Int, limit: Int?, remaining: Int?, enabled: Bool) {
         self.used = used
         self.limit = limit
         self.remaining = remaining
+        self.enabled = enabled
     }
 }
 

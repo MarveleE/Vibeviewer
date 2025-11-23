@@ -215,7 +215,8 @@ extension DashboardSnapshot {
 
     var onDemandMetrics: MetricsViewDataSource? {
         guard let usageSummary = usageSummary,
-              let onDemand = usageSummary.individualUsage.onDemand else {
+              let onDemand = usageSummary.individualUsage.onDemand,
+              let limit = onDemand.limit else {
             return nil
         }
         
@@ -227,8 +228,8 @@ extension DashboardSnapshot {
             title: "On-Demand Usage",
             description: description,
             currentValue: onDemand.used.dollarStringFromCents,
-            targetValue: onDemand.limit.dollarStringFromCents,
-            progress: min(Double(onDemand.used) / Double(onDemand.limit), 1),
+            targetValue: limit.dollarStringFromCents,
+            progress: min(Double(onDemand.used) / Double(limit), 1),
             tint: Color(hex: "FF6B6B")
         )
     }

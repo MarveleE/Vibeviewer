@@ -109,11 +109,12 @@ public struct DefaultCursorService: CursorService {
         // 映射按需使用情况（如果存在）
         let onDemandUsage: VibeviewerModel.OnDemandUsage? = {
             guard let individualOnDemand = dto.individualUsage.onDemand else { return nil }
-            if individualOnDemand.used > 0 || individualOnDemand.limit > 0 {
+            if individualOnDemand.used > 0 || (individualOnDemand.limit ?? 0) > 0 {
                 return VibeviewerModel.OnDemandUsage(
                     used: individualOnDemand.used,
                     limit: individualOnDemand.limit,
-                    remaining: individualOnDemand.remaining
+                    remaining: individualOnDemand.remaining,
+                    enabled: individualOnDemand.enabled
                 )
             }
             return nil
@@ -129,12 +130,13 @@ public struct DefaultCursorService: CursorService {
         let teamUsage: VibeviewerModel.TeamUsage? = {
             guard let teamUsageData = dto.teamUsage,
                   let teamOnDemand = teamUsageData.onDemand else { return nil }
-            if teamOnDemand.used > 0 || teamOnDemand.limit > 0 {
+            if teamOnDemand.used > 0 || (teamOnDemand.limit ?? 0) > 0 {
                 return VibeviewerModel.TeamUsage(
                     onDemand: VibeviewerModel.OnDemandUsage(
                         used: teamOnDemand.used,
                         limit: teamOnDemand.limit,
-                        remaining: teamOnDemand.remaining
+                        remaining: teamOnDemand.remaining,
+                        enabled: teamOnDemand.enabled
                     )
                 )
             }
