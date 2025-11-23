@@ -174,11 +174,9 @@ public struct MenuPopoverView: View {
                 self.loginError = "You need to login before refreshing dashboard data."
                 return
             }
-            
+
             self.loginError = nil
-            self.isLoggingIn = true
-            defer { self.isLoggingIn = false }
-            
+
             // 使用后台刷新服务的公共方法进行刷新
             await self.refresher.refreshNow()
             
