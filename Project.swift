@@ -52,8 +52,7 @@ let project = Project(
                 "CFBundleVersion": .string(appVersion),
                 // Sparkle 自动更新配置
                 // 使用 GitHub Pages 托管 appcast.xml（推荐）
-                // 如果未设置 GitHub Pages，可以使用: https://raw.githubusercontent.com/MarveleE/Vibeviewer/main/appcast.xml
-                "SUFeedURL": .string("https://raw.githubusercontent.com/MarveleE/Vibeviewer/main/appcast.xml"),
+                "SUFeedURL": .string("https://raw.githubusercontent.com/MarveleE/Vibeviewer/refs/heads/feat/auto-update/appcast.xml"),
                 "SUEnableAutomaticChecks": .boolean(true),
                 "SUEnableAutomaticDownloading": .boolean(false),
             ]),

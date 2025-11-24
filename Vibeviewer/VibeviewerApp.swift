@@ -30,7 +30,7 @@ struct VibeviewerApp: App {
     @State private var updateService: any UpdateService = {
         // 从 Info.plist 读取 appcast URL，如果没有则使用默认值
         let feedURLString = Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") as? String
-            ?? "https://github.com/MarveleE/Vibeviewer/releases/download/latest/appcast.xml"
+            ?? "https://raw.githubusercontent.com/MarveleE/Vibeviewer/refs/heads/feat/auto-update/appcast.xml"
         
         if let feedURL = URL(string: feedURLString) {
             return SparkleUpdateService(feedURL: feedURL)
