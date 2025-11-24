@@ -474,10 +474,16 @@ public struct DefaultCursorService: CursorService {
         }
         
         let startDate = Date(timeIntervalSince1970: TimeInterval(startMs) / 1000.0)
-        let endDate = Date(timeIntervalSince1970: TimeInterval(endMs) / 1000.0)
+        let originalEndDate = Date(timeIntervalSince1970: TimeInterval(endMs) / 1000.0)
         let calendar = Calendar.current
         
-        // 生成日期范围内的所有日期
+        // 为了避免 X 轴出现“未来一天”的空数据（例如今天是 24 号却出现 25 号），
+        // 这里将用于生成日期刻度的结束日期截断到“今天 00:00”，
+        // 但事件本身的时间范围仍然由后端返回的数据决定。
+        let startOfToday = calendar.startOfDay(for: Date())
+        let endDate: Date = originalEndDate > startOfToday ? startOfToday : originalEndDate
+        
+        // 生成日期范围内的所有日期（从 startDate 到 endDate，均为自然日）
         var allDates: [Date] = []
         var currentDate = startDate
         

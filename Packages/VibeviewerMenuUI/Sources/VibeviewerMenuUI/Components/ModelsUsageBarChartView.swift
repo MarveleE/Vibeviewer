@@ -27,8 +27,16 @@ struct ModelsUsageBarChartView: View {
         "Other": 4
     ]
     
+    /// 实际用于展示的数据点（最多 7 天，优先展示最近的数据）
+    private var displayedDataPoints: [ModelsUsageChartData.DataPoint] {
+        guard data.dataPoints.count > 7 else {
+            return data.dataPoints
+        }
+        return Array(data.dataPoints.suffix(7))
+    }
+    
     var body: some View {
-        if data.dataPoints.isEmpty {
+        if displayedDataPoints.isEmpty {
             emptyView
         } else {
             VStack(alignment: .leading, spacing: 12) {
@@ -49,7 +57,7 @@ struct ModelsUsageBarChartView: View {
     
     private var chartView: some View {
         Chart {
-            ForEach(data.dataPoints, id: \.date) { item in
+            ForEach(displayedDataPoints, id: \.date) { item in
                 let stackedData = calculateStackedData(for: item)
                 
                 ForEach(Array(stackedData.enumerated()), id: \.offset) { index, stackedItem in
@@ -65,7 +73,7 @@ struct ModelsUsageBarChartView: View {
             }
             
             if let selectedDate = selectedDate,
-               let selectedItem = data.dataPoints.first(where: { $0.dateLabel == selectedDate }) {
+               let selectedItem = displayedDataPoints.first(where: { $0.dateLabel == selectedDate }) {
                 RuleMark(x: .value("Selected", selectedDate))
                     .lineStyle(StrokeStyle(lineWidth: 2, dash: [4]))
                     .foregroundStyle(Color.gray.opacity(0.3))
@@ -80,7 +88,7 @@ struct ModelsUsageBarChartView: View {
             }
         }
         // 确保 X 轴始终展示所有日期标签（即使某些日期没有数据）
-        .chartXScale(domain: data.dataPoints.map { $0.dateLabel })
+        .chartXScale(domain: displayedDataPoints.map { $0.dateLabel })
         .chartXSelection(value: $selectedDate)
         .chartYAxis {
             AxisMarks(position: .leading) { value in
@@ -146,11 +154,11 @@ struct ModelsUsageBarChartView: View {
     /// 根据选中项的位置动态计算 annotation 位置
     /// 左侧使用 topTrailing，右侧使用 topLeading，中间使用 top
     private func annotationPosition(for dateLabel: String) -> AnnotationPosition {
-        guard let selectedIndex = data.dataPoints.firstIndex(where: { $0.dateLabel == dateLabel }) else {
+        guard let selectedIndex = displayedDataPoints.firstIndex(where: { $0.dateLabel == dateLabel }) else {
             return .top
         }
         
-        let totalCount = data.dataPoints.count
+        let totalCount = displayedDataPoints.count
         let middleIndex = totalCount / 2
         
         if selectedIndex < middleIndex {
@@ -186,7 +194,7 @@ struct ModelsUsageBarChartView: View {
     
     private var legendView: some View {
         // 获取所有唯一的模型名称
-        let uniqueModels = Set(data.dataPoints.flatMap { $0.modelUsages.map { $0.modelName } })
+        let uniqueModels = Set(displayedDataPoints.flatMap { $0.modelUsages.map { $0.modelName } })
             .sorted()
         
         // 限制显示的模型数量（最多显示前8个）
@@ -308,17 +316,17 @@ struct ModelsUsageBarChartView: View {
     }
     
     private var totalValue: Int? {
-        guard !data.dataPoints.isEmpty else { return nil }
-        return data.dataPoints.reduce(0) { $0 + $1.totalValue }
+        guard !displayedDataPoints.isEmpty else { return nil }
+        return displayedDataPoints.reduce(0) { $0 + $1.totalValue }
     }
     
     private var averageValue: Double? {
-        guard let total = totalValue, !data.dataPoints.isEmpty else { return nil }
-        return Double(total) / Double(data.dataPoints.count)
+        guard let total = totalValue, !displayedDataPoints.isEmpty else { return nil }
+        return Double(total) / Double(displayedDataPoints.count)
     }
     
     private var maxValue: Int? {
-        data.dataPoints.map { $0.totalValue }.max()
+        displayedDataPoints.map { $0.totalValue }.max()
     }
 }
 
