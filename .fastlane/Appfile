@@ -1,0 +1,12 @@
+# Appfile for Vibeviewer
+
+app_identifier("com.magicgroot.vibeviewer")
+apple_id("") # 可选，如果不需要 App Store 发布可以留空
+
+# 团队信息（如果需要签名）
+# team_id("")
+# team_name("")
+
+# 平台
+platform(:mac)
+

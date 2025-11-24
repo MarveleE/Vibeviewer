@@ -1,0 +1,251 @@
+# Fastlane configuration for Vibeviewer
+
+default_platform(:mac)
+
+platform :mac do
+  # 从 Project.swift 读取版本号
+  def get_version_from_project
+    project_file = File.join(Dir.pwd, "Project.swift")
+    if File.exist?(project_file)
+      content = File.read(project_file)
+      if match = content.match(/let appVersion\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)"/)
+        return match[1]
+      end
+    end
+    UI.user_error!("Could not find version in Project.swift")
+  end
+
+  # 获取 GitHub 仓库信息
+  def get_github_repo
+    ENV["GITHUB_REPO"] || "MarveleE/Vibeviewer"
+  end
+
+  # Debug Lane: 构建 Debug 版本并创建 DMG
+  lane :debug do
+    UI.header("Building Debug version")
+    
+    # 使用 gym 构建应用
+    gym(
+      workspace: "Vibeviewer.xcworkspace",
+      scheme: "Vibeviewer",
+      configuration: "Debug",
+      export_method: "development",
+      output_directory: "./build",
+      skip_codesigning: true,
+      skip_package_ipa: true,
+      skip_package_pkg: true
+    )
+    
+    # 查找构建的 app
+    app_path = Dir.glob("./build/**/Vibeviewer.app").first
+    unless app_path
+      UI.user_error!("Could not find built app")
+    end
+    
+    # 创建 DMG
+    version = get_version_from_project
+    dmg_name = "Vibeviewer-#{version}-Debug.dmg"
+    
+    create_dmg(
+      app_path: app_path,
+      dmg_name: dmg_name,
+      output_directory: "./build",
+      background_image: File.exist?("dmg_background.png") ? "dmg_background.png" : nil
+    )
+    
+    UI.success("Debug build completed: #{dmg_name}")
+  end
+
+  # Release Lane: 完整发布流程
+  lane :release do
+    UI.header("Starting Release Process")
+    
+    # 获取版本号
+    version = get_version_from_project
+    tag_name = "v#{version}"
+    github_repo = get_github_repo
+    
+    UI.message("Version: #{version}")
+    UI.message("Tag: #{tag_name}")
+    
+    # 使用 gym 构建应用
+    UI.header("Building Release version")
+    gym(
+      workspace: "Vibeviewer.xcworkspace",
+      scheme: "Vibeviewer",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "./build",
+      skip_codesigning: true,
+      skip_package_ipa: true,
+      skip_package_pkg: true
+    )
+    
+    # 查找构建的 app
+    app_path = Dir.glob("./build/**/Vibeviewer.app").first
+    unless app_path
+      UI.user_error!("Could not find built app")
+    end
+    
+    # 创建 DMG
+    UI.header("Creating DMG")
+    dmg_name = "Vibeviewer-#{version}.dmg"
+    
+    create_dmg(
+      app_path: app_path,
+      dmg_name: dmg_name,
+      output_directory: "./build",
+      background_image: File.exist?("dmg_background.png") ? "dmg_background.png" : nil
+    )
+    
+    dmg_path = lane_context[SharedValues::DMG_PATH]
+    UI.success("DMG created: #{dmg_path}")
+    
+    # 检查 Git 状态
+    UI.header("Checking Git status")
+    ensure_git_status_clean
+    
+    # 创建 Git tag（如果不存在）
+    UI.header("Creating Git tag")
+    begin
+      sh("git", "rev-parse", "-#{tag_name}", ">/dev/null", "2>&1")
+      UI.important("Tag #{tag_name} already exists")
+      if UI.confirm("Do you want to delete and recreate it?")
+        sh("git", "tag", "-d", tag_name)
+        sh("git", "push", "origin", ":refs/tags/#{tag_name}", error_callback: proc { |result| })
+        add_git_tag(tag: tag_name, message: "Release version #{version}")
+      end
+    rescue
+      add_git_tag(tag: tag_name, message: "Release version #{version}")
+    end
+    
+    # 推送 tag
+    push_git_tags
+    
+    # 生成 appcast.xml
+    UI.header("Generating appcast.xml")
+    dmg_url = "https://github.com/#{github_repo}/releases/download/#{tag_name}/#{dmg_name}"
+    release_notes_url = "https://github.com/#{github_repo}/releases/tag/#{tag_name}"
+    
+    sh("bash", "Scripts/generate_appcast.sh", version, dmg_url, release_notes_url, "appcast.xml")
+    
+    unless File.exist?("appcast.xml")
+      UI.user_error!("Failed to generate appcast.xml")
+    end
+    
+    # 创建或更新 GitHub Release
+    UI.header("Creating GitHub Release")
+    github_token = ENV["GITHUB_TOKEN"]
+    unless github_token
+      UI.user_error!("GITHUB_TOKEN environment variable is required")
+    end
+    
+    # 获取变更日志
+    prev_tag = ""
+    begin
+      prev_tag = sh("git", "describe", "--tags", "--abbrev=0", "HEAD~1").strip
+    rescue
+      prev_tag = ""
+    end
+    
+    changelog = ""
+    if prev_tag && !prev_tag.empty?
+      begin
+        changelog = sh("git", "log", "#{prev_tag}..HEAD", "--pretty=format:- %s").strip
+      rescue
+        changelog = ""
+      end
+    else
+      begin
+        changelog = sh("git", "log", "--oneline", "-10", "--pretty=format:- %s").strip
+      rescue
+        changelog = ""
+      end
+    end
+    
+    release_notes = <<~NOTES
+      ## 更新内容
+      
+      #{changelog}
+      
+      ## 技术改进
+      
+      - 版本更新至 #{version}
+      - 优化自动更新机制
+    NOTES
+    
+    # 检查 Release 是否已存在
+    release_exists = false
+    begin
+      response = github_api(
+        server_url: "https://api.github.com",
+        api_token: github_token,
+        http_method: "GET",
+        path: "/repos/#{github_repo}/releases/tags/#{tag_name}"
+      )
+      release_exists = true
+      UI.important("Release #{tag_name} already exists")
+      if UI.confirm("Do you want to delete and recreate it?")
+        # 获取 release ID
+        release_id = response[:id] || response["id"]
+        if release_id
+          # 删除现有 Release
+          github_api(
+            server_url: "https://api.github.com",
+            api_token: github_token,
+            http_method: "DELETE",
+            path: "/repos/#{github_repo}/releases/#{release_id}"
+          )
+        end
+        # 创建新 Release
+        create_github_release(
+          api_token: github_token,
+          repository_name: github_repo,
+          name: "Version #{version}",
+          tag_name: tag_name,
+          description: release_notes,
+          commitish: "main"
+        )
+      else
+        # 只上传文件
+        UI.message("Uploading files to existing release")
+      end
+    rescue => e
+      # Release 不存在，创建新的
+      create_github_release(
+        api_token: github_token,
+        repository_name: github_repo,
+        name: "Version #{version}",
+        tag_name: tag_name,
+        description: release_notes,
+        commitish: "main"
+      )
+    end
+    
+    # 上传 DMG 文件
+    UI.header("Uploading DMG to GitHub Release")
+    upload_to_github_release(
+      api_token: github_token,
+      repository_name: github_repo,
+      tag_name: tag_name,
+      file_path: dmg_path,
+      asset_name: dmg_name,
+      asset_content_type: "application/octet-stream"
+    )
+    
+    # 上传 appcast.xml
+    UI.header("Uploading appcast.xml to GitHub Release")
+    upload_to_github_release(
+      api_token: github_token,
+      repository_name: github_repo,
+      tag_name: tag_name,
+      file_path: "appcast.xml",
+      asset_name: "appcast.xml",
+      asset_content_type: "application/xml"
+    )
+    
+    UI.success("🎉 Release completed successfully!")
+    UI.message("Release URL: https://github.com/#{github_repo}/releases/tag/#{tag_name}")
+  end
+end
+

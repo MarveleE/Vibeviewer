@@ -50,6 +50,41 @@ public struct SettingsView: View {
                     Text(updateService.currentVersion)
                         .foregroundColor(.secondary)
                 }
+                
+                // 更新状态
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Update Status")
+                        Spacer()
+                        if updateService.isCheckingForUpdates {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                    }
+                    
+                    Text(updateService.updateStatusDescription)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    if let latestVersion = updateService.latestVersion {
+                        Text("Latest version: \(latestVersion)")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                    }
+                }
+                
+                // 检查更新按钮
+                Button {
+                    Task { @MainActor in
+                        updateService.checkForUpdates()
+                    }
+                } label: {
+                    HStack {
+                        Text("Check for Updates")
+                        Spacer()
+                    }
+                }
+                .disabled(updateService.isCheckingForUpdates)
             } header: {
                 Text("General")
             }

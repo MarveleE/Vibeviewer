@@ -27,7 +27,17 @@ struct VibeviewerApp: App {
     )
     @State private var refresher: any DashboardRefreshService = NoopDashboardRefreshService()
     @State private var loginService: any LoginService = NoopLoginService()
-    @State private var updateService: any UpdateService = NoopUpdateService()
+    @State private var updateService: any UpdateService = {
+        // 从 Info.plist 读取 appcast URL，如果没有则使用默认值
+        let feedURLString = Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") as? String
+            ?? "https://github.com/MarveleE/Vibeviewer/releases/download/latest/appcast.xml"
+        
+        if let feedURL = URL(string: feedURLString) {
+            return SparkleUpdateService(feedURL: feedURL)
+        } else {
+            return NoopUpdateService()
+        }
+    }()
 
     var body: some Scene {
         MenuBarExtra {
@@ -104,6 +114,9 @@ struct VibeviewerApp: App {
         )
         
         await self.refresher.start()
+        
+        // 启动时自动检查更新（后台）
+        await self.updateService.checkForUpdatesInBackground()
     }
 }
 
