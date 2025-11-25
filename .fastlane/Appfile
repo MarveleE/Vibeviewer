@@ -7,6 +7,3 @@ apple_id("") # 可选，如果不需要 App Store 发布可以留空
 # team_id("")
 # team_name("")
 
-# 平台
-platform(:mac)
-

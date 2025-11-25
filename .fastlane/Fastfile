@@ -3,16 +3,21 @@
 default_platform(:mac)
 
 platform :mac do
+  # 获取项目根目录（Fastfile 所在目录的上级目录）
+  def project_root
+    @project_root ||= File.expand_path("..", File.dirname(__FILE__))
+  end
+  
   # 从 Project.swift 读取版本号
   def get_version_from_project
-    project_file = File.join(Dir.pwd, "Project.swift")
+    project_file = File.join(project_root, "Project.swift")
     if File.exist?(project_file)
       content = File.read(project_file)
       if match = content.match(/let appVersion\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)"/)
         return match[1]
       end
     end
-    UI.user_error!("Could not find version in Project.swift")
+    UI.user_error!("Could not find version in Project.swift at #{project_file}")
   end
 
   # 获取 GitHub 仓库信息
@@ -20,38 +25,126 @@ platform :mac do
     ENV["GITHUB_REPO"] || "MarveleE/Vibeviewer"
   end
 
-  # Debug Lane: 构建 Debug 版本并创建 DMG
-  lane :debug do
-    UI.header("Building Debug version")
+  # 公共方法：构建应用
+  def build_app(configuration:, export_method:)
+    UI.header("Building #{configuration} version")
     
-    # 使用 gym 构建应用
     gym(
       workspace: "Vibeviewer.xcworkspace",
       scheme: "Vibeviewer",
-      configuration: "Debug",
-      export_method: "development",
+      configuration: configuration,
+      export_method: export_method,
       output_directory: "./build",
       skip_codesigning: true,
       skip_package_ipa: true,
       skip_package_pkg: true
     )
+  end
+
+  # 公共方法：查找构建的 app
+  def find_built_app
+    app_path = nil
+    build_dir = File.join(project_root, "build")
     
-    # 查找构建的 app
-    app_path = Dir.glob("./build/**/Vibeviewer.app").first
-    unless app_path
-      UI.user_error!("Could not find built app")
+    UI.message("Searching for built app...")
+    UI.message("Build directory: #{build_dir}")
+    
+    # 1. 首先检查 build 目录根目录（最常见的位置）
+    direct_path = File.join(build_dir, "Vibeviewer.app")
+    if File.exist?(direct_path)
+      app_path = direct_path
+      UI.message("✅ Found app at: #{app_path}")
+    # 2. 递归搜索 build 目录的所有子目录
+    else
+      UI.message("Searching in subdirectories...")
+      found_paths = Dir.glob(File.join(build_dir, "**/Vibeviewer.app"))
+      if found_paths.any?
+        app_path = found_paths.first
+        UI.message("✅ Found app at: #{app_path}")
+      end
     end
     
-    # 创建 DMG
-    version = get_version_from_project
-    dmg_name = "Vibeviewer-#{version}-Debug.dmg"
+    # 3. 如果还没找到，从 archive 中提取
+    unless app_path && File.exist?(app_path)
+      UI.message("Checking archive...")
+      archive_path = lane_context[:XCODEBUILD_ARCHIVE_PATH]
+      UI.message("Archive path from context: #{archive_path.inspect}")
+      
+      if archive_path
+        archive_path_str = archive_path.to_s
+        if File.exist?(archive_path_str)
+          archive_app_path = File.join(archive_path_str, "Products/Applications/Vibeviewer.app")
+          if File.exist?(archive_app_path)
+            app_path = archive_app_path
+            UI.message("✅ Found app in archive: #{app_path}")
+          else
+            UI.message("⚠️ Archive exists but app not found at: #{archive_app_path}")
+          end
+        else
+          UI.message("⚠️ Archive path does not exist: #{archive_path_str}")
+        end
+      end
+    end
+    
+    # 4. 最后的尝试：在整个 build 目录中搜索
+    unless app_path && File.exist?(app_path)
+      UI.message("Performing final search in build directory...")
+      all_apps = Dir.glob(File.join(build_dir, "**/*.app"))
+      UI.message("Found .app bundles: #{all_apps.inspect}")
+      
+      vibeviewer_app = all_apps.find { |path| File.basename(path) == "Vibeviewer.app" }
+      if vibeviewer_app && File.exist?(vibeviewer_app)
+        app_path = vibeviewer_app
+        UI.message("✅ Found app in final search: #{app_path}")
+      end
+    end
+    
+    unless app_path && File.exist?(app_path)
+      UI.user_error!("Could not find built app. Searched in:\n" +
+                     "  - #{build_dir}/Vibeviewer.app\n" +
+                     "  - #{build_dir}/**/Vibeviewer.app\n" +
+                     "  - Archive: #{lane_context[:XCODEBUILD_ARCHIVE_PATH]}\n" +
+                     "  - All .app bundles in build directory")
+    end
+    
+    UI.success("✅ Using app at: #{app_path}")
+    return app_path
+  end
+
+  # 公共方法：创建 DMG 包
+  def create_dmg_package(app_path:, dmg_name:, output_directory: nil)
+    UI.header("Creating DMG")
+    
+    # 如果没有指定输出目录，使用项目根目录下的 build 目录
+    output_dir = output_directory || File.join(project_root, "build")
+    
+    background_image_path = File.join(project_root, "dmg_background.png")
+    background_image = File.exist?(background_image_path) ? background_image_path : nil
     
     create_dmg(
       app_path: app_path,
       dmg_name: dmg_name,
-      output_directory: "./build",
-      background_image: File.exist?("dmg_background.png") ? "dmg_background.png" : nil
+      output_directory: output_dir,
+      background_image: background_image
     )
+    
+    dmg_path = lane_context[SharedValues::DMG_PATH]
+    UI.success("DMG created: #{dmg_path}")
+    return dmg_path
+  end
+
+  # Debug Lane: 构建 Debug 版本并创建 DMG
+  lane :build_debug do
+    # 构建应用
+    build_app(configuration: "Debug", export_method: "development")
+    
+    # 查找构建的 app
+    app_path = find_built_app
+    
+    # 创建 DMG
+    version = get_version_from_project
+    dmg_name = "Vibeviewer-#{version}-Debug.dmg"
+    dmg_path = create_dmg_package(app_path: app_path, dmg_name: dmg_name)
     
     UI.success("Debug build completed: #{dmg_name}")
   end
@@ -68,38 +161,15 @@ platform :mac do
     UI.message("Version: #{version}")
     UI.message("Tag: #{tag_name}")
     
-    # 使用 gym 构建应用
-    UI.header("Building Release version")
-    gym(
-      workspace: "Vibeviewer.xcworkspace",
-      scheme: "Vibeviewer",
-      configuration: "Release",
-      export_method: "app-store",
-      output_directory: "./build",
-      skip_codesigning: true,
-      skip_package_ipa: true,
-      skip_package_pkg: true
-    )
+    # 构建应用
+    build_app(configuration: "Release", export_method: "app-store")
     
     # 查找构建的 app
-    app_path = Dir.glob("./build/**/Vibeviewer.app").first
-    unless app_path
-      UI.user_error!("Could not find built app")
-    end
+    app_path = find_built_app
     
     # 创建 DMG
-    UI.header("Creating DMG")
     dmg_name = "Vibeviewer-#{version}.dmg"
-    
-    create_dmg(
-      app_path: app_path,
-      dmg_name: dmg_name,
-      output_directory: "./build",
-      background_image: File.exist?("dmg_background.png") ? "dmg_background.png" : nil
-    )
-    
-    dmg_path = lane_context[SharedValues::DMG_PATH]
-    UI.success("DMG created: #{dmg_path}")
+    dmg_path = create_dmg_package(app_path: app_path, dmg_name: dmg_name)
     
     # 检查 Git 状态
     UI.header("Checking Git status")
@@ -108,7 +178,7 @@ platform :mac do
     # 创建 Git tag（如果不存在）
     UI.header("Creating Git tag")
     begin
-      sh("git", "rev-parse", "-#{tag_name}", ">/dev/null", "2>&1")
+      sh("git", "rev-parse", "#{tag_name}", ">/dev/null", "2>&1")
       UI.important("Tag #{tag_name} already exists")
       if UI.confirm("Do you want to delete and recreate it?")
         sh("git", "tag", "-d", tag_name)
