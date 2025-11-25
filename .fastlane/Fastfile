@@ -2,6 +2,16 @@
 
 default_platform(:mac)
 
+# 在每次 lane 执行后清理自动生成的文件
+after_all do |lane|
+  # 删除 fastlane 自动生成的 README 和 report
+  readme_path = File.join(File.dirname(__FILE__), "README.md")
+  report_path = File.join(File.dirname(__FILE__), "report.xml")
+  
+  File.delete(readme_path) if File.exist?(readme_path)
+  File.delete(report_path) if File.exist?(report_path)
+end
+
 platform :mac do
   # 获取项目根目录（Fastfile 所在目录的上级目录）
   def project_root
@@ -149,8 +159,24 @@ platform :mac do
     UI.success("Debug build completed: #{dmg_name}")
   end
 
-  # Release Lane: 完整发布流程
-  lane :release do
+  # Release DMG Lane: 构建 Release 版本并创建 DMG（不包含 GitHub Release）
+  lane :build_release_dmg do
+    # 构建应用
+    build_app(configuration: "Release", export_method: "app-store")
+    
+    # 查找构建的 app
+    app_path = find_built_app
+    
+    # 创建 DMG
+    version = get_version_from_project
+    dmg_name = "Vibeviewer-#{version}.dmg"
+    dmg_path = create_dmg_package(app_path: app_path, dmg_name: dmg_name)
+    
+    UI.success("Release DMG created: #{dmg_name}")
+  end
+
+  # Release Post-DMG Lane: 执行 release 步骤（假设 DMG 已经通过 build_release_dmg 创建）
+  lane :release_post_dmg do
     UI.header("Starting Release Process")
     
     # 获取版本号
@@ -161,15 +187,16 @@ platform :mac do
     UI.message("Version: #{version}")
     UI.message("Tag: #{tag_name}")
     
-    # 构建应用
-    build_app(configuration: "Release", export_method: "app-store")
-    
-    # 查找构建的 app
-    app_path = find_built_app
-    
-    # 创建 DMG
+    # 查找已创建的 DMG（假设已经通过 build_release_dmg 创建）
     dmg_name = "Vibeviewer-#{version}.dmg"
-    dmg_path = create_dmg_package(app_path: app_path, dmg_name: dmg_name)
+    build_dir = File.join(project_root, "build")
+    dmg_path = File.join(build_dir, dmg_name)
+    
+    unless File.exist?(dmg_path)
+      UI.user_error!("DMG not found at #{dmg_path}. Please run 'make dmg' first.")
+    end
+    
+    UI.success("Using existing DMG: #{dmg_path}")
     
     # 检查 Git 状态
     UI.header("Checking Git status")
@@ -197,9 +224,10 @@ platform :mac do
     dmg_url = "https://github.com/#{github_repo}/releases/download/#{tag_name}/#{dmg_name}"
     release_notes_url = "https://github.com/#{github_repo}/releases/tag/#{tag_name}"
     
-    sh("bash", "Scripts/generate_appcast.sh", version, dmg_url, release_notes_url, "appcast.xml")
+    appcast_path = File.join(project_root, "appcast.xml")
+    sh("bash", File.join(project_root, "Scripts/generate_appcast.sh"), version, dmg_url, release_notes_url, appcast_path)
     
-    unless File.exist?("appcast.xml")
+    unless File.exist?(appcast_path)
       UI.user_error!("Failed to generate appcast.xml")
     end
     
@@ -309,7 +337,7 @@ platform :mac do
       api_token: github_token,
       repository_name: github_repo,
       tag_name: tag_name,
-      file_path: "appcast.xml",
+      file_path: appcast_path,
       asset_name: "appcast.xml",
       asset_content_type: "application/xml"
     )
